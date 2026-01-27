@@ -44,6 +44,8 @@ spring:
       whitelabel:
         enabled: true
 
+      include-stacktrace: never
+
   thymeleaf:
     check-template-location: false
 
