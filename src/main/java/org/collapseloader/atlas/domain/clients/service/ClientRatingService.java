@@ -17,9 +17,9 @@ public class ClientRatingService {
     private final ClientRatingRepository ratingRepository;
 
     @Transactional
-    public ClientRatingResponse submitRating(Long clientId, User user, short rating) {
-        if (rating < 1 || rating > 5) {
-            throw new IllegalArgumentException("Rating must be between 1 and 5");
+    public ClientRatingResponse submitRating(Long clientId, User user, double rating) {
+        if (rating < 1 || rating > 5 || (rating * 2) % 1 != 0) {
+            throw new IllegalArgumentException("Rating must be between 1 and 5 in 0.5 increments");
         }
 
         var client = clientRepository.findById(clientId)
@@ -40,15 +40,13 @@ public class ClientRatingService {
         return new ClientRatingResponse(
                 avgRating,
                 ratingCount,
-                (int) rating
-        );
+                rating);
     }
 
     @Transactional(readOnly = true)
     public ClientMyRatingResponse getMyRating(Long clientId, User user) {
         var myRating = ratingRepository.findByClientIdAndUserId(clientId, user.getId())
                 .map(ClientRating::getRating)
-                .map(Short::intValue)
                 .orElse(null);
 
         return new ClientMyRatingResponse(myRating);

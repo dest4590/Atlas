@@ -8,8 +8,7 @@ import java.io.Serializable;
 public record ClientRatingResponse(
         @JsonProperty("rating_avg") Double ratingAvg,
         @JsonProperty("rating_count") Integer ratingCount,
-        @JsonProperty("my_rating") Integer myRating
-) implements Serializable {
+        @JsonProperty("my_rating") Double myRating) implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 }

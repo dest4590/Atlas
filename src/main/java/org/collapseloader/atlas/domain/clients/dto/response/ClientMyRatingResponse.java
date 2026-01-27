@@ -6,8 +6,7 @@ import java.io.Serial;
 import java.io.Serializable;
 
 public record ClientMyRatingResponse(
-        @JsonProperty("my_rating") Integer myRating
-) implements Serializable {
+        @JsonProperty("my_rating") Double myRating) implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 }
