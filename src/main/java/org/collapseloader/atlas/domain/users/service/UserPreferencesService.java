@@ -22,8 +22,7 @@ public class UserPreferencesService {
     public UserPreferencesService(
             UserRepository userRepository,
             UserPreferenceRepository userPreferenceRepository,
-            ObjectMapper objectMapper
-    ) {
+            ObjectMapper objectMapper) {
         this.userRepository = userRepository;
         this.userPreferenceRepository = userPreferenceRepository;
         this.objectMapper = objectMapper;
@@ -51,6 +50,10 @@ public class UserPreferencesService {
         JsonNode node = objectMapper.valueToTree(value);
         if (node == null || node.isNull()) {
             throw new RuntimeException("Preference value is required");
+        }
+
+        if (node.isObject() && node.has("value") && node.size() == 1) {
+            node = node.get("value");
         }
 
         var preference = userPreferenceRepository.findByUserIdAndKey(user.getId(), normalizedKey)
