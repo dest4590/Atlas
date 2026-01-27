@@ -1,0 +1,66 @@
+spring:
+  config:
+    import: "optional:file:.env[.properties]"
+
+  application:
+    name: Atlas
+
+  datasource:
+    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/${POSTGRES_DB:atlas}
+    username: ${POSTGRES_USER:atlas_user}
+    password: ${POSTGRES_PASSWORD:atlas_password}
+    driver-class-name: org.postgresql.Driver
+
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      repositories:
+        enabled: false
+
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+  web:
+    error:
+      whitelabel:
+        enabled: true
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: WARN
+    org.hibernate: WARN
+
+server:
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/plain
+    min-response-size: 1024
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health, info, metrics"
+
+jwt:
+  secret: ${JWT_SECRET:default_jwt_secret_key_32bytes!x}
