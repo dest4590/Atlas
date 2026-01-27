@@ -21,6 +21,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final UserStatusService userStatusService;
+    private final org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService;
 
     public AuthService(
             UserRepository userRepository,
@@ -28,14 +29,15 @@ public class AuthService {
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             AuthenticationManager authenticationManager,
-            UserStatusService userStatusService
-    ) {
+            UserStatusService userStatusService,
+            org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService) {
         this.userRepository = userRepository;
         this.userProfileRepository = userProfileRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.userStatusService = userStatusService;
+        this.achievementService = achievementService;
     }
 
     public AuthResponse register(AuthRequest request) {
@@ -60,14 +62,15 @@ public class AuthService {
         savedUser.setProfile(profile);
         userProfileRepository.save(profile);
 
+        achievementService.unlockAchievement(savedUser.getId(), "WELCOME");
+
         var jwt = jwtService.generateToken(savedUser);
         return new AuthResponse(jwt);
     }
 
     public AuthResponse login(AuthRequest request) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.username(), request.password())
-        );
+                new UsernamePasswordAuthenticationToken(request.username(), request.password()));
 
         var user = userRepository.findByUsername(request.username())
                 .orElseThrow();
@@ -79,6 +82,11 @@ public class AuthService {
         user.setLastLoginAt(Instant.now());
         userRepository.save(user);
         userStatusService.setStatus(user.getId(), UserStatus.ONLINE, null);
+
+        var profile = user.getProfile();
+        if (profile != null && profile.getRole() != null && profile.getRole().isTester()) {
+            achievementService.unlockAchievement(user.getId(), "BETA_TESTER");
+        }
 
         var jwt = jwtService.generateToken(user);
         return new AuthResponse(jwt);

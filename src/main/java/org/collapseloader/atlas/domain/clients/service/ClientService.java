@@ -7,6 +7,9 @@ import org.collapseloader.atlas.domain.clients.entity.ClientType;
 import org.collapseloader.atlas.domain.clients.entity.fabric.FabricClient;
 import org.collapseloader.atlas.domain.clients.entity.forge.ForgeClient;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
+import org.collapseloader.atlas.domain.users.entity.User;
+import org.collapseloader.atlas.domain.users.repository.UserProfileRepository;
+import org.collapseloader.atlas.domain.achievements.service.AchievementService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
@@ -19,9 +22,16 @@ import java.util.List;
 @Service
 public class ClientService {
     private final ClientRepository clientRepository;
+    private final UserProfileRepository userProfileRepository;
+    private final AchievementService achievementService;
 
-    public ClientService(ClientRepository clientRepository) {
+    public ClientService(
+            ClientRepository clientRepository,
+            UserProfileRepository userProfileRepository,
+            AchievementService achievementService) {
         this.clientRepository = clientRepository;
+        this.userProfileRepository = userProfileRepository;
+        this.achievementService = achievementService;
     }
 
     @CacheEvict(value = "clients_list", allEntries = true)
@@ -64,10 +74,24 @@ public class ClientService {
     }
 
     @Transactional
-    public ClientResponse incrementLaunches(Long id) {
+    public ClientResponse incrementLaunches(Long id, User user) {
         var client = clientRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found: " + id));
         client.setLaunches(client.getLaunches() + 1);
+
+        if (user != null) {
+            var profile = userProfileRepository.findByUserId(user.getId()).orElse(null);
+            if (profile != null) {
+                profile.setLaunchesCount(profile.getLaunchesCount() + 1);
+                userProfileRepository.save(profile);
+
+                achievementService.unlockAchievement(user.getId(), "FIRST_GAME");
+                if (profile.getLaunchesCount() >= 50) {
+                    achievementService.unlockAchievement(user.getId(), "FREQUENT_FLYER");
+                }
+            }
+        }
+
         return toResponse(client);
     }
 
@@ -85,7 +109,6 @@ public class ClientService {
                 client.getLaunches(),
                 client.getDownloads(),
                 client.getType().getApiValue(),
-                client.getCreatedAt()
-        );
+                client.getCreatedAt());
     }
 }

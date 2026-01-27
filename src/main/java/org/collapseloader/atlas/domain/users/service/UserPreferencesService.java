@@ -56,7 +56,9 @@ public class UserPreferencesService {
                         .user(user)
                         .key(normalizedKey)
                         .build());
+
         preference.setValue(node);
+
         return mapPreference(userPreferenceRepository.save(preference));
     }
 
@@ -74,8 +76,7 @@ public class UserPreferencesService {
                 preference.getKey(),
                 preference.getValue(),
                 preference.getCreatedAt(),
-                preference.getUpdatedAt()
-        );
+                preference.getUpdatedAt());
     }
 
     private String normalizeKey(String value) {

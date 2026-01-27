@@ -29,8 +29,7 @@ public class ClientController {
             ClientService clientService,
             ClientDetailsService detailsService,
             ClientRatingService ratingService,
-            ClientCommentService commentService
-    ) {
+            ClientCommentService commentService) {
         this.clientService = clientService;
         this.detailsService = detailsService;
         this.ratingService = ratingService;
@@ -57,8 +56,10 @@ public class ClientController {
     }
 
     @PostMapping("/launch/{id}")
-    public ResponseEntity<ApiResponse<ClientResponse>> incrementLaunches(@PathVariable Long id) {
-        var data = clientService.incrementLaunches(id);
+    public ResponseEntity<ApiResponse<ClientResponse>> incrementLaunches(Authentication authentication,
+            @PathVariable Long id) {
+        User user = (authentication != null && authentication.getPrincipal() instanceof User u) ? u : null;
+        var data = clientService.incrementLaunches(id, user);
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
@@ -79,8 +80,7 @@ public class ClientController {
     public ResponseEntity<ApiResponse<ClientCommentResponse>> addComment(
             Authentication authentication,
             @PathVariable Long id,
-            @RequestBody ClientCommentRequest request
-    ) {
+            @RequestBody ClientCommentRequest request) {
         var user = requireUser(authentication);
         var data = commentService.addComment(id, user, request != null ? request.content() : null);
         return ResponseEntity.ok(ApiResponse.success(data));
@@ -91,8 +91,7 @@ public class ClientController {
     public ResponseEntity<ApiResponse<Void>> deleteComment(
             Authentication authentication,
             @PathVariable Long clientId,
-            @PathVariable Long commentId
-    ) {
+            @PathVariable Long commentId) {
         var user = requireUser(authentication);
         commentService.deleteComment(clientId, commentId, user);
         return ResponseEntity.ok(ApiResponse.success(null));
@@ -103,8 +102,7 @@ public class ClientController {
     public ResponseEntity<ApiResponse<ClientRatingResponse>> submitRating(
             Authentication authentication,
             @PathVariable Long id,
-            @RequestBody ClientRatingRequest request
-    ) {
+            @RequestBody ClientRatingRequest request) {
         var user = requireUser(authentication);
         var data = ratingService.submitRating(id, user, request.rating());
         return ResponseEntity.ok(ApiResponse.success(data));
@@ -114,8 +112,7 @@ public class ClientController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<ClientMyRatingResponse>> getMyRating(
             Authentication authentication,
-            @PathVariable Long id
-    ) {
+            @PathVariable Long id) {
         var user = requireUser(authentication);
         var data = ratingService.getMyRating(id, user);
         return ResponseEntity.ok(ApiResponse.success(data));
@@ -125,8 +122,7 @@ public class ClientController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> removeRating(
             Authentication authentication,
-            @PathVariable Long id
-    ) {
+            @PathVariable Long id) {
         var user = requireUser(authentication);
         ratingService.removeRating(id, user);
         return ResponseEntity.ok(ApiResponse.success(null));

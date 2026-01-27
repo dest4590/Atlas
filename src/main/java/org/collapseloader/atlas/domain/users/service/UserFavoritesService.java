@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.users.service;
 
+import org.collapseloader.atlas.domain.achievements.service.AchievementService;
 import org.collapseloader.atlas.domain.users.dto.request.UserFavoriteRequest;
 import org.collapseloader.atlas.domain.users.dto.response.UserFavoriteResponse;
 import org.collapseloader.atlas.domain.users.entity.User;
@@ -16,10 +17,15 @@ import java.util.Locale;
 public class UserFavoritesService {
     private final UserRepository userRepository;
     private final UserFavoriteRepository userFavoriteRepository;
+    private final AchievementService achievementService;
 
-    public UserFavoritesService(UserRepository userRepository, UserFavoriteRepository userFavoriteRepository) {
+    public UserFavoritesService(
+            UserRepository userRepository,
+            UserFavoriteRepository userFavoriteRepository,
+            AchievementService achievementService) {
         this.userRepository = userRepository;
         this.userFavoriteRepository = userFavoriteRepository;
+        this.achievementService = achievementService;
     }
 
     @Transactional(readOnly = true)
@@ -48,7 +54,21 @@ public class UserFavoritesService {
                 .reference(reference)
                 .metadata(request.metadata())
                 .build();
-        return mapFavorite(userFavoriteRepository.save(favorite));
+
+        var saved = userFavoriteRepository.save(favorite);
+
+        if ("client".equals(type)) {
+            long clientCount = userFavoriteRepository.findByUserId(principal.getId()).stream()
+                    .filter(f -> "client".equals(f.getType()))
+                    .map(UserFavorite::getReference)
+                    .distinct()
+                    .count();
+            if (clientCount >= 5) {
+                achievementService.unlockAchievement(principal.getId(), "COLLECTOR");
+            }
+        }
+
+        return mapFavorite(saved);
     }
 
     @Transactional
@@ -64,8 +84,7 @@ public class UserFavoritesService {
                 favorite.getType(),
                 favorite.getReference(),
                 favorite.getMetadata(),
-                favorite.getCreatedAt()
-        );
+                favorite.getCreatedAt());
     }
 
     private String normalizeType(String value) {

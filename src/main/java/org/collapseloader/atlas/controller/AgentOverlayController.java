@@ -69,7 +69,7 @@ public class AgentOverlayController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/overlay/upload/{os:windows|linux}")
-    public ResponseEntity<ApiResponse<Map<String, String>>> uploadOverlay(@PathVariable("os") String os, @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> uploadOverlay(@PathVariable String os, @RequestParam("file") MultipartFile file) {
         OverlayAsset overlay = resolveOverlay(os);
         return ResponseEntity.ok(ApiResponse.success(storeOverlay(file, overlay)));
     }

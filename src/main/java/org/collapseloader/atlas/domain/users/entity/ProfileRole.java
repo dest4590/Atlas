@@ -6,4 +6,9 @@ public enum ProfileRole {
     ADMIN,
     DEVELOPER,
     OWNER
+    ;
+
+    public boolean isTester() {
+        return this == TESTER;
+    }
 }

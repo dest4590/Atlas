@@ -11,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/v1/admin/clients")
@@ -45,7 +46,7 @@ public class AdminClientController {
         var saved = clientRepository.save(client);
 
         auditLogService.log("CREATE_CLIENT", "CLIENT", saved.getId().toString(),
-                SecurityContextHolder.getContext().getAuthentication()
+                Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())
                         .getName(),
                 "Created client: " + saved.getName());
 
@@ -60,8 +61,8 @@ public class AdminClientController {
                     var saved = clientRepository.save(client);
 
                     auditLogService.log("UPDATE_CLIENT", "CLIENT", saved.getId().toString(),
-                            SecurityContextHolder.getContext()
-                                    .getAuthentication().getName(),
+                            Objects.requireNonNull(SecurityContextHolder.getContext()
+                                    .getAuthentication()).getName(),
                             "Updated client: " + saved.getName());
 
                     return ResponseEntity.ok(saved);
@@ -78,7 +79,7 @@ public class AdminClientController {
             clientRepository.deleteById(id);
 
             auditLogService.log("DELETE_CLIENT", "CLIENT", id.toString(),
-                    SecurityContextHolder.getContext().getAuthentication()
+                    Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())
                             .getName(),
                     "Deleted client: " + clientName);
 

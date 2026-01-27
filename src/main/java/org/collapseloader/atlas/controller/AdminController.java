@@ -21,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -34,6 +35,7 @@ public class AdminController {
     private final org.collapseloader.atlas.domain.audit.AuditLogService auditLogService;
     private final ClientRepository clientRepository;
     private final UserPreferenceRepository userPreferenceRepository;
+    private final org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService;
 
     @GetMapping("/stats")
     @PreAuthorize("hasRole('ADMIN')")
@@ -121,6 +123,10 @@ public class AdminController {
         if (request.profileRole() != null)
             profile.setRole(request.profileRole());
 
+        if (profile.getRole() != null && profile.getRole().isTester()) {
+            achievementService.unlockAchievement(user.getId(), "BETA_TESTER");
+        }
+
         if (request.socialLinks() != null) {
             profile.getSocialLinks().clear();
             for (var linkReq : request.socialLinks()) {
@@ -153,7 +159,7 @@ public class AdminController {
 
         userRepository.save(user);
         auditLogService.log("UPDATE_USER", "USER", user.getId().toString(),
-                SecurityContextHolder.getContext().getAuthentication()
+                Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())
                         .getName(),
                 "Updated user details for " + user.getUsername());
         return ResponseEntity.ok().build();
@@ -171,7 +177,7 @@ public class AdminController {
             @RequestBody org.collapseloader.atlas.domain.news.dto.request.NewsRequest request) {
         var news = newsService.createNews(request);
         auditLogService.log("CREATE_NEWS", "NEWS", news.getId().toString(),
-                SecurityContextHolder.getContext().getAuthentication()
+                Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())
                         .getName(),
                 "Created news article: " + news.getTitle());
         return ResponseEntity.ok(news);
@@ -183,7 +189,7 @@ public class AdminController {
                                                                                 @RequestBody org.collapseloader.atlas.domain.news.dto.request.NewsRequest request) {
         var news = newsService.updateNews(id, request);
         auditLogService.log("UPDATE_NEWS", "NEWS", news.getId().toString(),
-                SecurityContextHolder.getContext().getAuthentication()
+                Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())
                         .getName(),
                 "Updated news article: " + news.getTitle());
         return ResponseEntity.ok(news);
@@ -196,7 +202,7 @@ public class AdminController {
         String title = news != null ? news.getTitle() : "Unknown";
         newsService.deleteNews(id);
         auditLogService.log("DELETE_NEWS", "NEWS", id.toString(),
-                SecurityContextHolder.getContext().getAuthentication()
+                Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())
                         .getName(),
                 "Deleted news article: " + title);
         return ResponseEntity.noContent().build();

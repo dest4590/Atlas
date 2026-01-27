@@ -8,12 +8,8 @@ import java.net.http.HttpResponse;
 import java.security.MessageDigest;
 
 public class CdnMetadataUtil {
-    public record CdnMetadata(String md5, long sizeMb) {
-    }
-
     public static CdnMetadata calculateMetadata(String url) {
-        try {
-            HttpClient client = HttpClient.newHttpClient();
+        try (HttpClient client = HttpClient.newHttpClient()) {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .GET()
@@ -42,5 +38,8 @@ public class CdnMetadataUtil {
             System.err.println("Error calculating metadata for URL " + url + ": " + e.getMessage());
         }
         return null;
+    }
+
+    public record CdnMetadata(String md5, long sizeMb) {
     }
 }

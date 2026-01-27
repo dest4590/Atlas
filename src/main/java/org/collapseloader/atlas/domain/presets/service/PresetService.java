@@ -37,6 +37,7 @@ public class PresetService {
     private final PresetRepository presetRepository;
     private final PresetLikeRepository likeRepository;
     private final PresetCommentRepository commentRepository;
+    private final org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService;
 
     @Transactional(readOnly = true)
     public List<PresetResponse> listPresets(User principal, String query, Long ownerId, boolean mine, int limit) {
@@ -62,7 +63,7 @@ public class PresetService {
             case OWNER_PRIVATE -> presetRepository.findByOwnerId(targetOwner, pageable);
             case OWNER_PUBLIC -> presetRepository.findByOwnerIdAndIsPublicTrue(targetOwner, pageable);
             case SEARCH_PUBLIC ->
-                    presetRepository.findByIsPublicTrueAndNameContainingIgnoreCase(query.trim(), pageable);
+                presetRepository.findByIsPublicTrueAndNameContainingIgnoreCase(query.trim(), pageable);
             default -> presetRepository.findByIsPublicTrue(pageable);
         };
 
@@ -91,11 +92,14 @@ public class PresetService {
         preset.setOwner(principal);
         preset.setName(requireName(request.name()));
         preset.setDescription(normalizeDescription(request.description()));
-        preset.setPublic(request.isPublic() == null || Boolean.TRUE.equals(request.isPublic()));
+        preset.setPublic(request.isPublic() == null || request.isPublic());
         preset.setTheme(new PresetTheme());
         applyTheme(preset.getTheme(), request, false);
 
         var saved = presetRepository.save(preset);
+
+        achievementService.unlockAchievement(principal.getId(), "PRESET_MAX");
+
         return toResponse(saved, false);
     }
 
@@ -113,7 +117,7 @@ public class PresetService {
             preset.setDescription(normalizeDescription(request.description()));
         }
         if (request.isPublic() != null) {
-            preset.setPublic(Boolean.TRUE.equals(request.isPublic()));
+            preset.setPublic(request.isPublic());
         }
         if (preset.getTheme() == null) {
             preset.setTheme(new PresetTheme());
@@ -121,7 +125,7 @@ public class PresetService {
         applyTheme(preset.getTheme(), request, true);
 
         var saved = presetRepository.save(preset);
-        boolean liked = principal != null && likeRepository.existsByPresetIdAndUserId(id, principal.getId());
+        boolean liked = likeRepository.existsByPresetIdAndUserId(id, principal.getId());
         return toResponse(saved, liked);
     }
 
@@ -226,7 +230,8 @@ public class PresetService {
         var comment = commentRepository.findByIdAndPresetId(commentId, presetId)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
         var preset = comment.getPreset();
-        boolean isOwner = preset != null && preset.getOwner() != null && preset.getOwner().getId().equals(principal.getId());
+        boolean isOwner = preset != null && preset.getOwner() != null
+                && preset.getOwner().getId().equals(principal.getId());
         boolean isAuthor = comment.getUser() != null && comment.getUser().getId().equals(principal.getId());
         boolean isAdmin = principal.getRole() == Role.ADMIN;
         if (!isAuthor && !isOwner && !isAdmin) {
@@ -253,7 +258,8 @@ public class PresetService {
         if (preset.isPublic()) {
             return;
         }
-        boolean owner = principal != null && preset.getOwner() != null && preset.getOwner().getId().equals(principal.getId());
+        boolean owner = principal != null && preset.getOwner() != null
+                && preset.getOwner().getId().equals(principal.getId());
         boolean admin = principal != null && principal.getRole() == Role.ADMIN;
         if (!owner && !admin) {
             throw new RuntimeException("Preset is private");
@@ -301,35 +307,54 @@ public class PresetService {
             theme.setEnableCustomCss(Boolean.TRUE.equals(request.enableCustomCSS()));
         }
 
-        if (!patch || request.base100() != null) theme.setBase100(trimToNull(request.base100()));
-        if (!patch || request.base200() != null) theme.setBase200(trimToNull(request.base200()));
-        if (!patch || request.base300() != null) theme.setBase300(trimToNull(request.base300()));
-        if (!patch || request.baseContent() != null) theme.setBaseContent(trimToNull(request.baseContent()));
+        if (!patch || request.base100() != null)
+            theme.setBase100(trimToNull(request.base100()));
+        if (!patch || request.base200() != null)
+            theme.setBase200(trimToNull(request.base200()));
+        if (!patch || request.base300() != null)
+            theme.setBase300(trimToNull(request.base300()));
+        if (!patch || request.baseContent() != null)
+            theme.setBaseContent(trimToNull(request.baseContent()));
 
-        if (!patch || request.primary() != null) theme.setPrimary(trimToNull(request.primary()));
-        if (!patch || request.primaryContent() != null) theme.setPrimaryContent(trimToNull(request.primaryContent()));
+        if (!patch || request.primary() != null)
+            theme.setPrimary(trimToNull(request.primary()));
+        if (!patch || request.primaryContent() != null)
+            theme.setPrimaryContent(trimToNull(request.primaryContent()));
 
-        if (!patch || request.secondary() != null) theme.setSecondary(trimToNull(request.secondary()));
+        if (!patch || request.secondary() != null)
+            theme.setSecondary(trimToNull(request.secondary()));
         if (!patch || request.secondaryContent() != null)
             theme.setSecondaryContent(trimToNull(request.secondaryContent()));
 
-        if (!patch || request.accent() != null) theme.setAccent(trimToNull(request.accent()));
-        if (!patch || request.accentContent() != null) theme.setAccentContent(trimToNull(request.accentContent()));
+        if (!patch || request.accent() != null)
+            theme.setAccent(trimToNull(request.accent()));
+        if (!patch || request.accentContent() != null)
+            theme.setAccentContent(trimToNull(request.accentContent()));
 
-        if (!patch || request.neutral() != null) theme.setNeutral(trimToNull(request.neutral()));
-        if (!patch || request.neutralContent() != null) theme.setNeutralContent(trimToNull(request.neutralContent()));
+        if (!patch || request.neutral() != null)
+            theme.setNeutral(trimToNull(request.neutral()));
+        if (!patch || request.neutralContent() != null)
+            theme.setNeutralContent(trimToNull(request.neutralContent()));
 
-        if (!patch || request.info() != null) theme.setInfo(trimToNull(request.info()));
-        if (!patch || request.infoContent() != null) theme.setInfoContent(trimToNull(request.infoContent()));
+        if (!patch || request.info() != null)
+            theme.setInfo(trimToNull(request.info()));
+        if (!patch || request.infoContent() != null)
+            theme.setInfoContent(trimToNull(request.infoContent()));
 
-        if (!patch || request.success() != null) theme.setSuccess(trimToNull(request.success()));
-        if (!patch || request.successContent() != null) theme.setSuccessContent(trimToNull(request.successContent()));
+        if (!patch || request.success() != null)
+            theme.setSuccess(trimToNull(request.success()));
+        if (!patch || request.successContent() != null)
+            theme.setSuccessContent(trimToNull(request.successContent()));
 
-        if (!patch || request.warning() != null) theme.setWarning(trimToNull(request.warning()));
-        if (!patch || request.warningContent() != null) theme.setWarningContent(trimToNull(request.warningContent()));
+        if (!patch || request.warning() != null)
+            theme.setWarning(trimToNull(request.warning()));
+        if (!patch || request.warningContent() != null)
+            theme.setWarningContent(trimToNull(request.warningContent()));
 
-        if (!patch || request.error() != null) theme.setError(trimToNull(request.error()));
-        if (!patch || request.errorContent() != null) theme.setErrorContent(trimToNull(request.errorContent()));
+        if (!patch || request.error() != null)
+            theme.setError(trimToNull(request.error()));
+        if (!patch || request.errorContent() != null)
+            theme.setErrorContent(trimToNull(request.errorContent()));
     }
 
     private String trimToNull(String value) {
@@ -355,8 +380,7 @@ public class PresetService {
                 toAuthor(preset.getOwner()),
                 liked,
                 preset.getCreatedAt(),
-                preset.getUpdatedAt()
-        );
+                preset.getUpdatedAt());
     }
 
     private PresetCommentResponse toCommentResponse(PresetComment comment) {
@@ -370,8 +394,7 @@ public class PresetService {
                 profile != null ? profile.getNickname() : null,
                 buildAvatarUrl(profile),
                 comment.getContent(),
-                comment.getCreatedAt()
-        );
+                comment.getCreatedAt());
     }
 
     private PresetThemeResponse toTheme(PresetTheme theme) {
@@ -397,8 +420,7 @@ public class PresetService {
                 theme.getWarning(),
                 theme.getWarningContent(),
                 theme.getError(),
-                theme.getErrorContent()
-        );
+                theme.getErrorContent());
     }
 
     private PresetAuthorResponse toAuthor(User owner) {
@@ -410,8 +432,7 @@ public class PresetService {
                 owner.getId(),
                 owner.getUsername(),
                 profile != null ? profile.getNickname() : null,
-                buildAvatarUrl(profile)
-        );
+                buildAvatarUrl(profile));
     }
 
     private String buildAvatarUrl(UserProfile profile) {

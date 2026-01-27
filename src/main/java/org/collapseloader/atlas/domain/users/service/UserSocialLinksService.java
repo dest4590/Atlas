@@ -1,6 +1,6 @@
 package org.collapseloader.atlas.domain.users.service;
 
-import org.collapseloader.atlas.domain.users.dto.request.SocialLinkRequest;
+import org.collapseloader.atlas.domain.achievements.service.AchievementService;
 import org.collapseloader.atlas.domain.users.dto.request.UpdateSocialLinksRequest;
 import org.collapseloader.atlas.domain.users.dto.response.SocialLinkResponse;
 import org.collapseloader.atlas.domain.users.entity.*;
@@ -17,10 +17,15 @@ import java.util.List;
 public class UserSocialLinksService {
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
+    private final AchievementService achievementService;
 
-    public UserSocialLinksService(UserRepository userRepository, UserProfileRepository userProfileRepository) {
+    public UserSocialLinksService(
+            UserRepository userRepository,
+            UserProfileRepository userProfileRepository,
+            AchievementService achievementService) {
         this.userRepository = userRepository;
         this.userProfileRepository = userProfileRepository;
+        this.achievementService = achievementService;
     }
 
     @Transactional(readOnly = true)
@@ -38,12 +43,17 @@ public class UserSocialLinksService {
         var profile = ensureProfile(user);
         if (profile.getSocialLinks() == null) {
             profile.setSocialLinks(new ArrayList<>());
-        } else {
-            profile.getSocialLinks().clear();
         }
 
+        var existingByPlatform = new LinkedHashMap<SocialPlatform, SocialLink>();
+        for (var link : profile.getSocialLinks()) {
+            if (link != null && link.getPlatform() != null) {
+                existingByPlatform.put(link.getPlatform(), link);
+            }
+        }
+
+        var desiredByPlatform = new LinkedHashMap<SocialPlatform, String>();
         if (request != null && request.links() != null) {
-            var uniqueLinks = new LinkedHashMap<SocialPlatform, SocialLinkRequest>();
             for (var link : request.links()) {
                 if (link == null || link.platform() == null) {
                     continue;
@@ -52,12 +62,21 @@ public class UserSocialLinksService {
                 if (url == null) {
                     continue;
                 }
-                uniqueLinks.put(link.platform(), new SocialLinkRequest(link.platform(), url));
+                desiredByPlatform.put(link.platform(), url);
             }
-            for (var link : uniqueLinks.values()) {
+        }
+
+        profile.getSocialLinks().removeIf(link -> link == null || link.getPlatform() == null
+                || !desiredByPlatform.containsKey(link.getPlatform()));
+
+        for (var entry : desiredByPlatform.entrySet()) {
+            var existing = existingByPlatform.get(entry.getKey());
+            if (existing != null) {
+                existing.setUrl(entry.getValue());
+            } else {
                 var entity = SocialLink.builder()
-                        .platform(link.platform())
-                        .url(link.url())
+                        .platform(entry.getKey())
+                        .url(entry.getValue())
                         .profile(profile)
                         .build();
                 profile.getSocialLinks().add(entity);
@@ -65,6 +84,11 @@ public class UserSocialLinksService {
         }
 
         var savedProfile = userProfileRepository.save(profile);
+
+        if (savedProfile.getSocialLinks() != null && !savedProfile.getSocialLinks().isEmpty()) {
+            achievementService.unlockAchievement(principal.getId(), "SOCIAL_BUTTERFLY");
+        }
+
         return mapSocialLinks(savedProfile.getSocialLinks());
     }
 

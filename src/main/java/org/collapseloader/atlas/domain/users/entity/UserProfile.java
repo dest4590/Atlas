@@ -11,15 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(
-        name = "user_profiles",
-        indexes = {
-                @Index(name = "user_profiles_user_idx", columnList = "user_id"),
-                @Index(name = "user_profiles_nickname_idx", columnList = "nickname"),
-                @Index(name = "user_profiles_created_idx", columnList = "created_at"),
-                @Index(name = "user_profiles_updated_idx", columnList = "updated_at")
-        }
-)
+@Table(name = "user_profiles", indexes = {
+        @Index(name = "user_profiles_user_idx", columnList = "user_id"),
+        @Index(name = "user_profiles_nickname_idx", columnList = "nickname"),
+        @Index(name = "user_profiles_created_idx", columnList = "created_at"),
+        @Index(name = "user_profiles_updated_idx", columnList = "updated_at")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -62,6 +59,14 @@ public class UserProfile {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @Column(name = "total_playtime_seconds", nullable = false)
+    @Builder.Default
+    private long totalPlaytimeSeconds = 0L;
+
+    @Column(name = "launches_count", nullable = false)
+    @Builder.Default
+    private long launchesCount = 0L;
 
     private static String normalizeNickname(String value) {
         if (value == null) {

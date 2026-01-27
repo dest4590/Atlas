@@ -10,11 +10,9 @@ public final class DjangoPasswordUtils {
     private static byte[] pbkdf2(
             char[] password,
             byte[] salt,
-            int iterations,
-            int keyLength
+            int iterations
     ) throws Exception {
-
-        PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, keyLength);
+        PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, 256);
         SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
         return skf.generateSecret(spec).getEncoded();
     }
@@ -29,8 +27,7 @@ public final class DjangoPasswordUtils {
             byte[] hash = pbkdf2(
                     raw.toString().toCharArray(),
                     salt.getBytes(StandardCharsets.UTF_8),
-                    iterations,
-                    256
+                    iterations
             );
 
             String actual = Base64.getEncoder().encodeToString(hash);

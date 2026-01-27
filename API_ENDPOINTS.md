@@ -1,11 +1,12 @@
 # Atlas API Endpoints
 
 > Protected endpoints expect an `Authorization: Bearer <token>` header. Tokens are issued by `/api/v1/auth/login` or
-`/api/v1/auth/register` and appear under `AuthResponse.token`. JSON payloads require `Content-Type: application/json`;
+> `/api/v1/auth/register` and appear under `AuthResponse.token`. JSON payloads require `Content-Type: application/json`;
 > file uploads must use `multipart/form-data`. Most responses are wrapped inside `ApiResponse`, while download endpoints
 > stream binary payloads and `/agent-overlay/checksums` returns raw JSON.
 >
 > **Common enums & hints:**
+>
 > - `UserStatus`: `ONLINE`, `OFFLINE`.
 > - `SocialPlatform`: `DISCORD`, `TELEGRAM`, `GITHUB`, `YOUTUBE`.
 > - `Version`: `1.21.11`, `1.21.8`, `1.21.4`, `1.16.5`, `1.8.9` (strings or enum names like `v_1_21_11`).
@@ -46,7 +47,7 @@
 | `/api/presets/{id}/comments`             | POST   | Bearer   | Adds comment; body `{ "text": string }`, trims and caps at 2000 chars.                                                                                                                                                                                                                                                                                                                                                       |
 | `/api/presets/{id}/comments/{commentId}` | DELETE | Bearer   | Deletes comment if you are the author, preset owner, or admin.                                                                                                                                                                                                                                                                                                                                                               |
 
-### Client catalog & downloads
+### Client catalog and downloads
 
 | Endpoint                        | Method | Auth | Payload / Notes                                                                                                          |
 |---------------------------------|--------|------|--------------------------------------------------------------------------------------------------------------------------|
@@ -79,28 +80,33 @@
 
 ## User self-service (requires Bearer)
 
-| Endpoint                                  | Method | Auth   | Payload / Notes                                                                                                   |
-|-------------------------------------------|--------|--------|-------------------------------------------------------------------------------------------------------------------|
-| `/api/v1/users/me`                        | GET    | Bearer | Returns `UserMeResponse` (account, profile, status).                                                              |
-| `/api/v1/users/{userId}`                  | GET    | Bearer | Public profile + friendship status versus you.                                                                    |
-| `/api/v1/users/search?q=...&limit=...`    | GET    | Bearer | `q` is required; `limit` defaults to 20.                                                                          |
-| `/api/v1/users/me/profile`                | PATCH  | Bearer | `{"nickname": string}`.                                                                                           |
-| `/api/v1/users/me/avatar`                 | POST   | Bearer | Multipart `avatar` file (image).                                                                                  |
-| `/api/v1/users/me/avatar/reset`           | POST   | Bearer | No body; resets avatar.                                                                                           |
-| `/api/v1/users/me/social-links`           | PUT    | Bearer | `{"links": [{"platform": <SocialPlatform>, "url": "https://..."}, ...]}`. Replaces all social links.              |
-| `/api/v1/users/me/social-links`           | GET    | Bearer | Returns saved social links.                                                                                       |
-| `/api/v1/users/me/status`                 | GET    | Bearer | Returns your `UserStatusResponse`.                                                                                |
-| `/api/v1/users/me/status`                 | PUT    | Bearer | `{"status": "ONLINE"                                                                                              |"OFFLINE", "client_name": string (optional)}`. |
-| `/api/v1/users/{userId}/status`           | GET    | None   | Public status for another user.                                                                                   |
-| `/api/v1/users/me/accounts`               | GET    | Bearer | Lists linked external accounts.                                                                                   |
-| `/api/v1/users/me/accounts`               | POST   | Bearer | `{"provider": string, "external_id": string, "display_name": string, "metadata": {...}}`. Metadata optional JSON. |
-| `/api/v1/users/me/accounts/{accountId}`   | DELETE | Bearer | Deletes an external account.                                                                                      |
-| `/api/v1/users/me/favorites`              | GET    | Bearer | Lists favorites.                                                                                                  |
-| `/api/v1/users/me/favorites`              | POST   | Bearer | `{"type": string, "reference": string, "metadata": {...}}`. Metadata optional JSON.                               |
-| `/api/v1/users/me/favorites/{favoriteId}` | DELETE | Bearer | Removes favorite.                                                                                                 |
-| `/api/v1/users/me/preferences`            | GET    | Bearer | Lists preferences.                                                                                                |
-| `/api/v1/users/me/preferences/{key}`      | PUT    | Bearer | Body is raw JSON (true, 123, "special", {"foo":1}, [1,2]).                                                        |
-| `/api/v1/users/me/preferences/{key}`      | DELETE | Bearer | Removes the preference.                                                                                           |
+| Endpoint | Method | Auth | Payload / Notes |
+| ----------------------------------------- | ------ | ------ | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `/api/v1/users/me`                        | GET | Bearer | Returns `UserMeResponse` (account, profile, status). |
+| `/api/v1/users/{userId}`                  | GET | Bearer | Public profile and friendship status versus you. |
+| `/api/v1/users/search?q=...&limit=...`    | GET | Bearer | `q` is required; `limit` defaults to 20. |
+| `/api/v1/users/me/profile`                | PATCH | Bearer | `{"nickname": string}`. |
+| `/api/v1/users/me/avatar`                 | POST | Bearer | Multipart `avatar` file (image). |
+| `/api/v1/users/me/avatar/reset`           | POST | Bearer | Without body; resets avatar. |
+| `/api/v1/users/me/social-links`           | PUT | Bearer |
+`{"links": [{"platform": <SocialPlatform>, "url": "https://..."}, ...]}`. Replaces all social links. |
+| `/api/v1/users/me/social-links`           | GET | Bearer | Returns saved social links. |
+| `/api/v1/users/me/status`                 | GET | Bearer | Returns your `UserStatusResponse`. |
+| `/api/v1/users/me/status`                 | PUT | Bearer |
+`{"status": "ONLINE"                                                                                              | "OFFLINE", "client_name": string (optional)}`. |
+| `/api/v1/users/{userId}/status`           | GET | None | Public status for another user. |
+| `/api/v1/users/me/accounts`               | GET | Bearer | Lists linked external accounts. |
+| `/api/v1/users/me/accounts`               | POST | Bearer |
+`{"provider": string, "external_id": string, "display_name": string, "metadata": {...}}`. Metadata optional JSON. |
+| `/api/v1/users/me/accounts/{accountId}`   | DELETE | Bearer | Deletes an external account. |
+| `/api/v1/users/me/favorites`              | GET | Bearer | Lists favorites. |
+| `/api/v1/users/me/favorites`              | POST | Bearer |
+`{"type": string, "reference": string, "metadata": {...}}`. Metadata optional JSON. |
+| `/api/v1/users/me/favorites/{favoriteId}` | DELETE | Bearer | Removes favorite. |
+| `/api/v1/users/me/preferences`            | GET | Bearer | Lists preferences. |
+| `/api/v1/users/me/preferences/{key}`      | PUT | Bearer | Body is raw JSON (true, 123, "special", {"foo":
+1}, [1,2]). |
+| `/api/v1/users/me/preferences/{key}`      | DELETE | Bearer | Removes the preference. |
 
 ## Friends (requires Bearer)
 
@@ -115,26 +121,41 @@
 | `/api/v1/friends/block`                        | POST   | Bearer | `{"user_id": <id>}` to block.                                        |
 | `/api/v1/friends/unblock`                      | POST   | Bearer | `{"user_id": <id>}` to unblock.                                      |
 | `/api/v1/friends/{userId}`                     | DELETE | Bearer | Removes friend.                                                      |
+| ---------------------------------------------- | ------ | ------ | -------------------------------------------------------------------- |
+
+## Achievements (requires Bearer)
+
+| Endpoint                          | Method | Auth   | Payload / Notes                                  |
+|-----------------------------------|--------|--------|--------------------------------------------------|
+| `/api/v1/achievements`            | GET    | Bearer | Lists all available achievements.                |
+| `/api/v1/achievements/users/{id}` | GET    | Bearer | Lists unlocked achievements for a specific user. |
 
 ## Agent & overlay uploads (Admin)
 
-| Endpoint               | Method | Auth           | Payload / Notes                                                                                               |
-|------------------------|--------|----------------|---------------------------------------------------------------------------------------------------------------|
-| `/agent/upload`        | POST   | Bearer (ADMIN) | Multipart `file` (.jar). Returns storage path + `agent_hash` (also accepts legacy `/agent/upload/windows      |linux`).  |
+| Endpoint               | Method | Auth           | Payload / Notes                                                                                               | -------- |
+|------------------------|--------|----------------|---------------------------------------------------------------------------------------------------------------|----------|
+| `/agent/upload`        | POST   | Bearer (ADMIN) | Multipart `file` (.jar). Returns storage path + `agent_hash` (also accepts legacy `/agent/upload/windows      | linux`). |
 | `/overlay/upload/{os}` | POST   | Bearer (ADMIN) | `os` `windows` or `linux`. Multipart `file` (.dll for Windows, .so for Linux). Returns path + `overlay_hash`. |
 
 ## Admin operations
 
 ### Stats & users
 
-| Endpoint                   | Method | Auth           | Payload / Notes                                                                                                                                                                                                                                                                                                                           |
-|----------------------------|--------|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `/api/v1/admin/stats`      | GET    | Bearer (ADMIN) | Returns counts: `users`, `news`, `clients`.                                                                                                                                                                                                                                                                                               |
-| `/api/v1/admin/news`       | GET    | Bearer (ADMIN) | Returns all news rows.                                                                                                                                                                                                                                                                                                                    |
-| `/api/v1/admin/users`      | GET    | Bearer (ADMIN) | Lists users (`UserAdminResponse`).                                                                                                                                                                                                                                                                                                        |
-| `/api/v1/admin/users/{id}` | GET    | Bearer (ADMIN) | Returns `AdminUserDetailResponse` with profile, social links, preferences.                                                                                                                                                                                                                                                                |
-| `/api/v1/admin/users/{id}` | PUT    | Bearer (ADMIN) | Body: `username`, `enabled` (boolean), `role` (`USER`                                                                                                                                                                                                                                                                                     |`ADMIN`), `nickname`, `avatarPath`, `profileRole` (`ProfileRole`), `socialLinks` (list of `{id?, platform, url}`), `preferences` (list of `{key, value}` where `value` is JSON). |
-| `/api/v1/admin/status`     | GET    | Bearer (ADMIN) | Returns `ApiResponse` with detailed server info: project name, version, environment, current timestamp, `started_at`, `uptime_seconds`, and subsystem checks (database, redis, storage). Each check exposes `status`, `detail`, and `info` (e.g., DB URL redacted + latency/version, Redis host/port/latency/ping, storage path + space). |
+| Endpoint | Method | Auth | Payload / Notes |
+| -------------------------- | ------ | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/api/v1/admin/stats`      | GET | Bearer (ADMIN) | Returns counts: `users`, `news`, `clients`. |
+| `/api/v1/admin/news`       | GET | Bearer (ADMIN) | Returns all news rows. |
+| `/api/v1/admin/users`      | GET | Bearer (ADMIN) | Lists users (`UserAdminResponse`). |
+| `/api/v1/admin/users/{id}` | GET | Bearer (ADMIN) | Returns `AdminUserDetailResponse` with profile, social links,
+preferences. |
+| `/api/v1/admin/users/{id}` | PUT | Bearer (ADMIN) | Body: `username`, `enabled` (boolean), `role` (
+`USER`                                                                                                                                                                                                                                                                                     |
+`ADMIN`), `nickname`, `avatarPath`, `profileRole` (`ProfileRole`), `socialLinks` (list of `{id?, platform, url}`),
+`preferences` (list of `{key, value}` where `value` is JSON). |
+| `/api/v1/admin/status`     | GET | Bearer (ADMIN) | Returns `ApiResponse` with detailed server info: project name,
+version, environment, current timestamp, `started_at`, `uptime_seconds`, and subsystem checks (database, redis,
+storage). Each check exposes `status`, `detail`, and `info` (e.g., DB URL redacted + latency/version, Redis
+host/port/latency/ping, storage path + space). |
 
 ### Clients
 

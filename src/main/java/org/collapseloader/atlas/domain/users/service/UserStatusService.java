@@ -16,24 +16,32 @@ public class UserStatusService {
     private static final String FIELD_STATUS = "status";
     private static final String FIELD_CLIENT_NAME = "clientName";
     private static final String FIELD_UPDATED_AT = "updatedAt";
+    private static final String FIELD_STARTED_AT = "startedAt";
 
     private final StringRedisTemplate redisTemplate;
+    private final org.collapseloader.atlas.domain.users.repository.UserProfileRepository userProfileRepository;
+    private final org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService;
 
-    public UserStatusService(StringRedisTemplate redisTemplate) {
+    public UserStatusService(
+            StringRedisTemplate redisTemplate,
+            org.collapseloader.atlas.domain.users.repository.UserProfileRepository userProfileRepository,
+            org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService) {
         this.redisTemplate = redisTemplate;
+        this.userProfileRepository = userProfileRepository;
+        this.achievementService = achievementService;
     }
 
     public UserStatusResponse getStatus(Long userId) {
         HashOperations<String, String, String> ops = redisTemplate.opsForHash();
         Map<String, String> data = ops.entries(key(userId));
         if (data == null || data.isEmpty()) {
-            return new UserStatusResponse(UserStatus.OFFLINE, null, null);
+            return new UserStatusResponse(UserStatus.OFFLINE, null, null, null);
         }
         return new UserStatusResponse(
                 parseStatus(data.get(FIELD_STATUS)),
                 parseClientName(data.get(FIELD_CLIENT_NAME)),
-                parseUpdatedAt(data.get(FIELD_UPDATED_AT))
-        );
+                parseUpdatedAt(data.get(FIELD_UPDATED_AT)),
+                parseUpdatedAt(data.get(FIELD_STARTED_AT)));
     }
 
     public UserStatusResponse setStatus(Long userId, UserStatus status, String clientName) {
@@ -43,16 +51,57 @@ public class UserStatusService {
         HashOperations<String, String, String> ops = redisTemplate.opsForHash();
         String key = key(userId);
 
+        Map<String, String> currentData = ops.entries(key);
+        String currentClientName = currentData.get(FIELD_CLIENT_NAME);
+        UserStatus currentStatus = parseStatus(currentData.get(FIELD_STATUS));
+
         Map<String, String> updates = new HashMap<>();
         updates.put(FIELD_STATUS, status.name());
         updates.put(FIELD_UPDATED_AT, String.valueOf(Instant.now().toEpochMilli()));
-        ops.putAll(key, updates);
 
-        if (status == UserStatus.ONLINE && clientName != null && !clientName.isBlank()) {
-            ops.put(key, FIELD_CLIENT_NAME, clientName);
+        if (status == UserStatus.ONLINE) {
+            if (clientName != null && !clientName.isBlank()) {
+                updates.put(FIELD_CLIENT_NAME, clientName);
+            }
+
+            // Set startedAt if we are just coming online, or if the client changed
+            boolean isNewSession = currentStatus != UserStatus.ONLINE
+                    || (clientName != null && !clientName.equals(currentClientName));
+
+            if (isNewSession) {
+                updates.put(FIELD_STARTED_AT, String.valueOf(Instant.now().toEpochMilli()));
+            }
         } else {
+            if (currentStatus == UserStatus.ONLINE) {
+                String startedAtStr = currentData.get(FIELD_STARTED_AT);
+                if (startedAtStr != null) {
+                    try {
+                        long startedAt = Long.parseLong(startedAtStr);
+                        long elapsedSeconds = (Instant.now().toEpochMilli() - startedAt) / 1000;
+                        if (elapsedSeconds > 0) {
+                            var profile = userProfileRepository.findByUserId(userId).orElse(null);
+                            if (profile != null) {
+                                long total = profile.getTotalPlaytimeSeconds() + elapsedSeconds;
+                                profile.setTotalPlaytimeSeconds(total);
+                                userProfileRepository.save(profile);
+
+                                if (total >= 3600) { // 1 hour
+                                    achievementService.unlockAchievement(userId, "PLAYED_1Hour");
+                                }
+                                if (total >= 36000) { // 10 hours
+                                    achievementService.unlockAchievement(userId, "PLAYED_10Hours");
+                                }
+                            }
+                        }
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+            }
             ops.delete(key, FIELD_CLIENT_NAME);
+            ops.delete(key, FIELD_STARTED_AT);
         }
+
+        ops.putAll(key, updates);
 
         return getStatus(userId);
     }
