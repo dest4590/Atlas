@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.collapseloader.atlas.domain.achievements.dto.AchievementResponse;
 import org.collapseloader.atlas.domain.achievements.dto.UserAchievementResponse;
 import org.collapseloader.atlas.domain.achievements.service.AchievementService;
+import org.collapseloader.atlas.domain.users.entity.User;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +27,12 @@ public class AchievementController {
     @GetMapping("/users/{userId}")
     public ResponseEntity<List<UserAchievementResponse>> getUserAchievements(@PathVariable Long userId) {
         return ResponseEntity.ok(achievementService.getUserAchievements(userId));
+    }
+
+    @PostMapping("/unlock/{key}")
+    public ResponseEntity<Void> unlockAchievement(@AuthenticationPrincipal User user, @PathVariable String key) {
+        achievementService.unlockAchievement(user.getId(), key);
+        return ResponseEntity.ok().build();
     }
 
     @EventListener(ApplicationReadyEvent.class)

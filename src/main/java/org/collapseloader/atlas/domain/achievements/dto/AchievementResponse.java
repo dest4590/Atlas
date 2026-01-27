@@ -12,4 +12,5 @@ public class AchievementResponse {
     private String key;
     private String icon;
     private boolean hidden;
+    private Double receivePercentage;
 }

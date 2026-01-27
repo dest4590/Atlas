@@ -84,7 +84,9 @@ public class AuthService {
         userStatusService.setStatus(user.getId(), UserStatus.ONLINE, null);
 
         var profile = user.getProfile();
+
         if (profile != null && profile.getRole() != null && profile.getRole().isTester()) {
+            achievementService.unlockAchievement(user.getId(), "WELCOME");
             achievementService.unlockAchievement(user.getId(), "BETA_TESTER");
         }
 

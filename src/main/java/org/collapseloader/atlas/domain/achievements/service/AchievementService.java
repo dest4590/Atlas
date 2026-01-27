@@ -25,8 +25,21 @@ public class AchievementService {
 
     @Transactional(readOnly = true)
     public List<AchievementResponse> getAllAchievements() {
-        return achievementRepository.findAll().stream()
-                .map(this::mapToResponse)
+        long totalUsers = userRepository.count();
+
+        if (totalUsers == 0)
+            totalUsers = 1;
+
+        List<Achievement> achievements = achievementRepository.findAll();
+        long finalTotalUsers = totalUsers;
+
+        return achievements.stream()
+                .map(a -> {
+                    long count = userAchievementRepository.countByAchievementId(a.getId());
+                    double percentage = (double) count / finalTotalUsers * 100.0;
+                    percentage = Math.round(percentage * 10.0) / 10.0;
+                    return mapToResponse(a, percentage);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -74,11 +87,22 @@ public class AchievementService {
         }
     }
 
-    private AchievementResponse mapToResponse(Achievement achievement) {
+    private AchievementResponse mapToResponse(Achievement achievement, Double percentage) {
         return new AchievementResponse(
                 achievement.getId(),
                 achievement.getKey(),
                 achievement.getIcon(),
-                achievement.isHidden());
+                achievement.isHidden(),
+                percentage);
+    }
+
+    private AchievementResponse mapToResponse(Achievement achievement) {
+        long totalUsers = userRepository.count();
+        if (totalUsers == 0)
+            totalUsers = 1;
+        long count = userAchievementRepository.countByAchievementId(achievement.getId());
+        double percentage = (double) count / totalUsers * 100.0;
+        percentage = Math.round(percentage * 10.0) / 10.0;
+        return mapToResponse(achievement, percentage);
     }
 }

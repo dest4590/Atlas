@@ -64,7 +64,6 @@ public class UserStatusService {
                 updates.put(FIELD_CLIENT_NAME, clientName);
             }
 
-            // Set startedAt if we are just coming online, or if the client changed
             boolean isNewSession = currentStatus != UserStatus.ONLINE
                     || (clientName != null && !clientName.equals(currentClientName));
 
@@ -85,10 +84,10 @@ public class UserStatusService {
                                 profile.setTotalPlaytimeSeconds(total);
                                 userProfileRepository.save(profile);
 
-                                if (total >= 3600) { // 1 hour
+                                if (total >= 3600) {
                                     achievementService.unlockAchievement(userId, "PLAYED_1Hour");
                                 }
-                                if (total >= 36000) { // 10 hours
+                                if (total >= 36000) {
                                     achievementService.unlockAchievement(userId, "PLAYED_10Hours");
                                 }
                             }
