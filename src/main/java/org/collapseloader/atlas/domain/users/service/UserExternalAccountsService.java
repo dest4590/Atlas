@@ -1,5 +1,7 @@
 package org.collapseloader.atlas.domain.users.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.collapseloader.atlas.domain.users.dto.request.UserExternalAccountRequest;
 import org.collapseloader.atlas.domain.users.dto.response.UserExternalAccountResponse;
 import org.collapseloader.atlas.domain.users.entity.User;
@@ -16,13 +18,16 @@ import java.util.Locale;
 public class UserExternalAccountsService {
     private final UserRepository userRepository;
     private final UserExternalAccountRepository userExternalAccountRepository;
+    private final ObjectMapper objectMapper;
 
     public UserExternalAccountsService(
             UserRepository userRepository,
-            UserExternalAccountRepository userExternalAccountRepository
+            UserExternalAccountRepository userExternalAccountRepository,
+            ObjectMapper objectMapper
     ) {
         this.userRepository = userRepository;
         this.userExternalAccountRepository = userExternalAccountRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional(readOnly = true)
@@ -68,10 +73,17 @@ public class UserExternalAccountsService {
                 account.getProvider(),
                 account.getExternalId(),
                 account.getDisplayName(),
-                account.getMetadata(),
+                normalizeMetadata(account.getMetadata()),
                 account.getCreatedAt(),
                 account.getUpdatedAt()
         );
+    }
+
+    private Object normalizeMetadata(JsonNode metadata) {
+        if (metadata == null || metadata.isNull()) {
+            return null;
+        }
+        return objectMapper.convertValue(metadata, Object.class);
     }
 
     private String normalizeProvider(String value) {

@@ -1,5 +1,7 @@
 package org.collapseloader.atlas.domain.users.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.collapseloader.atlas.domain.achievements.service.AchievementService;
 import org.collapseloader.atlas.domain.users.dto.request.UserFavoriteRequest;
 import org.collapseloader.atlas.domain.users.dto.response.UserFavoriteResponse;
@@ -18,14 +20,17 @@ public class UserFavoritesService {
     private final UserRepository userRepository;
     private final UserFavoriteRepository userFavoriteRepository;
     private final AchievementService achievementService;
+    private final ObjectMapper objectMapper;
 
     public UserFavoritesService(
             UserRepository userRepository,
             UserFavoriteRepository userFavoriteRepository,
-            AchievementService achievementService) {
+            AchievementService achievementService,
+            ObjectMapper objectMapper) {
         this.userRepository = userRepository;
         this.userFavoriteRepository = userFavoriteRepository;
         this.achievementService = achievementService;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional(readOnly = true)
@@ -83,8 +88,15 @@ public class UserFavoritesService {
                 favorite.getId(),
                 favorite.getType(),
                 favorite.getReference(),
-                favorite.getMetadata(),
+                normalizeMetadata(favorite.getMetadata()),
                 favorite.getCreatedAt());
+    }
+
+    private Object normalizeMetadata(JsonNode metadata) {
+        if (metadata == null || metadata.isNull()) {
+            return null;
+        }
+        return objectMapper.convertValue(metadata, Object.class);
     }
 
     private String normalizeType(String value) {

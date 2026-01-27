@@ -29,8 +29,7 @@ public class FriendshipService {
     public FriendshipService(
             FriendRequestRepository friendRequestRepository,
             UserRepository userRepository,
-            UserStatusService userStatusService
-    ) {
+            UserStatusService userStatusService) {
         this.friendRequestRepository = friendRequestRepository;
         this.userRepository = userRepository;
         this.userStatusService = userStatusService;
@@ -48,9 +47,11 @@ public class FriendshipService {
     public List<FriendRequestResponse> getRequests(User principal, RequestType type) {
         List<FriendRequest> requests = switch (type) {
             case INCOMING ->
-                    friendRequestRepository.findIncomingRequests(principal.getId(), FriendRequestStatus.PENDING);
+                friendRequestRepository.findIncomingRequests(principal.getId(), FriendRequestStatus.PENDING);
             case OUTGOING ->
-                    friendRequestRepository.findOutgoingRequests(principal.getId(), FriendRequestStatus.PENDING);
+                friendRequestRepository.findOutgoingRequests(principal.getId(), FriendRequestStatus.PENDING);
+            case BLOCKED ->
+                friendRequestRepository.findByStatusForUser(principal.getId(), FriendRequestStatus.BLOCKED);
             case ALL -> friendRequestRepository.findByStatusForUser(principal.getId(), FriendRequestStatus.PENDING);
         };
         return requests.stream()
@@ -203,8 +204,7 @@ public class FriendshipService {
                         user.getId(),
                         user.getUsername(),
                         user.getProfile() == null ? null : user.getProfile().getNickname(),
-                        statusByUserId.get(user.getId())
-                ))
+                        statusByUserId.get(user.getId())))
                 .toList();
     }
 
@@ -226,8 +226,7 @@ public class FriendshipService {
                 friend.getId(),
                 friend.getUsername(),
                 friend.getProfile() == null ? null : friend.getProfile().getNickname(),
-                userStatusService.getStatus(friend.getId())
-        );
+                userStatusService.getStatus(friend.getId()));
     }
 
     private FriendRequestResponse mapRequestResponse(FriendRequest request) {
@@ -236,19 +235,18 @@ public class FriendshipService {
                 new FriendResponse(
                         request.getRequester().getId(),
                         request.getRequester().getUsername(),
-                        request.getRequester().getProfile() == null ? null : request.getRequester().getProfile().getNickname(),
-                        userStatusService.getStatus(request.getRequester().getId())
-                ),
+                        request.getRequester().getProfile() == null ? null
+                                : request.getRequester().getProfile().getNickname(),
+                        userStatusService.getStatus(request.getRequester().getId())),
                 new FriendResponse(
                         request.getAddressee().getId(),
                         request.getAddressee().getUsername(),
-                        request.getAddressee().getProfile() == null ? null : request.getAddressee().getProfile().getNickname(),
-                        userStatusService.getStatus(request.getAddressee().getId())
-                ),
+                        request.getAddressee().getProfile() == null ? null
+                                : request.getAddressee().getProfile().getNickname(),
+                        userStatusService.getStatus(request.getAddressee().getId())),
                 request.getStatus().name().toLowerCase(Locale.ROOT),
                 request.getCreatedAt(),
-                request.getUpdatedAt()
-        );
+                request.getUpdatedAt());
     }
 
     private Map<Long, String> buildFriendshipStatusMap(User principal, List<FriendRequest> requests) {
@@ -275,6 +273,7 @@ public class FriendshipService {
     public enum RequestType {
         INCOMING,
         OUTGOING,
+        BLOCKED,
         ALL;
 
         public static RequestType from(String value) {
@@ -283,6 +282,7 @@ public class FriendshipService {
             }
             return switch (value.trim().toLowerCase(Locale.ROOT)) {
                 case "outgoing", "sent" -> OUTGOING;
+                case "blocked" -> BLOCKED;
                 case "all" -> ALL;
                 default -> INCOMING;
             };

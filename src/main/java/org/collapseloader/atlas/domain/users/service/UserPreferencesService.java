@@ -17,14 +17,16 @@ import java.util.Locale;
 public class UserPreferencesService {
     private final UserRepository userRepository;
     private final UserPreferenceRepository userPreferenceRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     public UserPreferencesService(
             UserRepository userRepository,
-            UserPreferenceRepository userPreferenceRepository
+            UserPreferenceRepository userPreferenceRepository,
+            ObjectMapper objectMapper
     ) {
         this.userRepository = userRepository;
         this.userPreferenceRepository = userPreferenceRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional(readOnly = true)
@@ -74,7 +76,7 @@ public class UserPreferencesService {
     private UserPreferenceResponse mapPreference(UserPreference preference) {
         return new UserPreferenceResponse(
                 preference.getKey(),
-                preference.getValue(),
+                normalizeValue(preference.getValue()),
                 preference.getCreatedAt(),
                 preference.getUpdatedAt());
     }
@@ -85,5 +87,12 @@ public class UserPreferencesService {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed.toLowerCase(Locale.ROOT);
+    }
+
+    private Object normalizeValue(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        return objectMapper.convertValue(node, Object.class);
     }
 }
