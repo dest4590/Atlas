@@ -44,6 +44,9 @@ spring:
       whitelabel:
         enabled: true
 
+  thymeleaf:
+    check-template-location: false
+
 logging:
   level:
     root: INFO
