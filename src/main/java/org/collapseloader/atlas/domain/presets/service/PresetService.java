@@ -11,7 +11,9 @@ import org.collapseloader.atlas.domain.presets.entity.Preset;
 import org.collapseloader.atlas.domain.presets.entity.PresetComment;
 import org.collapseloader.atlas.domain.presets.entity.PresetLike;
 import org.collapseloader.atlas.domain.presets.entity.PresetTheme;
+import org.collapseloader.atlas.domain.presets.entity.PresetDownload;
 import org.collapseloader.atlas.domain.presets.repository.PresetCommentRepository;
+import org.collapseloader.atlas.domain.presets.repository.PresetDownloadRepository;
 import org.collapseloader.atlas.domain.presets.repository.PresetLikeRepository;
 import org.collapseloader.atlas.domain.presets.repository.PresetRepository;
 import org.collapseloader.atlas.domain.users.entity.Role;
@@ -39,11 +41,12 @@ public class PresetService {
     private final PresetRepository presetRepository;
     private final PresetLikeRepository likeRepository;
     private final PresetCommentRepository commentRepository;
+    private final PresetDownloadRepository downloadRepository;
     private final org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService;
 
     @Transactional(readOnly = true)
     public List<PresetResponse> listPresets(User principal, String query, Long ownerId, boolean mine, String sort,
-                                            int limit) {
+            int limit) {
         int size = Math.min(Math.max(limit, 1), 100);
         boolean includePrivate = false;
         Long targetOwner = ownerId;
@@ -67,7 +70,7 @@ public class PresetService {
             case OWNER_PRIVATE -> presetRepository.findByOwnerId(targetOwner, pageable);
             case OWNER_PUBLIC -> presetRepository.findByOwnerIdAndIsPublicTrue(targetOwner, pageable);
             case SEARCH_PUBLIC ->
-                    presetRepository.findByIsPublicTrueAndNameContainingIgnoreCase(query.trim(), pageable);
+                presetRepository.findByIsPublicTrueAndNameContainingIgnoreCase(query.trim(), pageable);
             default -> presetRepository.findByIsPublicTrue(pageable);
         };
 
@@ -183,7 +186,18 @@ public class PresetService {
         var preset = presetRepository.findWithOwnerById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Preset not found"));
         requireViewPermission(preset, principal);
-        preset.setDownloadsCount(preset.getDownloadsCount() + 1);
+
+        if (principal != null) {
+            if (!downloadRepository.existsByPresetIdAndUserId(id, principal.getId())) {
+                var download = PresetDownload.builder()
+                        .preset(preset)
+                        .user(principal)
+                        .build();
+                downloadRepository.save(download);
+                preset.setDownloadsCount(preset.getDownloadsCount() + 1);
+            }
+        }
+
         boolean liked = principal != null && likeRepository.existsByPresetIdAndUserId(id, principal.getId());
         return toResponse(preset, liked);
     }
