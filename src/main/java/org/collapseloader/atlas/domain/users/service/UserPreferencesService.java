@@ -62,6 +62,10 @@ public class UserPreferencesService {
                         .key(normalizedKey)
                         .build());
 
+        if (node.isObject() && node.has("value")) {
+            node = node.get("value");
+        }
+
         preference.setValue(node);
 
         return mapPreference(userPreferenceRepository.save(preference));

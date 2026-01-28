@@ -14,20 +14,13 @@ import java.io.IOException;
 import java.time.Instant;
 
 @Entity
-@Table(
-        name = "user_preferences",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "user_preferences_user_key_unique",
-                        columnNames = {"user_id", "pref_key"}
-                )
-        },
-        indexes = {
-                @Index(name = "user_preferences_user_idx", columnList = "user_id"),
-                @Index(name = "user_preferences_key_idx", columnList = "pref_key"),
-                @Index(name = "user_preferences_updated_idx", columnList = "updated_at")
-        }
-)
+@Table(name = "user_preferences", uniqueConstraints = {
+        @UniqueConstraint(name = "user_preferences_user_key_unique", columnNames = {"user_id", "pref_key"})
+}, indexes = {
+        @Index(name = "user_preferences_user_idx", columnList = "user_id"),
+        @Index(name = "user_preferences_key_idx", columnList = "pref_key"),
+        @Index(name = "user_preferences_updated_idx", columnList = "updated_at")
+})
 @Getter
 @Setter
 @NoArgsConstructor

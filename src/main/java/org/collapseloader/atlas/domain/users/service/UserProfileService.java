@@ -59,7 +59,9 @@ public class UserProfileService {
                 user.getUsername(),
                 mapProfile(profile),
                 userStatusService.getStatus(userId),
-                friendshipStatus);
+                friendshipStatus,
+                null,
+                null);
     }
 
     @Transactional
