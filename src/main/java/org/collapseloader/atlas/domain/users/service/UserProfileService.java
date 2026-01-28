@@ -12,6 +12,8 @@ import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.domain.users.entity.UserProfile;
 import org.collapseloader.atlas.domain.users.repository.UserProfileRepository;
 import org.collapseloader.atlas.domain.users.repository.UserRepository;
+import org.collapseloader.atlas.exception.ConflictException;
+import org.collapseloader.atlas.exception.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,7 +45,7 @@ public class UserProfileService {
     @Transactional
     public UserMeResponse getMe(User principal) {
         var user = userRepository.findById(principal.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         var profile = ensureProfile(user);
         return mapUserMe(user, profile);
     }
@@ -51,7 +53,7 @@ public class UserProfileService {
     @Transactional(readOnly = true)
     public PublicUserResponse getPublicUser(User principal, Long userId) {
         var user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         var profile = userProfileRepository.findByUserId(userId).orElse(null);
         String friendshipStatus = friendshipService.getFriendshipStatus(principal, userId);
         return new PublicUserResponse(
@@ -67,7 +69,7 @@ public class UserProfileService {
     @Transactional
     public UserProfileResponse updateProfile(User principal, UpdateProfileRequest request) {
         var user = userRepository.findById(principal.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         var profile = ensureProfile(user);
         String nickname = normalizeNickname(request.nickname());
 
@@ -77,7 +79,7 @@ public class UserProfileService {
                     ? userProfileRepository.existsByNickname(normalized)
                     : userProfileRepository.existsByNicknameAndIdNot(normalized, profile.getId());
             if (exists) {
-                throw new RuntimeException("Nickname is already in use");
+                throw new ConflictException("Nickname is already in use");
             }
         }
 
@@ -89,7 +91,7 @@ public class UserProfileService {
     @Transactional
     public UserProfileResponse uploadAvatar(User principal, MultipartFile avatar) {
         var user = userRepository.findById(principal.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         var profile = ensureProfile(user);
         String previousPath = profile.getAvatarPath();
         String storedPath = userAvatarStorageService.storeAvatar(user.getId(), avatar);
@@ -104,7 +106,7 @@ public class UserProfileService {
     @Transactional
     public UserProfileResponse resetAvatar(User principal) {
         var user = userRepository.findById(principal.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         var profile = ensureProfile(user);
         String previousPath = profile.getAvatarPath();
         profile.setAvatarPath(null);

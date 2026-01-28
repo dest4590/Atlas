@@ -9,6 +9,7 @@ import org.collapseloader.atlas.domain.users.dto.response.SearchUserResponse;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.domain.users.repository.UserRepository;
 import org.collapseloader.atlas.domain.users.service.UserStatusService;
+import org.collapseloader.atlas.exception.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,27 +62,27 @@ public class FriendshipService {
     @Transactional
     public FriendRequestResponse sendRequest(User principal, Long userId) {
         if (userId == null) {
-            throw new RuntimeException("User id is required");
+            throw new ValidationException("User id is required");
         }
         if (principal.getId().equals(userId)) {
-            throw new RuntimeException("Cannot send friend request to yourself");
+            throw new ConflictException("Cannot send friend request to yourself");
         }
         var target = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         var existing = friendRequestRepository.findBetweenUsers(principal.getId(), userId);
         if (existing.isPresent()) {
             var request = existing.get();
             if (request.getStatus() == FriendRequestStatus.ACCEPTED) {
-                throw new RuntimeException("Already friends");
+                throw new ConflictException("Already friends");
             }
             if (request.getStatus() == FriendRequestStatus.PENDING) {
                 if (request.getRequester().getId().equals(principal.getId())) {
-                    throw new RuntimeException("Friend request already sent");
+                    throw new ConflictException("Friend request already sent");
                 }
-                throw new RuntimeException("Friend request already received");
+                throw new ConflictException("Friend request already received");
             }
-            throw new RuntimeException("User is blocked");
+            throw new ForbiddenException("User is blocked");
         }
 
         var request = FriendRequest.builder()
@@ -96,12 +97,12 @@ public class FriendshipService {
     @Transactional
     public FriendRequestResponse acceptRequest(User principal, Long requestId) {
         var request = friendRequestRepository.findByIdWithUsers(requestId)
-                .orElseThrow(() -> new RuntimeException("Friend request not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Friend request not found"));
         if (!request.getAddressee().getId().equals(principal.getId())) {
-            throw new RuntimeException("Unauthorized");
+            throw new UnauthorizedException("Unauthorized");
         }
         if (request.getStatus() != FriendRequestStatus.PENDING) {
-            throw new RuntimeException("Friend request is not pending");
+            throw new ConflictException("Friend request is not pending");
         }
         request.setStatus(FriendRequestStatus.ACCEPTED);
         request.setBlockedBy(null);
@@ -111,14 +112,14 @@ public class FriendshipService {
     @Transactional
     public void declineRequest(User principal, Long requestId) {
         var request = friendRequestRepository.findByIdWithUsers(requestId)
-                .orElseThrow(() -> new RuntimeException("Friend request not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Friend request not found"));
         var isRequester = request.getRequester().getId().equals(principal.getId());
         var isAddressee = request.getAddressee().getId().equals(principal.getId());
         if (!isRequester && !isAddressee) {
-            throw new RuntimeException("Unauthorized");
+            throw new UnauthorizedException("Unauthorized");
         }
         if (request.getStatus() != FriendRequestStatus.PENDING) {
-            throw new RuntimeException("Friend request is not pending");
+            throw new ConflictException("Friend request is not pending");
         }
         friendRequestRepository.delete(request);
     }
@@ -126,13 +127,13 @@ public class FriendshipService {
     @Transactional
     public FriendRequestResponse blockUser(User principal, Long userId) {
         if (userId == null) {
-            throw new RuntimeException("User id is required");
+            throw new ValidationException("User id is required");
         }
         if (principal.getId().equals(userId)) {
-            throw new RuntimeException("Cannot block yourself");
+            throw new ConflictException("Cannot block yourself");
         }
         var target = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         var request = friendRequestRepository.findBetweenUsers(principal.getId(), userId)
                 .orElseGet(() -> FriendRequest.builder()
@@ -149,13 +150,13 @@ public class FriendshipService {
     @Transactional
     public FriendRequestResponse unblockUser(User principal, Long userId) {
         if (userId == null) {
-            throw new RuntimeException("User id is required");
+            throw new ValidationException("User id is required");
         }
         var request = friendRequestRepository.findBetweenUsers(principal.getId(), userId)
-                .orElseThrow(() -> new RuntimeException("Friendship not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Friendship not found"));
 
         if (request.getStatus() != FriendRequestStatus.BLOCKED) {
-            throw new RuntimeException("Not blocked");
+            throw new ConflictException("Not blocked");
         }
 
         request.setStatus(FriendRequestStatus.ACCEPTED);
@@ -168,12 +169,12 @@ public class FriendshipService {
     @Transactional
     public void removeFriend(User principal, Long userId) {
         if (userId == null) {
-            throw new RuntimeException("User id is required");
+            throw new ValidationException("User id is required");
         }
         var request = friendRequestRepository.findBetweenUsers(principal.getId(), userId)
-                .orElseThrow(() -> new RuntimeException("Friendship not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Friendship not found"));
         if (request.getStatus() != FriendRequestStatus.ACCEPTED) {
-            throw new RuntimeException("Not friends");
+            throw new ConflictException("Not friends");
         }
         friendRequestRepository.delete(request);
     }

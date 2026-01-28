@@ -15,6 +15,7 @@ import org.collapseloader.atlas.domain.users.service.UserExternalAccountsService
 import org.collapseloader.atlas.domain.users.service.UserFavoritesService;
 import org.collapseloader.atlas.domain.users.service.UserPreferencesService;
 import org.collapseloader.atlas.domain.users.service.UserProfileService;
+import org.collapseloader.atlas.exception.UnauthorizedException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -142,7 +143,7 @@ public class UserController {
 
     private User requireUser(Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            throw new RuntimeException("Unauthorized");
+            throw new UnauthorizedException("Unauthorized");
         }
         return user;
     }

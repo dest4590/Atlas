@@ -6,6 +6,9 @@ import org.collapseloader.atlas.domain.users.dto.response.AuthResponse;
 import org.collapseloader.atlas.domain.users.entity.*;
 import org.collapseloader.atlas.domain.users.repository.UserProfileRepository;
 import org.collapseloader.atlas.domain.users.repository.UserRepository;
+import org.collapseloader.atlas.exception.ConflictException;
+import org.collapseloader.atlas.exception.UnauthorizedException;
+import org.collapseloader.atlas.exception.ValidationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -42,10 +45,10 @@ public class AuthService {
 
     public AuthResponse register(AuthRequest request) {
         if (userRepository.findByUsername(request.username()).isPresent()) {
-            throw new RuntimeException("User already exists");
+            throw new ConflictException("User already exists");
         }
         if (request.email() == null || request.email().isBlank()) {
-            throw new RuntimeException("Email is required");
+            throw new ValidationException("Email is required");
         }
 
         var user = new User();
@@ -93,7 +96,7 @@ public class AuthService {
 
     public AuthResponse setPassword(User user, AuthSetPasswordRequest password) {
         if (!passwordEncoder.matches(password.currentPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid current password");
+            throw new UnauthorizedException("Invalid current password");
         }
 
         user.setPassword(passwordEncoder.encode(password.newPassword()));

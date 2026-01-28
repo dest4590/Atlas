@@ -9,6 +9,8 @@ import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.domain.users.entity.UserFavorite;
 import org.collapseloader.atlas.domain.users.repository.UserFavoriteRepository;
 import org.collapseloader.atlas.domain.users.repository.UserRepository;
+import org.collapseloader.atlas.exception.EntityNotFoundException;
+import org.collapseloader.atlas.exception.ValidationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,14 +45,14 @@ public class UserFavoritesService {
     @Transactional
     public UserFavoriteResponse addFavorite(User principal, UserFavoriteRequest request) {
         var user = userRepository.findById(principal.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         if (request == null) {
-            throw new RuntimeException("Favorite payload is required");
+            throw new ValidationException("Favorite payload is required");
         }
         String type = normalizeType(request.type());
         String reference = normalizeReference(request.reference());
         if (type == null || reference == null) {
-            throw new RuntimeException("Favorite type and reference are required");
+            throw new ValidationException("Favorite type and reference are required");
         }
 
         var favorite = UserFavorite.builder()
@@ -79,7 +81,7 @@ public class UserFavoritesService {
     @Transactional
     public void deleteFavorite(User principal, Long favoriteId) {
         var favorite = userFavoriteRepository.findByIdAndUserId(favoriteId, principal.getId())
-                .orElseThrow(() -> new RuntimeException("Favorite not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Favorite not found"));
         userFavoriteRepository.delete(favorite);
     }
 

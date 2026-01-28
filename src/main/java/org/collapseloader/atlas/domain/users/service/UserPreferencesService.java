@@ -7,6 +7,8 @@ import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.domain.users.entity.UserPreference;
 import org.collapseloader.atlas.domain.users.repository.UserPreferenceRepository;
 import org.collapseloader.atlas.domain.users.repository.UserRepository;
+import org.collapseloader.atlas.exception.EntityNotFoundException;
+import org.collapseloader.atlas.exception.ValidationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,17 +41,17 @@ public class UserPreferencesService {
     @Transactional
     public UserPreferenceResponse upsertPreference(User principal, String key, Object value) {
         var user = userRepository.findById(principal.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         String normalizedKey = normalizeKey(key);
         if (normalizedKey == null) {
-            throw new RuntimeException("Preference key is required");
+            throw new ValidationException("Preference key is required");
         }
         if (value == null) {
-            throw new RuntimeException("Preference value is required");
+            throw new ValidationException("Preference value is required");
         }
         JsonNode node = objectMapper.valueToTree(value);
         if (node == null || node.isNull()) {
-            throw new RuntimeException("Preference value is required");
+            throw new ValidationException("Preference value is required");
         }
 
         if (node.isObject() && node.has("value") && node.size() == 1) {

@@ -16,6 +16,10 @@ import org.collapseloader.atlas.domain.presets.repository.PresetLikeRepository;
 import org.collapseloader.atlas.domain.presets.repository.PresetRepository;
 import org.collapseloader.atlas.domain.users.entity.Role;
 import org.collapseloader.atlas.domain.users.entity.User;
+import org.collapseloader.atlas.exception.EntityNotFoundException;
+import org.collapseloader.atlas.exception.ForbiddenException;
+import org.collapseloader.atlas.exception.UnauthorizedException;
+import org.collapseloader.atlas.exception.ValidationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -46,7 +50,7 @@ public class PresetService {
 
         if (mine) {
             if (principal == null) {
-                throw new RuntimeException("Authentication required");
+                throw new UnauthorizedException("Authentication required");
             }
             targetOwner = principal.getId();
             includePrivate = true;
@@ -76,7 +80,7 @@ public class PresetService {
     @Transactional(readOnly = true)
     public PresetResponse getPreset(Long id, User principal) {
         var preset = presetRepository.findWithOwnerById(id)
-                .orElseThrow(() -> new RuntimeException("Preset not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Preset not found"));
         requireViewPermission(preset, principal);
 
         boolean liked = principal != null && likeRepository.existsByPresetIdAndUserId(id, principal.getId());
@@ -86,7 +90,7 @@ public class PresetService {
     @Transactional
     public PresetResponse createPreset(User principal, PresetUpsertRequest request) {
         if (principal == null) {
-            throw new RuntimeException("Authentication required");
+            throw new UnauthorizedException("Authentication required");
         }
         var preset = new Preset();
         preset.setOwner(principal);
@@ -106,7 +110,7 @@ public class PresetService {
     @Transactional
     public PresetResponse updatePreset(Long id, User principal, PresetUpsertRequest request) {
         var preset = presetRepository.findWithOwnerById(id)
-                .orElseThrow(() -> new RuntimeException("Preset not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Preset not found"));
         requireOwnership(preset, principal);
 
         if (request.name() != null) {
@@ -132,7 +136,7 @@ public class PresetService {
     @Transactional
     public void deletePreset(Long id, User principal) {
         var preset = presetRepository.findWithOwnerById(id)
-                .orElseThrow(() -> new RuntimeException("Preset not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Preset not found"));
         requireOwnership(preset, principal);
         presetRepository.delete(preset);
     }
@@ -140,10 +144,10 @@ public class PresetService {
     @Transactional
     public PresetResponse likePreset(Long id, User principal) {
         if (principal == null) {
-            throw new RuntimeException("Authentication required");
+            throw new UnauthorizedException("Authentication required");
         }
         var preset = presetRepository.findWithOwnerById(id)
-                .orElseThrow(() -> new RuntimeException("Preset not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Preset not found"));
         requireViewPermission(preset, principal);
         if (!likeRepository.existsByPresetIdAndUserId(id, principal.getId())) {
             var like = new PresetLike();
@@ -158,10 +162,10 @@ public class PresetService {
     @Transactional
     public PresetResponse unlikePreset(Long id, User principal) {
         if (principal == null) {
-            throw new RuntimeException("Authentication required");
+            throw new UnauthorizedException("Authentication required");
         }
         var preset = presetRepository.findWithOwnerById(id)
-                .orElseThrow(() -> new RuntimeException("Preset not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Preset not found"));
         requireViewPermission(preset, principal);
 
         likeRepository.findByPresetIdAndUserId(id, principal.getId()).ifPresent(like -> {
@@ -177,7 +181,7 @@ public class PresetService {
     @Transactional
     public PresetResponse incrementDownloads(Long id, User principal) {
         var preset = presetRepository.findWithOwnerById(id)
-                .orElseThrow(() -> new RuntimeException("Preset not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Preset not found"));
         requireViewPermission(preset, principal);
         preset.setDownloadsCount(preset.getDownloadsCount() + 1);
         boolean liked = principal != null && likeRepository.existsByPresetIdAndUserId(id, principal.getId());
@@ -187,7 +191,7 @@ public class PresetService {
     @Transactional(readOnly = true)
     public List<PresetCommentResponse> listComments(Long presetId, User principal) {
         var preset = presetRepository.findWithOwnerById(presetId)
-                .orElseThrow(() -> new RuntimeException("Preset not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Preset not found"));
         requireViewPermission(preset, principal);
         return commentRepository.findByPresetIdWithAuthors(presetId).stream()
                 .map(this::toCommentResponse)
@@ -197,19 +201,19 @@ public class PresetService {
     @Transactional
     public PresetCommentResponse addComment(Long presetId, User principal, PresetCommentRequest request) {
         if (principal == null) {
-            throw new RuntimeException("Authentication required");
+            throw new UnauthorizedException("Authentication required");
         }
         var preset = presetRepository.findWithOwnerById(presetId)
-                .orElseThrow(() -> new RuntimeException("Preset not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Preset not found"));
         requireViewPermission(preset, principal);
 
         String text = request != null ? request.text() : null;
         if (!StringUtils.hasText(text)) {
-            throw new RuntimeException("Comment cannot be empty");
+            throw new ValidationException("Comment cannot be empty");
         }
         String normalized = text.trim();
         if (normalized.length() > MAX_COMMENT_LENGTH) {
-            throw new RuntimeException("Comment is too long");
+            throw new ValidationException("Comment is too long");
         }
 
         var comment = new PresetComment();
@@ -225,17 +229,17 @@ public class PresetService {
     @Transactional
     public void deleteComment(Long presetId, Long commentId, User principal) {
         if (principal == null) {
-            throw new RuntimeException("Authentication required");
+            throw new UnauthorizedException("Authentication required");
         }
         var comment = commentRepository.findByIdAndPresetId(commentId, presetId)
-                .orElseThrow(() -> new RuntimeException("Comment not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
         var preset = comment.getPreset();
         boolean isOwner = preset != null && preset.getOwner() != null
                 && preset.getOwner().getId().equals(principal.getId());
         boolean isAuthor = comment.getUser() != null && comment.getUser().getId().equals(principal.getId());
         boolean isAdmin = principal.getRole() == Role.ADMIN;
         if (!isAuthor && !isOwner && !isAdmin) {
-            throw new RuntimeException("Forbidden");
+            throw new ForbiddenException("Forbidden");
         }
 
         commentRepository.delete(comment);
@@ -262,28 +266,28 @@ public class PresetService {
                 && preset.getOwner().getId().equals(principal.getId());
         boolean admin = principal != null && principal.getRole() == Role.ADMIN;
         if (!owner && !admin) {
-            throw new RuntimeException("Preset is private");
+            throw new ForbiddenException("Preset is private");
         }
     }
 
     private void requireOwnership(Preset preset, User principal) {
         if (principal == null) {
-            throw new RuntimeException("Authentication required");
+            throw new UnauthorizedException("Authentication required");
         }
         boolean owner = preset.getOwner() != null && preset.getOwner().getId().equals(principal.getId());
         boolean admin = principal.getRole() == Role.ADMIN;
         if (!owner && !admin) {
-            throw new RuntimeException("Forbidden");
+            throw new ForbiddenException("Forbidden");
         }
     }
 
     private String requireName(String name) {
         if (!StringUtils.hasText(name)) {
-            throw new RuntimeException("Preset name is required");
+            throw new ValidationException("Preset name is required");
         }
         String normalized = name.trim();
         if (normalized.length() > MAX_NAME_LENGTH) {
-            throw new RuntimeException("Preset name is too long");
+            throw new ValidationException("Preset name is too long");
         }
         return normalized;
     }
@@ -294,7 +298,7 @@ public class PresetService {
         }
         String normalized = description.trim();
         if (normalized.length() > MAX_DESCRIPTION_LENGTH) {
-            throw new RuntimeException("Description is too long");
+            throw new ValidationException("Description is too long");
         }
         return normalized.isEmpty() ? null : normalized;
     }
