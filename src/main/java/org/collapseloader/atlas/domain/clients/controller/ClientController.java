@@ -57,7 +57,7 @@ public class ClientController {
 
     @PostMapping("/launch/{id}")
     public ResponseEntity<ApiResponse<ClientResponse>> incrementLaunches(Authentication authentication,
-            @PathVariable Long id) {
+                                                                         @PathVariable Long id) {
         User user = (authentication != null && authentication.getPrincipal() instanceof User u) ? u : null;
         var data = clientService.incrementLaunches(id, user);
         return ResponseEntity.ok(ApiResponse.success(data));

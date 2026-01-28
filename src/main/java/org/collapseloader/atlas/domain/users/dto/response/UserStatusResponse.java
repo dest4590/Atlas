@@ -6,8 +6,8 @@ import org.collapseloader.atlas.domain.users.entity.UserStatus;
 import java.time.Instant;
 
 public record UserStatusResponse(
-                UserStatus status,
-                @JsonProperty("client_name") String clientName,
-                @JsonProperty("updated_at") Instant updatedAt,
-                @JsonProperty("started_at") Instant startedAt) {
+        UserStatus status,
+        @JsonProperty("client_name") String clientName,
+        @JsonProperty("updated_at") Instant updatedAt,
+        @JsonProperty("started_at") Instant startedAt) {
 }

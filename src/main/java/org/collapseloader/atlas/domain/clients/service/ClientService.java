@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.clients.service;
 
+import org.collapseloader.atlas.domain.achievements.service.AchievementService;
 import org.collapseloader.atlas.domain.clients.dto.request.ClientCreateRequest;
 import org.collapseloader.atlas.domain.clients.dto.response.ClientResponse;
 import org.collapseloader.atlas.domain.clients.entity.Client;
@@ -9,7 +10,6 @@ import org.collapseloader.atlas.domain.clients.entity.forge.ForgeClient;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.domain.users.repository.UserProfileRepository;
-import org.collapseloader.atlas.domain.achievements.service.AchievementService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;

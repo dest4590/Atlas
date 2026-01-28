@@ -7,12 +7,10 @@ import org.collapseloader.atlas.domain.clients.repository.ClientCommentRepositor
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
 import org.collapseloader.atlas.domain.users.entity.Role;
 import org.collapseloader.atlas.domain.users.entity.User;
-import org.collapseloader.atlas.domain.users.entity.UserProfile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -75,25 +73,9 @@ public class ClientCommentService {
                 comment.getClient() != null ? comment.getClient().getId() : null,
                 author != null ? author.getId() : null,
                 author != null ? author.getUsername() : null,
-                buildAvatarUrl(profile),
+                profile != null ? profile.getAvatarUrl() : null,
                 comment.getContent(),
-                comment.getCreatedAt()
-        );
+                comment.getCreatedAt());
     }
 
-    private String buildAvatarUrl(UserProfile profile) {
-        if (profile == null) {
-            return null;
-        }
-        String avatarPath = profile.getAvatarPath();
-        if (avatarPath == null || avatarPath.isBlank()) {
-            return null;
-        }
-        String url = avatarPath.startsWith("/") ? avatarPath : "/" + avatarPath;
-        Instant updatedAt = profile.getAvatarUpdatedAt();
-        if (updatedAt != null) {
-            url = url + (url.contains("?") ? "&" : "?") + "v=" + updatedAt.getEpochSecond();
-        }
-        return url;
-    }
 }

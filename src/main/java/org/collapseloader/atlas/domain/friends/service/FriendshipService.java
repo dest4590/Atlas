@@ -47,11 +47,10 @@ public class FriendshipService {
     public List<FriendRequestResponse> getRequests(User principal, RequestType type) {
         List<FriendRequest> requests = switch (type) {
             case INCOMING ->
-                friendRequestRepository.findIncomingRequests(principal.getId(), FriendRequestStatus.PENDING);
+                    friendRequestRepository.findIncomingRequests(principal.getId(), FriendRequestStatus.PENDING);
             case OUTGOING ->
-                friendRequestRepository.findOutgoingRequests(principal.getId(), FriendRequestStatus.PENDING);
-            case BLOCKED ->
-                friendRequestRepository.findByStatusForUser(principal.getId(), FriendRequestStatus.BLOCKED);
+                    friendRequestRepository.findOutgoingRequests(principal.getId(), FriendRequestStatus.PENDING);
+            case BLOCKED -> friendRequestRepository.findByStatusForUser(principal.getId(), FriendRequestStatus.BLOCKED);
             case ALL -> friendRequestRepository.findByStatusForUser(principal.getId(), FriendRequestStatus.PENDING);
         };
         return requests.stream()
@@ -226,6 +225,7 @@ public class FriendshipService {
                 friend.getId(),
                 friend.getUsername(),
                 friend.getProfile() == null ? null : friend.getProfile().getNickname(),
+                friend.getProfile() == null ? null : friend.getProfile().getAvatarUrl(),
                 userStatusService.getStatus(friend.getId()));
     }
 
@@ -237,12 +237,16 @@ public class FriendshipService {
                         request.getRequester().getUsername(),
                         request.getRequester().getProfile() == null ? null
                                 : request.getRequester().getProfile().getNickname(),
+                        request.getRequester().getProfile() == null ? null
+                                : request.getRequester().getProfile().getAvatarUrl(),
                         userStatusService.getStatus(request.getRequester().getId())),
                 new FriendResponse(
                         request.getAddressee().getId(),
                         request.getAddressee().getUsername(),
                         request.getAddressee().getProfile() == null ? null
                                 : request.getAddressee().getProfile().getNickname(),
+                        request.getAddressee().getProfile() == null ? null
+                                : request.getAddressee().getProfile().getAvatarUrl(),
                         userStatusService.getStatus(request.getAddressee().getId())),
                 request.getStatus().name().toLowerCase(Locale.ROOT),
                 request.getCreatedAt(),

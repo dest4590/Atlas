@@ -11,7 +11,7 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "user_achievements", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "user_id", "achievement_id" })
+        @UniqueConstraint(columnNames = {"user_id", "achievement_id"})
 })
 @Getter
 @Setter

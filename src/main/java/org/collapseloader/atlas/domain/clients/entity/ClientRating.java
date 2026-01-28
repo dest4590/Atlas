@@ -6,7 +6,7 @@ import org.collapseloader.atlas.domain.users.entity.User;
 
 @Entity
 @Table(name = "client_ratings", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "client_id", "user_id" })
+        @UniqueConstraint(columnNames = {"client_id", "user_id"})
 })
 @Data
 public class ClientRating {

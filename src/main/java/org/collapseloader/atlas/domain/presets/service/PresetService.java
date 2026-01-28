@@ -16,14 +16,12 @@ import org.collapseloader.atlas.domain.presets.repository.PresetLikeRepository;
 import org.collapseloader.atlas.domain.presets.repository.PresetRepository;
 import org.collapseloader.atlas.domain.users.entity.Role;
 import org.collapseloader.atlas.domain.users.entity.User;
-import org.collapseloader.atlas.domain.users.entity.UserProfile;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
@@ -41,7 +39,7 @@ public class PresetService {
 
     @Transactional(readOnly = true)
     public List<PresetResponse> listPresets(User principal, String query, Long ownerId, boolean mine, String sort,
-            int limit) {
+                                            int limit) {
         int size = Math.min(Math.max(limit, 1), 100);
         boolean includePrivate = false;
         Long targetOwner = ownerId;
@@ -65,7 +63,7 @@ public class PresetService {
             case OWNER_PRIVATE -> presetRepository.findByOwnerId(targetOwner, pageable);
             case OWNER_PUBLIC -> presetRepository.findByOwnerIdAndIsPublicTrue(targetOwner, pageable);
             case SEARCH_PUBLIC ->
-                presetRepository.findByIsPublicTrueAndNameContainingIgnoreCase(query.trim(), pageable);
+                    presetRepository.findByIsPublicTrueAndNameContainingIgnoreCase(query.trim(), pageable);
             default -> presetRepository.findByIsPublicTrue(pageable);
         };
 
@@ -394,7 +392,7 @@ public class PresetService {
                 user != null ? user.getId() : null,
                 user != null ? user.getUsername() : null,
                 profile != null ? profile.getNickname() : null,
-                buildAvatarUrl(profile),
+                profile != null ? profile.getAvatarUrl() : null,
                 comment.getContent(),
                 comment.getCreatedAt());
     }
@@ -434,23 +432,7 @@ public class PresetService {
                 owner.getId(),
                 owner.getUsername(),
                 profile != null ? profile.getNickname() : null,
-                buildAvatarUrl(profile));
-    }
-
-    private String buildAvatarUrl(UserProfile profile) {
-        if (profile == null) {
-            return null;
-        }
-        String avatarPath = profile.getAvatarPath();
-        if (!StringUtils.hasText(avatarPath)) {
-            return null;
-        }
-        String url = avatarPath.startsWith("/") ? avatarPath : "/" + avatarPath;
-        Instant updatedAt = profile.getAvatarUpdatedAt();
-        if (updatedAt != null) {
-            url = url + (url.contains("?") ? "&" : "?") + "v=" + updatedAt.getEpochSecond();
-        }
-        return url;
+                profile != null ? profile.getAvatarUrl() : null);
     }
 
     private Sort resolveSort(String sort) {

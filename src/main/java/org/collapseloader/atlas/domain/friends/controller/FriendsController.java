@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping({ "/api/v1/friends" })
+@RequestMapping({"/api/v1/friends"})
 @PreAuthorize("isAuthenticated()")
 public class FriendsController {
     private final FriendshipService friendshipService;
@@ -31,7 +31,7 @@ public class FriendsController {
         return ResponseEntity.ok(ApiResponse.success(friendshipService.getFriends(user)));
     }
 
-    @GetMapping({ "/batch" })
+    @GetMapping({"/batch"})
     public ResponseEntity<ApiResponse<FriendsBatchResponse>> getBatch(Authentication authentication) {
         var user = requireUser(authentication);
         var friends = friendshipService.getFriends(user);
@@ -42,7 +42,7 @@ public class FriendsController {
         return ResponseEntity.ok(ApiResponse.success(new FriendsBatchResponse(friends, requests)));
     }
 
-    @GetMapping({ "/requests" })
+    @GetMapping({"/requests"})
     public ResponseEntity<ApiResponse<List<FriendRequestResponse>>> getRequests(
             Authentication authentication,
             @RequestParam(value = "type", required = false) String type) {
@@ -51,7 +51,7 @@ public class FriendsController {
         return ResponseEntity.ok(ApiResponse.success(friendshipService.getRequests(user, requestType)));
     }
 
-    @PostMapping({ "/requests" })
+    @PostMapping({"/requests"})
     public ResponseEntity<ApiResponse<FriendRequestResponse>> sendRequest(
             Authentication authentication,
             @RequestBody FriendRequestCreateRequest request) {

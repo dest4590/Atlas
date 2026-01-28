@@ -39,9 +39,6 @@ public class UserProfile {
     @Column(name = "avatar_path")
     private String avatarPath;
 
-    @Column(name = "avatar_updated_at")
-    private Instant avatarUpdatedAt;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
@@ -97,5 +94,17 @@ public class UserProfile {
                 link.setProfile(this);
             }
         }
+    }
+
+    @JsonIgnore
+    public String getAvatarUrl() {
+        if (avatarPath == null || avatarPath.isBlank()) {
+            return null;
+        }
+        String url = avatarPath.startsWith("/") ? avatarPath : "/" + avatarPath;
+        if (updatedAt != null) {
+            url = url + (url.contains("?") ? "&" : "?") + "v=" + updatedAt.getEpochSecond();
+        }
+        return url;
     }
 }

@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 
@@ -33,8 +32,7 @@ public class UserProfileService {
             UserProfileRepository userProfileRepository,
             UserStatusService userStatusService,
             UserAvatarStorageService userAvatarStorageService,
-            FriendshipService friendshipService
-    ) {
+            FriendshipService friendshipService) {
         this.userRepository = userRepository;
         this.userProfileRepository = userProfileRepository;
         this.userStatusService = userStatusService;
@@ -61,8 +59,7 @@ public class UserProfileService {
                 user.getUsername(),
                 mapProfile(profile),
                 userStatusService.getStatus(userId),
-                friendshipStatus
-        );
+                friendshipStatus);
     }
 
     @Transactional
@@ -95,7 +92,6 @@ public class UserProfileService {
         String previousPath = profile.getAvatarPath();
         String storedPath = userAvatarStorageService.storeAvatar(user.getId(), avatar);
         profile.setAvatarPath(storedPath);
-        profile.setAvatarUpdatedAt(Instant.now());
         var savedProfile = userProfileRepository.save(profile);
         if (previousPath != null && !previousPath.equals(storedPath)) {
             userAvatarStorageService.deleteAvatar(previousPath);
@@ -110,7 +106,6 @@ public class UserProfileService {
         var profile = ensureProfile(user);
         String previousPath = profile.getAvatarPath();
         profile.setAvatarPath(null);
-        profile.setAvatarUpdatedAt(null);
         var savedProfile = userProfileRepository.save(profile);
         if (previousPath != null) {
             userAvatarStorageService.deleteAvatar(previousPath);
@@ -140,8 +135,7 @@ public class UserProfileService {
                 user.getUpdatedAt(),
                 user.getLastLoginAt(),
                 mapProfile(profile),
-                userStatusService.getStatus(user.getId())
-        );
+                userStatusService.getStatus(user.getId()));
     }
 
     private UserProfileResponse mapProfile(UserProfile profile) {
@@ -151,14 +145,11 @@ public class UserProfileService {
         return new UserProfileResponse(
                 profile.getId(),
                 profile.getNickname(),
-                profile.getAvatarPath(),
-                buildAvatarUrl(profile),
-                profile.getAvatarUpdatedAt(),
+                profile.getAvatarUrl(),
                 profile.getRole(),
                 mapSocialLinks(profile.getSocialLinks()),
                 profile.getCreatedAt(),
-                profile.getUpdatedAt()
-        );
+                profile.getUpdatedAt());
     }
 
     private List<SocialLinkResponse> mapSocialLinks(List<SocialLink> links) {
@@ -168,19 +159,6 @@ public class UserProfileService {
         return links.stream()
                 .map(link -> new SocialLinkResponse(link.getPlatform(), link.getUrl()))
                 .toList();
-    }
-
-    private String buildAvatarUrl(UserProfile profile) {
-        String avatarPath = profile.getAvatarPath();
-        if (avatarPath == null || avatarPath.isBlank()) {
-            return null;
-        }
-        String url = avatarPath.startsWith("/") ? avatarPath : "/" + avatarPath;
-        Instant updatedAt = profile.getAvatarUpdatedAt();
-        if (updatedAt != null) {
-            url = url + (url.contains("?") ? "&" : "?") + "v=" + updatedAt.getEpochSecond();
-        }
-        return url;
     }
 
     private String normalizeNickname(String value) {
