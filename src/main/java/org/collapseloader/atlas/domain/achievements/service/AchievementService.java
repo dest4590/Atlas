@@ -52,10 +52,6 @@ public class AchievementService {
 
     @Transactional
     public void unlockAchievement(Long userId, String key) {
-        if (!"SECRET_FINDER".equals(key)) {
-            throw new IllegalArgumentException("Only SECRET_FINDER can be unlocked manually");
-        }
-
         if (userAchievementRepository.existsByUserIdAndAchievementKey(userId, key)) {
             return;
         }

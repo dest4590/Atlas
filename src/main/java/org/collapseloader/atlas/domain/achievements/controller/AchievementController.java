@@ -31,6 +31,10 @@ public class AchievementController {
 
     @PostMapping("/unlock/{key}")
     public ResponseEntity<Void> unlockAchievement(@AuthenticationPrincipal User user, @PathVariable String key) {
+        if (!"SECRET_FINDER".equals(key)) {
+            return ResponseEntity.badRequest().build();
+        }
+
         achievementService.unlockAchievement(user.getId(), key);
         return ResponseEntity.ok().build();
     }
