@@ -73,7 +73,6 @@ public class AchievementService {
 
     @Transactional
     public void seedAchievements() {
-        createIfNotExists("WELCOME", "PartyPopper", false);
         createIfNotExists("PLAYED_1Hour", "Clock", false);
         createIfNotExists("PLAYED_10Hours", "Clock", false);
         createIfNotExists("FIRST_GAME", "Gamepad2", false);

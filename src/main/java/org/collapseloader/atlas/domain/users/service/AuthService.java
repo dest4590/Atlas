@@ -62,8 +62,6 @@ public class AuthService {
         savedUser.setProfile(profile);
         userProfileRepository.save(profile);
 
-        achievementService.unlockAchievement(savedUser.getId(), "WELCOME");
-
         var jwt = jwtService.generateToken(savedUser);
         return new AuthResponse(jwt);
     }
@@ -86,7 +84,6 @@ public class AuthService {
         var profile = user.getProfile();
 
         if (profile != null && profile.getRole() != null && profile.getRole().isTester()) {
-            achievementService.unlockAchievement(user.getId(), "WELCOME");
             achievementService.unlockAchievement(user.getId(), "BETA_TESTER");
         }
 

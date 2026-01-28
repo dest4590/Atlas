@@ -40,7 +40,8 @@ public class PresetService {
     private final org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService;
 
     @Transactional(readOnly = true)
-    public List<PresetResponse> listPresets(User principal, String query, Long ownerId, boolean mine, int limit) {
+    public List<PresetResponse> listPresets(User principal, String query, Long ownerId, boolean mine, String sort,
+            int limit) {
         int size = Math.min(Math.max(limit, 1), 100);
         boolean includePrivate = false;
         Long targetOwner = ownerId;
@@ -58,7 +59,8 @@ public class PresetService {
             }
         }
 
-        var pageable = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        var sortOrder = resolveSort(sort);
+        var pageable = PageRequest.of(0, size, sortOrder);
         var page = switch (resolveQueryMode(query, targetOwner, includePrivate)) {
             case OWNER_PRIVATE -> presetRepository.findByOwnerId(targetOwner, pageable);
             case OWNER_PUBLIC -> presetRepository.findByOwnerIdAndIsPublicTrue(targetOwner, pageable);
@@ -449,6 +451,19 @@ public class PresetService {
             url = url + (url.contains("?") ? "&" : "?") + "v=" + updatedAt.getEpochSecond();
         }
         return url;
+    }
+
+    private Sort resolveSort(String sort) {
+        if (!StringUtils.hasText(sort)) {
+            return Sort.by(Sort.Direction.DESC, "createdAt");
+        }
+        return switch (sort.toLowerCase()) {
+            case "popular", "likes" -> Sort.by(Sort.Direction.DESC, "likesCount");
+            case "downloads" -> Sort.by(Sort.Direction.DESC, "downloadsCount");
+            case "comments" -> Sort.by(Sort.Direction.DESC, "commentsCount");
+            case "oldest" -> Sort.by(Sort.Direction.ASC, "createdAt");
+            default -> Sort.by(Sort.Direction.DESC, "createdAt");
+        };
     }
 
     private enum QueryMode {

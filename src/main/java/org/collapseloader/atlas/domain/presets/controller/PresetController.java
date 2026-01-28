@@ -29,18 +29,17 @@ public class PresetController {
             @RequestParam(value = "q", required = false) String query,
             @RequestParam(value = "owner", required = false) Long ownerId,
             @RequestParam(value = "mine", required = false, defaultValue = "false") boolean mine,
-            @RequestParam(value = "limit", required = false, defaultValue = "50") int limit
-    ) {
+            @RequestParam(value = "sort", required = false) String sort,
+            @RequestParam(value = "limit", required = false, defaultValue = "50") int limit) {
         var user = optionalUser(authentication);
-        var data = presetService.listPresets(user, query, ownerId, mine, limit);
+        var data = presetService.listPresets(user, query, ownerId, mine, sort, limit);
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PresetResponse>> getPreset(
             Authentication authentication,
-            @PathVariable Long id
-    ) {
+            @PathVariable Long id) {
         var user = optionalUser(authentication);
         var data = presetService.getPreset(id, user);
         return ResponseEntity.ok(ApiResponse.success(data));
@@ -50,8 +49,7 @@ public class PresetController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<PresetResponse>> createPreset(
             Authentication authentication,
-            @RequestBody PresetUpsertRequest request
-    ) {
+            @RequestBody PresetUpsertRequest request) {
         var user = requireUser(authentication);
         var data = presetService.createPreset(user, request);
         return ResponseEntity.ok(ApiResponse.success(data));
@@ -62,8 +60,7 @@ public class PresetController {
     public ResponseEntity<ApiResponse<PresetResponse>> updatePreset(
             Authentication authentication,
             @PathVariable Long id,
-            @RequestBody PresetUpsertRequest request
-    ) {
+            @RequestBody PresetUpsertRequest request) {
         var user = requireUser(authentication);
         var data = presetService.updatePreset(id, user, request);
         return ResponseEntity.ok(ApiResponse.success(data));
@@ -73,8 +70,7 @@ public class PresetController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> deletePreset(
             Authentication authentication,
-            @PathVariable Long id
-    ) {
+            @PathVariable Long id) {
         var user = requireUser(authentication);
         presetService.deletePreset(id, user);
         return ResponseEntity.ok(ApiResponse.success(null));
@@ -84,8 +80,7 @@ public class PresetController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<PresetResponse>> likePreset(
             Authentication authentication,
-            @PathVariable Long id
-    ) {
+            @PathVariable Long id) {
         var user = requireUser(authentication);
         var data = presetService.likePreset(id, user);
         return ResponseEntity.ok(ApiResponse.success(data));
@@ -95,8 +90,7 @@ public class PresetController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<PresetResponse>> unlikePreset(
             Authentication authentication,
-            @PathVariable Long id
-    ) {
+            @PathVariable Long id) {
         var user = requireUser(authentication);
         var data = presetService.unlikePreset(id, user);
         return ResponseEntity.ok(ApiResponse.success(data));
@@ -105,8 +99,7 @@ public class PresetController {
     @PostMapping("/{id}/download")
     public ResponseEntity<ApiResponse<PresetResponse>> downloadPreset(
             Authentication authentication,
-            @PathVariable Long id
-    ) {
+            @PathVariable Long id) {
         var user = optionalUser(authentication);
         var data = presetService.incrementDownloads(id, user);
         return ResponseEntity.ok(ApiResponse.success(data));
@@ -115,8 +108,7 @@ public class PresetController {
     @GetMapping("/{id}/comments")
     public ResponseEntity<ApiResponse<List<PresetCommentResponse>>> listComments(
             Authentication authentication,
-            @PathVariable Long id
-    ) {
+            @PathVariable Long id) {
         var user = optionalUser(authentication);
         var data = presetService.listComments(id, user);
         return ResponseEntity.ok(ApiResponse.success(data));
@@ -127,8 +119,7 @@ public class PresetController {
     public ResponseEntity<ApiResponse<PresetCommentResponse>> addComment(
             Authentication authentication,
             @PathVariable Long id,
-            @RequestBody PresetCommentRequest request
-    ) {
+            @RequestBody PresetCommentRequest request) {
         var user = requireUser(authentication);
         var data = presetService.addComment(id, user, request);
         return ResponseEntity.ok(ApiResponse.success(data));
@@ -139,8 +130,7 @@ public class PresetController {
     public ResponseEntity<ApiResponse<Void>> deleteComment(
             Authentication authentication,
             @PathVariable Long presetId,
-            @PathVariable Long commentId
-    ) {
+            @PathVariable Long commentId) {
         var user = requireUser(authentication);
         presetService.deleteComment(presetId, commentId, user);
         return ResponseEntity.ok(ApiResponse.success(null));
