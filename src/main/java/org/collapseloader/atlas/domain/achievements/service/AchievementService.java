@@ -67,7 +67,9 @@ public class AchievementService {
 
         UserAchievement ua = new UserAchievement(user, achievement);
         userAchievementRepository.save(ua);
+
         log.info("Unlocked achievement {} for user {}", key, userId);
+
         messagingTemplate.convertAndSendToUser(
                 user.getUsername(),
                 "/queue/achievements",
