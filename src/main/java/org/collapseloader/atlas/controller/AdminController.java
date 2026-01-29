@@ -53,6 +53,7 @@ public class AdminController {
             @org.springframework.data.web.PageableDefault(size = 20, sort = "id", direction = org.springframework.data.domain.Sort.Direction.ASC) org.springframework.data.domain.Pageable pageable,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String role,
+            @RequestParam(required = false) String profileRole,
             @RequestParam(required = false) Boolean enabled) {
 
         org.springframework.data.jpa.domain.Specification<User> spec = (root, query, cb) -> {
@@ -72,6 +73,13 @@ public class AdminController {
                 }
             }
 
+            if (profileRole != null && !profileRole.isBlank()) {
+                try {
+                    predicates.add(cb.equal(root.join("profile").get("role"), ProfileRole.valueOf(profileRole)));
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+
             if (enabled != null) {
                 predicates.add(cb.equal(root.get("enabled"), enabled));
             }
@@ -86,6 +94,7 @@ public class AdminController {
                 u.getUsername(),
                 u.getEmail(),
                 u.getRole().name(),
+                u.getProfile() != null ? u.getProfile().getRole().name() : "USER",
                 u.isEnabled(),
                 u.getCreatedAt())));
     }
