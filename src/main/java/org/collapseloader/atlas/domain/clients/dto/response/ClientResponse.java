@@ -19,8 +19,7 @@ public record ClientResponse(
         long launches,
         long downloads,
         @JsonProperty("client_type") String clientType,
-        @JsonProperty("created_at") Instant createdAt
-) implements Serializable {
+        @JsonProperty("created_at") Instant createdAt) implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 }

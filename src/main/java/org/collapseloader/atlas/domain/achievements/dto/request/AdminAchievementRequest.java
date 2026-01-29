@@ -1,4 +1,6 @@
 package org.collapseloader.atlas.domain.achievements.dto.request;
 
-public record AdminAchievementRequest(String key, String icon, Boolean hidden) {
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public record AdminAchievementRequest(String key, String icon, @JsonProperty("hidden") Boolean hidden) {
 }

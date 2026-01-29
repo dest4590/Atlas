@@ -1,16 +1,11 @@
 package org.collapseloader.atlas.domain.achievements.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class AchievementResponse {
-    private Long id;
-    private String key;
-    private String icon;
-    private boolean hidden;
-    private Double receivePercentage;
+public record AchievementResponse(
+        Long id,
+        String key,
+        String icon,
+        @JsonProperty("hidden") boolean hidden,
+        Double receivePercentage) {
 }
