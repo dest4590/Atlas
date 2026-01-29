@@ -165,15 +165,34 @@ public class AdminController {
         }
 
         if (request.socialLinks() != null) {
-            profile.getSocialLinks().clear();
-            for (var linkReq : request.socialLinks()) {
-                SocialLink link = SocialLink.builder()
-                        .platform(linkReq.platform())
-                        .url(linkReq.url())
-                        .profile(profile)
-                        .build();
-                profile.getSocialLinks().add(link);
+            java.util.Map<SocialPlatform, SocialLink> existingMap = new java.util.HashMap<>();
+            for (SocialLink link : profile.getSocialLinks()) {
+                if (link.getPlatform() != null) {
+                    existingMap.put(link.getPlatform(), link);
+                }
             }
+
+            java.util.Set<SocialLink> linksToKeep = new java.util.HashSet<>();
+            for (var linkReq : request.socialLinks()) {
+                if (linkReq.platform() == null)
+                    continue;
+
+                SocialLink existing = existingMap.get(linkReq.platform());
+                if (existing != null) {
+                    existing.setUrl(linkReq.url());
+                    linksToKeep.add(existing);
+                } else {
+                    SocialLink newLink = SocialLink.builder()
+                            .platform(linkReq.platform())
+                            .url(linkReq.url())
+                            .profile(profile)
+                            .build();
+                    profile.getSocialLinks().add(newLink);
+                    linksToKeep.add(newLink);
+                }
+            }
+
+            profile.getSocialLinks().removeIf(link -> !linksToKeep.contains(link));
         }
 
         if (request.preferences() != null) {
@@ -223,7 +242,7 @@ public class AdminController {
     @PutMapping("/news/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<org.collapseloader.atlas.domain.news.News> updateNews(@PathVariable Long id,
-            @RequestBody org.collapseloader.atlas.domain.news.dto.request.NewsRequest request) {
+                                                                                @RequestBody org.collapseloader.atlas.domain.news.dto.request.NewsRequest request) {
         var news = newsService.updateNews(id, request);
         auditLogService.log("UPDATE_NEWS", "NEWS", news.getId().toString(),
                 Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())

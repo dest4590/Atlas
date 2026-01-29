@@ -9,7 +9,7 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "preset_downloads", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_preset_user_download", columnNames = { "preset_id", "user_id" })
+        @UniqueConstraint(name = "uk_preset_user_download", columnNames = {"preset_id", "user_id"})
 }, indexes = {
         @Index(name = "idx_preset_download_preset", columnList = "preset_id"),
         @Index(name = "idx_preset_download_user", columnList = "user_id")

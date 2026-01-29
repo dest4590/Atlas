@@ -8,29 +8,29 @@ import org.collapseloader.atlas.domain.users.entity.SocialPlatform;
 import java.util.List;
 
 public record AdminUserDetailResponse(
-                Long id,
-                String username,
-                String email,
-                String role,
-                @JsonProperty("enabled") boolean enabled,
-                UserProfileDto profile,
-                List<UserPreferenceDto> preferences) {
-        public record UserProfileDto(
-                        String nickname,
-                        String avatarPath,
-                        ProfileRole role,
-                        List<SocialLinkDto> socialLinks) {
-        }
+        Long id,
+        String username,
+        String email,
+        String role,
+        @JsonProperty("enabled") boolean enabled,
+        UserProfileDto profile,
+        List<UserPreferenceDto> preferences) {
+    public record UserProfileDto(
+            String nickname,
+            String avatarPath,
+            ProfileRole role,
+            List<SocialLinkDto> socialLinks) {
+    }
 
-        public record SocialLinkDto(
-                        Long id,
-                        SocialPlatform platform,
-                        String url) {
-        }
+    public record SocialLinkDto(
+            Long id,
+            SocialPlatform platform,
+            String url) {
+    }
 
-        public record UserPreferenceDto(
-                        Long id,
-                        String key,
-                        @JsonRawValue String value) {
-        }
+    public record UserPreferenceDto(
+            Long id,
+            String key,
+            @JsonRawValue String value) {
+    }
 }

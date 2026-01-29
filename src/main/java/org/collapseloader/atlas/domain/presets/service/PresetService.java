@@ -7,11 +7,7 @@ import org.collapseloader.atlas.domain.presets.dto.response.PresetAuthorResponse
 import org.collapseloader.atlas.domain.presets.dto.response.PresetCommentResponse;
 import org.collapseloader.atlas.domain.presets.dto.response.PresetResponse;
 import org.collapseloader.atlas.domain.presets.dto.response.PresetThemeResponse;
-import org.collapseloader.atlas.domain.presets.entity.Preset;
-import org.collapseloader.atlas.domain.presets.entity.PresetComment;
-import org.collapseloader.atlas.domain.presets.entity.PresetLike;
-import org.collapseloader.atlas.domain.presets.entity.PresetTheme;
-import org.collapseloader.atlas.domain.presets.entity.PresetDownload;
+import org.collapseloader.atlas.domain.presets.entity.*;
 import org.collapseloader.atlas.domain.presets.repository.PresetCommentRepository;
 import org.collapseloader.atlas.domain.presets.repository.PresetDownloadRepository;
 import org.collapseloader.atlas.domain.presets.repository.PresetLikeRepository;
@@ -46,7 +42,7 @@ public class PresetService {
 
     @Transactional(readOnly = true)
     public List<PresetResponse> listPresets(User principal, String query, Long ownerId, boolean mine, String sort,
-            int limit) {
+                                            int limit) {
         int size = Math.min(Math.max(limit, 1), 100);
         boolean includePrivate = false;
         Long targetOwner = ownerId;
@@ -70,7 +66,7 @@ public class PresetService {
             case OWNER_PRIVATE -> presetRepository.findByOwnerId(targetOwner, pageable);
             case OWNER_PUBLIC -> presetRepository.findByOwnerIdAndIsPublicTrue(targetOwner, pageable);
             case SEARCH_PUBLIC ->
-                presetRepository.findByIsPublicTrueAndNameContainingIgnoreCase(query.trim(), pageable);
+                    presetRepository.findByIsPublicTrueAndNameContainingIgnoreCase(query.trim(), pageable);
             default -> presetRepository.findByIsPublicTrue(pageable);
         };
 
