@@ -74,6 +74,15 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .httpBasic(AbstractHttpConfigurer::disable)
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            if (request.getServletPath().startsWith("/api/")) {
+                                response.sendError(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED,
+                                        "Unauthorized");
+                            } else {
+                                response.sendRedirect("/login");
+                            }
+                        }))
                 .formLogin(login -> login
                         .successHandler(successHandler));
 
