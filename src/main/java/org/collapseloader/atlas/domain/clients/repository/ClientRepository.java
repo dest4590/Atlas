@@ -15,4 +15,9 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     @Query("select coalesce(sum(c.downloads), 0) from Client c")
     long sumDownloads();
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    @Query(value = "UPDATE clients SET type = :type WHERE id = :id", nativeQuery = true)
+    void updateClientType(Long id, String type);
 }

@@ -5,9 +5,13 @@ import org.collapseloader.atlas.domain.clients.dto.request.AdminClientRequest;
 import org.collapseloader.atlas.domain.clients.dto.response.ClientResponse;
 import org.collapseloader.atlas.domain.clients.entity.Client;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
+import jakarta.persistence.EntityManager;
+import org.collapseloader.atlas.domain.clients.entity.fabric.FabricClient;
+import org.collapseloader.atlas.domain.clients.entity.forge.ForgeClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +25,7 @@ public class AdminClientController {
 
     private final ClientRepository clientRepository;
     private final org.collapseloader.atlas.domain.audit.AuditLogService auditLogService;
+    private final EntityManager entityManager;
 
     @GetMapping
     public ResponseEntity<List<ClientResponse>> getAllClients() {
@@ -41,7 +46,11 @@ public class AdminClientController {
 
     @PostMapping
     public ResponseEntity<Client> createClient(@RequestBody AdminClientRequest request) {
-        Client client = new Client();
+        Client client = switch (request.type()) {
+            case FORGE -> new ForgeClient();
+            case FABRIC -> new FabricClient();
+            case Vanilla -> new Client();
+        };
         mapRequestToClient(request, client);
         var saved = clientRepository.save(client);
 
@@ -53,10 +62,16 @@ public class AdminClientController {
         return ResponseEntity.ok(saved);
     }
 
+    @Transactional
     @PutMapping("/{id}")
     public ResponseEntity<Client> updateClient(@PathVariable Long id, @RequestBody AdminClientRequest request) {
         return clientRepository.findById(id)
                 .map(client -> {
+                    if (request.type() != null && client.getType() != request.type()) {
+                        clientRepository.updateClientType(id, request.type().name());
+                        entityManager.clear();
+                        client = clientRepository.findById(id).orElseThrow();
+                    }
                     mapRequestToClient(request, client);
                     var saved = clientRepository.save(client);
 
