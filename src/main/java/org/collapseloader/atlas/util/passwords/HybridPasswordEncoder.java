@@ -11,14 +11,16 @@ public class HybridPasswordEncoder implements PasswordEncoder {
 
     @Override
     public boolean matches(CharSequence rawPassword, String encodedPassword) {
-        if (encodedPassword == null) return false;
+        if (encodedPassword == null)
+            return false;
+        String trimmedEncoded = encodedPassword.trim();
 
-        if (encodedPassword.startsWith("pbkdf2_sha256$")) {
-            return DjangoPasswordUtils.matches(rawPassword, encodedPassword);
+        if (trimmedEncoded.startsWith("pbkdf2_sha256$")) {
+            return DjangoPasswordUtils.matches(rawPassword, trimmedEncoded);
         }
 
-        if (encodedPassword.startsWith("$2")) {
-            return bcrypt.matches(rawPassword, encodedPassword);
+        if (trimmedEncoded.startsWith("$2")) {
+            return bcrypt.matches(rawPassword, trimmedEncoded);
         }
 
         return false;
@@ -30,6 +32,6 @@ public class HybridPasswordEncoder implements PasswordEncoder {
     }
 
     public boolean isDjangoHash(String hash) {
-        return hash != null && hash.startsWith("pbkdf2_sha256$");
+        return hash != null && hash.trim().startsWith("pbkdf2_sha256$");
     }
 }
