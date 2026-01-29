@@ -57,6 +57,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/error").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/v1/agent/download/**", "/api/v1/overlay/download/**").permitAll()
                         .requestMatchers("/api/v1/agent-overlay/**").permitAll()
