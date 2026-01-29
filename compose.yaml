@@ -15,6 +15,7 @@ services:
     restart: always
   backend:
     image: ghcr.io/dest4590/atlas:latest
+    build: .
     container_name: atlas_app
     env_file:
       - .env

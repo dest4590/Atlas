@@ -9,10 +9,12 @@ import org.collapseloader.atlas.domain.achievements.entity.UserAchievement;
 import org.collapseloader.atlas.domain.achievements.repository.AchievementRepository;
 import org.collapseloader.atlas.domain.achievements.repository.UserAchievementRepository;
 import org.collapseloader.atlas.domain.users.repository.UserRepository;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,6 +24,7 @@ public class AchievementService {
     private final AchievementRepository achievementRepository;
     private final UserAchievementRepository userAchievementRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional(readOnly = true)
     public List<AchievementResponse> getAllAchievements() {
@@ -65,6 +68,10 @@ public class AchievementService {
         UserAchievement ua = new UserAchievement(user, achievement);
         userAchievementRepository.save(ua);
         log.info("Unlocked achievement {} for user {}", key, userId);
+        messagingTemplate.convertAndSendToUser(
+                user.getUsername(),
+                "/queue/achievements",
+                Map.of("key", key));
     }
 
     @Transactional
@@ -133,6 +140,9 @@ public class AchievementService {
         createIfNotExists("PRESET_MAX", "Palette", false);
         createIfNotExists("BETA_TESTER", "FlaskConical", false);
         createIfNotExists("COLLECTOR", "Library", false);
+        createIfNotExists("NIGHT_OWL", "Moon", false);
+        createIfNotExists("EARLY_BIRD", "Sun", false);
+        createIfNotExists("WEEKEND_WARRIOR", "Calendar", false);
     }
 
     private void createIfNotExists(String key, String icon, boolean hidden) {

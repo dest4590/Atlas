@@ -7,6 +7,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -69,6 +71,20 @@ public class UserStatusService {
 
             if (isNewSession) {
                 updates.put(FIELD_STARTED_AT, String.valueOf(Instant.now().toEpochMilli()));
+
+                LocalDateTime now = LocalDateTime.now(ZoneId.systemDefault());
+                int hour = now.getHour();
+                var dayOfWeek = now.getDayOfWeek();
+
+                if (hour >= 2 && hour < 5) {
+                    achievementService.unlockAchievement(userId, "NIGHT_OWL");
+                }
+                if (hour >= 5 && hour < 8) {
+                    achievementService.unlockAchievement(userId, "EARLY_BIRD");
+                }
+                if (dayOfWeek == java.time.DayOfWeek.SATURDAY || dayOfWeek == java.time.DayOfWeek.SUNDAY) {
+                    achievementService.unlockAchievement(userId, "WEEKEND_WARRIOR");
+                }
             }
         } else {
             if (currentStatus == UserStatus.ONLINE) {
