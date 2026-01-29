@@ -26,14 +26,17 @@ public class FriendshipService {
     private final FriendRequestRepository friendRequestRepository;
     private final UserRepository userRepository;
     private final UserStatusService userStatusService;
+    private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
 
     public FriendshipService(
             FriendRequestRepository friendRequestRepository,
             UserRepository userRepository,
-            UserStatusService userStatusService) {
+            UserStatusService userStatusService,
+            org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate) {
         this.friendRequestRepository = friendRequestRepository;
         this.userRepository = userRepository;
         this.userStatusService = userStatusService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Transactional(readOnly = true)
@@ -106,7 +109,15 @@ public class FriendshipService {
         }
         request.setStatus(FriendRequestStatus.ACCEPTED);
         request.setBlockedBy(null);
-        return mapRequestResponse(friendRequestRepository.save(request));
+        var saved = friendRequestRepository.save(request);
+        var response = mapRequestResponse(saved);
+
+        messagingTemplate.convertAndSendToUser(
+                request.getRequester().getUsername(),
+                "/queue/notifications",
+                Map.of("type", "FRIEND_REQUEST_ACCEPTED", "data", response));
+
+        return response;
     }
 
     @Transactional
