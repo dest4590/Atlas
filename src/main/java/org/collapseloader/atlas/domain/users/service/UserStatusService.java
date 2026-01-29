@@ -1,6 +1,5 @@
 package org.collapseloader.atlas.domain.users.service;
 
-import org.collapseloader.atlas.domain.users.dto.response.AdminOnlineUserResponse;
 import org.collapseloader.atlas.domain.users.dto.response.UserStatusResponse;
 import org.collapseloader.atlas.domain.users.entity.UserStatus;
 import org.springframework.data.redis.core.HashOperations;
@@ -8,8 +7,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.*;
-
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class UserStatusService {
@@ -18,7 +17,6 @@ public class UserStatusService {
     private static final String FIELD_CLIENT_NAME = "clientName";
     private static final String FIELD_UPDATED_AT = "updatedAt";
     private static final String FIELD_STARTED_AT = "startedAt";
-    private static final String KEY_ONLINE_USERS = "users:online";
 
     private final StringRedisTemplate redisTemplate;
     private final org.collapseloader.atlas.domain.users.repository.UserProfileRepository userProfileRepository;
@@ -31,36 +29,6 @@ public class UserStatusService {
         this.redisTemplate = redisTemplate;
         this.userProfileRepository = userProfileRepository;
         this.achievementService = achievementService;
-    }
-
-    public List<AdminOnlineUserResponse> getOnlineUsers() {
-        Set<String> onlineUserIds = redisTemplate.opsForSet().members(KEY_ONLINE_USERS);
-        if (onlineUserIds == null || onlineUserIds.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        List<AdminOnlineUserResponse> results = new ArrayList<>();
-        for (String userIdStr : onlineUserIds) {
-            try {
-                Long userId = Long.parseLong(userIdStr);
-                UserStatusResponse status = getStatus(userId);
-                if (status.status() == UserStatus.ONLINE) {
-                    var profile = userProfileRepository.findByUserId(userId).orElse(null);
-                    if (profile != null && profile.getUser() != null) {
-                        results.add(new org.collapseloader.atlas.domain.users.dto.response.AdminOnlineUserResponse(
-                                userId,
-                                profile.getUser().getUsername(),
-                                profile.getAvatarPath(),
-                                status.clientName(),
-                                status.startedAt()));
-                    }
-                } else {
-                    redisTemplate.opsForSet().remove(KEY_ONLINE_USERS, userIdStr);
-                }
-            } catch (NumberFormatException ignored) {
-            }
-        }
-        return results;
     }
 
     public UserStatusResponse getStatus(Long userId) {
@@ -102,7 +70,6 @@ public class UserStatusService {
             if (isNewSession) {
                 updates.put(FIELD_STARTED_AT, String.valueOf(Instant.now().toEpochMilli()));
             }
-            redisTemplate.opsForSet().add(KEY_ONLINE_USERS, userId.toString());
         } else {
             if (currentStatus == UserStatus.ONLINE) {
                 String startedAtStr = currentData.get(FIELD_STARTED_AT);
@@ -131,7 +98,6 @@ public class UserStatusService {
             }
             ops.delete(key, FIELD_CLIENT_NAME);
             ops.delete(key, FIELD_STARTED_AT);
-            redisTemplate.opsForSet().remove(KEY_ONLINE_USERS, userId.toString());
         }
 
         ops.putAll(key, updates);
