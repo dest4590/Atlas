@@ -49,17 +49,45 @@ public class AdminController {
 
     @GetMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UserAdminResponse>> getUsers() {
-        List<UserAdminResponse> users = userRepository.findAll().stream()
-                .map(u -> new UserAdminResponse(
-                        u.getId(),
-                        u.getUsername(),
-                        u.getEmail(),
-                        u.getRole().name(),
-                        u.isEnabled(),
-                        u.getCreatedAt()))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(users);
+    public ResponseEntity<org.springframework.data.domain.Page<UserAdminResponse>> getUsers(
+            @org.springframework.data.web.PageableDefault(size = 20, sort = "id", direction = org.springframework.data.domain.Sort.Direction.ASC) org.springframework.data.domain.Pageable pageable,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) Boolean enabled) {
+
+        org.springframework.data.jpa.domain.Specification<User> spec = (root, query, cb) -> {
+            var predicates = new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
+
+            if (search != null && !search.isBlank()) {
+                String likePattern = "%" + search.toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("username")), likePattern),
+                        cb.like(cb.lower(root.get("email")), likePattern)));
+            }
+
+            if (role != null && !role.isBlank()) {
+                try {
+                    predicates.add(cb.equal(root.get("role"), Role.valueOf(role)));
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+
+            if (enabled != null) {
+                predicates.add(cb.equal(root.get("enabled"), enabled));
+            }
+
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+
+        org.springframework.data.domain.Page<User> userPage = userRepository.findAll(spec, pageable);
+
+        return ResponseEntity.ok(userPage.map(u -> new UserAdminResponse(
+                u.getId(),
+                u.getUsername(),
+                u.getEmail(),
+                u.getRole().name(),
+                u.isEnabled(),
+                u.getCreatedAt())));
     }
 
     @GetMapping("/users/{id}")
@@ -186,7 +214,7 @@ public class AdminController {
     @PutMapping("/news/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<org.collapseloader.atlas.domain.news.News> updateNews(@PathVariable Long id,
-                                                                                @RequestBody org.collapseloader.atlas.domain.news.dto.request.NewsRequest request) {
+            @RequestBody org.collapseloader.atlas.domain.news.dto.request.NewsRequest request) {
         var news = newsService.updateNews(id, request);
         auditLogService.log("UPDATE_NEWS", "NEWS", news.getId().toString(),
                 Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())
@@ -213,5 +241,25 @@ public class AdminController {
     public ResponseEntity<org.springframework.data.domain.Page<org.collapseloader.atlas.domain.audit.AuditLog>> getAuditLogs(
             @org.springframework.data.web.PageableDefault(size = 20, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) org.springframework.data.domain.Pageable pageable) {
         return ResponseEntity.ok(auditLogService.getLogs(pageable));
+    }
+
+    @PostMapping("/users/{userId}/achievements/{achievementKey}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> grantAchievement(@PathVariable Long userId, @PathVariable String achievementKey) {
+        achievementService.unlockAchievement(userId, achievementKey);
+        auditLogService.log("GRANT_ACHIEVEMENT", "USER", userId.toString(),
+                Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getName(),
+                "Granted achievement " + achievementKey);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/users/{userId}/achievements/{achievementKey}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> revokeAchievement(@PathVariable Long userId, @PathVariable String achievementKey) {
+        achievementService.revokeAchievement(userId, achievementKey);
+        auditLogService.log("REVOKE_ACHIEVEMENT", "USER", userId.toString(),
+                Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getName(),
+                "Revoked achievement " + achievementKey);
+        return ResponseEntity.noContent().build();
     }
 }

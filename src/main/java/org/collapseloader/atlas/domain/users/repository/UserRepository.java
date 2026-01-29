@@ -10,10 +10,12 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
+public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
     Optional<User> findByUsername(String username);
 
-    @EntityGraph(attributePaths = {"profile"})
+    @EntityGraph(attributePaths = { "profile" })
     @Query("""
             select u from User u
             left join u.profile p

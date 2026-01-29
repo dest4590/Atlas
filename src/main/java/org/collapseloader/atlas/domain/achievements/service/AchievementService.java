@@ -68,6 +68,61 @@ public class AchievementService {
     }
 
     @Transactional
+    public void revokeAchievement(Long userId, String key) {
+        var achievement = achievementRepository.findByKey(key)
+                .orElseThrow(() -> new IllegalArgumentException("Achievement not found: " + key));
+
+        var ua = userAchievementRepository.findByUserIdAndAchievementId(userId, achievement.getId())
+                .orElseThrow(() -> new IllegalArgumentException("User does not have achievement: " + key));
+
+        userAchievementRepository.delete(ua);
+        log.info("Revoked achievement {} from user {}", key, userId);
+    }
+
+    @Transactional
+    public void createAchievement(String key, String icon, boolean hidden) {
+        if (achievementRepository.findByKey(key).isPresent()) {
+            throw new IllegalArgumentException("Achievement already exists: " + key);
+        }
+        achievementRepository.save(new Achievement(key, icon, hidden));
+    }
+
+    @Transactional
+    public void updateAchievement(Long id, String key, String icon, Boolean hidden) {
+        var achievement = achievementRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Achievement not found: " + id));
+
+        if (key != null && !key.equals(achievement.getKey())) {
+            if (achievementRepository.findByKey(key).isPresent()) {
+                throw new IllegalArgumentException("Achievement key already exists: " + key);
+            }
+            achievement.setKey(key);
+        }
+
+        if (icon != null)
+            achievement.setIcon(icon);
+        if (hidden != null)
+            achievement.setHidden(hidden);
+
+        achievementRepository.save(achievement);
+    }
+
+    @Transactional
+    public void deleteAchievement(Long id) {
+        if (!achievementRepository.existsById(id)) {
+            throw new IllegalArgumentException("Achievement not found: " + id);
+        }
+
+        if (userAchievementRepository.countByAchievementId(id) > 0) {
+            var links = userAchievementRepository.findAll().stream()
+                    .filter(ua -> ua.getAchievement().getId().equals(id)).collect(Collectors.toList());
+            userAchievementRepository.deleteAll(links);
+        }
+
+        achievementRepository.deleteById(id);
+    }
+
+    @Transactional
     public void seedAchievements() {
         createIfNotExists("PLAYED_1Hour", "Clock", false);
         createIfNotExists("PLAYED_10Hours", "Clock", false);
