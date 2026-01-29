@@ -11,6 +11,8 @@ import org.collapseloader.atlas.domain.users.dto.response.UserAdminResponse;
 import org.collapseloader.atlas.domain.users.entity.*;
 import org.collapseloader.atlas.domain.users.repository.UserPreferenceRepository;
 import org.collapseloader.atlas.domain.users.repository.UserRepository;
+import org.collapseloader.atlas.domain.users.service.UserStatusService;
+import org.collapseloader.atlas.domain.users.dto.response.AdminOnlineUserResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,6 +38,7 @@ public class AdminController {
     private final ClientRepository clientRepository;
     private final UserPreferenceRepository userPreferenceRepository;
     private final org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService;
+    private final UserStatusService userStatusService;
 
     @GetMapping("/stats")
     @PreAuthorize("hasRole('ADMIN')")
@@ -44,7 +47,14 @@ public class AdminController {
         stats.put("users", userRepository.count());
         stats.put("news", newsRepository.count());
         stats.put("clients", clientRepository.count());
+        stats.put("online", (long) userStatusService.getOnlineUsers().size());
         return ResponseEntity.ok(stats);
+    }
+
+    @GetMapping("/users/online")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<AdminOnlineUserResponse>> getOnlineUsers() {
+        return ResponseEntity.ok(userStatusService.getOnlineUsers());
     }
 
     @GetMapping("/users")
@@ -242,7 +252,7 @@ public class AdminController {
     @PutMapping("/news/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<org.collapseloader.atlas.domain.news.News> updateNews(@PathVariable Long id,
-                                                                                @RequestBody org.collapseloader.atlas.domain.news.dto.request.NewsRequest request) {
+            @RequestBody org.collapseloader.atlas.domain.news.dto.request.NewsRequest request) {
         var news = newsService.updateNews(id, request);
         auditLogService.log("UPDATE_NEWS", "NEWS", news.getId().toString(),
                 Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())

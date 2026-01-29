@@ -30,8 +30,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            PasswordUpgradeSuccessHandler successHandler
-    ) {
+            PasswordUpgradeSuccessHandler successHandler) {
         http
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new org.springframework.web.cors.CorsConfiguration();
@@ -44,8 +43,7 @@ public class SecurityConfig {
                             "http://localhost:5173",
                             "https://calypso.collapseloader.org",
                             "http://atlas.collapseloader.org",
-                            "https://atlas.collapseloader.org"
-                    ));
+                            "https://atlas.collapseloader.org"));
                     config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(java.util.List.of("*"));
                     config.setExposedHeaders(java.util.List.of("Authorization"));
@@ -73,13 +71,11 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(login -> login
-                        .successHandler(successHandler)
-                );
+                        .successHandler(successHandler));
 
         return http.build();
     }
@@ -93,8 +89,7 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(
             UserDetailsService userDetailsService,
-            HybridPasswordEncoder hybridPasswordEncoder
-    ) {
+            HybridPasswordEncoder hybridPasswordEncoder) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
         provider.setPasswordEncoder(hybridPasswordEncoder);
         return new ProviderManager(provider);
