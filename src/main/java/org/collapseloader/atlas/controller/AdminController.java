@@ -37,6 +37,7 @@ public class AdminController {
     private final UserPreferenceRepository userPreferenceRepository;
     private final org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService;
     private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+    private final org.collapseloader.atlas.domain.users.service.UserStatusService userStatusService;
 
     @GetMapping("/stats")
     @PreAuthorize("hasRole('ADMIN')")
@@ -45,6 +46,7 @@ public class AdminController {
         stats.put("users", userRepository.count());
         stats.put("news", newsRepository.count());
         stats.put("clients", clientRepository.count());
+        stats.put("online", userStatusService.getOnlineUserCount());
         return ResponseEntity.ok(stats);
     }
 

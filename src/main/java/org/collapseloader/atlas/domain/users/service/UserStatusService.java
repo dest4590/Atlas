@@ -19,6 +19,7 @@ public class UserStatusService {
     private static final String FIELD_CLIENT_NAME = "clientName";
     private static final String FIELD_UPDATED_AT = "updatedAt";
     private static final String FIELD_STARTED_AT = "startedAt";
+    private static final String KEY_ONLINE_SET = "user:online_set";
 
     private final StringRedisTemplate redisTemplate;
     private final org.collapseloader.atlas.domain.users.repository.UserProfileRepository userProfileRepository;
@@ -46,6 +47,11 @@ public class UserStatusService {
                 parseUpdatedAt(data.get(FIELD_STARTED_AT)));
     }
 
+    public long getOnlineUserCount() {
+        Long count = redisTemplate.opsForSet().size(KEY_ONLINE_SET);
+        return count != null ? count : 0;
+    }
+
     public UserStatusResponse setStatus(Long userId, UserStatus status, String clientName) {
         if (status == null) {
             throw new RuntimeException("Status is required");
@@ -62,6 +68,8 @@ public class UserStatusService {
         updates.put(FIELD_UPDATED_AT, String.valueOf(Instant.now().toEpochMilli()));
 
         if (status == UserStatus.ONLINE) {
+            redisTemplate.opsForSet().add(KEY_ONLINE_SET, userId.toString());
+
             if (clientName != null && !clientName.isBlank()) {
                 updates.put(FIELD_CLIENT_NAME, clientName);
             }
@@ -112,6 +120,7 @@ public class UserStatusService {
                     }
                 }
             }
+            redisTemplate.opsForSet().remove(KEY_ONLINE_SET, userId.toString());
             ops.delete(key, FIELD_CLIENT_NAME);
             ops.delete(key, FIELD_STARTED_AT);
         }
