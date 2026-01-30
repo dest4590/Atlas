@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.collapseloader.atlas.domain.clients.dto.request.AdminClientRequest;
 import org.collapseloader.atlas.domain.clients.dto.response.ClientResponse;
 import org.collapseloader.atlas.domain.clients.entity.Client;
+import org.collapseloader.atlas.domain.clients.entity.Version;
 import org.collapseloader.atlas.domain.clients.entity.fabric.FabricClient;
 import org.collapseloader.atlas.domain.clients.entity.forge.ForgeClient;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
@@ -14,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -128,6 +130,13 @@ public class AdminClientController {
         if (request.type() != null) {
             client.setType(request.type());
         }
+    }
+
+    @GetMapping("/versions")
+    public ResponseEntity<List<String>> getAllVersions() {
+        return ResponseEntity.ok(Arrays.stream(Version.values())
+                .map(Version::getApiValue)
+                .toList());
     }
 
     private ClientResponse toResponse(Client client) {
