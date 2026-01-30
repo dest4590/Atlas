@@ -45,7 +45,7 @@ public class AdminClientController {
     }
 
     @PostMapping
-    public ResponseEntity<Client> createClient(@RequestBody AdminClientRequest request) {
+    public ResponseEntity<ClientResponse> createClient(@RequestBody AdminClientRequest request) {
         Client client = switch (request.type()) {
             case FORGE -> new ForgeClient();
             case FABRIC -> new FabricClient();
@@ -59,12 +59,12 @@ public class AdminClientController {
                         .getName(),
                 "Created client: " + saved.getName());
 
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(toResponse(saved));
     }
 
     @Transactional
     @PutMapping("/{id}")
-    public ResponseEntity<Client> updateClient(@PathVariable Long id, @RequestBody AdminClientRequest request) {
+    public ResponseEntity<ClientResponse> updateClient(@PathVariable Long id, @RequestBody AdminClientRequest request) {
         return clientRepository.findById(id)
                 .map(client -> {
                     if (request.type() != null && client.getType() != request.type()) {
@@ -80,7 +80,7 @@ public class AdminClientController {
                                     .getAuthentication()).getName(),
                             "Updated client: " + saved.getName());
 
-                    return ResponseEntity.ok(saved);
+                    return ResponseEntity.ok(toResponse(saved));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
