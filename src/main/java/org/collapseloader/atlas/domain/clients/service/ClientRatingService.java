@@ -18,8 +18,8 @@ public class ClientRatingService {
 
     @Transactional
     public ClientRatingResponse submitRating(Long clientId, User user, double rating) {
-        if (rating < 1 || rating > 5 || (rating * 2) % 1 != 0) {
-            throw new IllegalArgumentException("Rating must be between 1 and 5 in 0.5 increments");
+        if (rating < 0.5 || rating > 5 || (rating * 2) % 1 != 0) {
+            throw new IllegalArgumentException("Rating must be between 0.5 and 5 in 0.5 increments");
         }
 
         var client = clientRepository.findById(clientId)
