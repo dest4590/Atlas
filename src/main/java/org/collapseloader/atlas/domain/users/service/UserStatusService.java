@@ -1,12 +1,9 @@
 package org.collapseloader.atlas.domain.users.service;
 
-import org.collapseloader.atlas.domain.achievements.service.AchievementService;
 import org.collapseloader.atlas.domain.users.dto.response.UserStatusResponse;
 import org.collapseloader.atlas.domain.users.entity.UserStatus;
-import org.collapseloader.atlas.domain.users.repository.UserProfileRepository;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -24,19 +21,16 @@ public class UserStatusService {
     private static final String FIELD_STARTED_AT = "startedAt";
 
     private final StringRedisTemplate redisTemplate;
-    private final UserProfileRepository userProfileRepository;
-    private final AchievementService achievementService;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final org.collapseloader.atlas.domain.users.repository.UserProfileRepository userProfileRepository;
+    private final org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService;
 
     public UserStatusService(
             StringRedisTemplate redisTemplate,
-            UserProfileRepository userProfileRepository,
-            AchievementService achievementService,
-            SimpMessagingTemplate messagingTemplate) {
+            org.collapseloader.atlas.domain.users.repository.UserProfileRepository userProfileRepository,
+            org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService) {
         this.redisTemplate = redisTemplate;
         this.userProfileRepository = userProfileRepository;
         this.achievementService = achievementService;
-        this.messagingTemplate = messagingTemplate;
     }
 
     public UserStatusResponse getStatus(Long userId) {
@@ -124,10 +118,7 @@ public class UserStatusService {
 
         ops.putAll(key, updates);
 
-        var response = getStatus(userId);
-        messagingTemplate.convertAndSend("/topic/presence", (Object) Map.of("userId", userId, "status", response));
-
-        return response;
+        return getStatus(userId);
     }
 
     private String key(Long userId) {

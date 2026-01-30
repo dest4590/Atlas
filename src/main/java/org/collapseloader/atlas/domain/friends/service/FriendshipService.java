@@ -11,6 +11,7 @@ import org.collapseloader.atlas.domain.users.repository.UserRepository;
 import org.collapseloader.atlas.domain.users.service.UserStatusService;
 import org.collapseloader.atlas.exception.*;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,13 +27,13 @@ public class FriendshipService {
     private final FriendRequestRepository friendRequestRepository;
     private final UserRepository userRepository;
     private final UserStatusService userStatusService;
-    private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public FriendshipService(
             FriendRequestRepository friendRequestRepository,
             UserRepository userRepository,
             UserStatusService userStatusService,
-            org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate) {
+            SimpMessagingTemplate messagingTemplate) {
         this.friendRequestRepository = friendRequestRepository;
         this.userRepository = userRepository;
         this.userStatusService = userStatusService;
@@ -94,6 +95,21 @@ public class FriendshipService {
                 .status(FriendRequestStatus.PENDING)
                 .build();
         var saved = friendRequestRepository.save(request);
+
+        var payload = new HashMap<String, Object>();
+
+        payload.put("type", "REQUEST_RECEIVED");
+        payload.put("sender", principal.getUsername());
+
+        var nickname = principal.getProfile() != null ? principal.getProfile().getNickname() : null;
+        if (nickname != null) {
+            payload.put("nickname", nickname);
+        }
+
+        messagingTemplate.convertAndSendToUser(
+                target.getUsername(),
+                "/queue/friends",
+                payload);
         return mapRequestResponse(saved);
     }
 
@@ -109,15 +125,24 @@ public class FriendshipService {
         }
         request.setStatus(FriendRequestStatus.ACCEPTED);
         request.setBlockedBy(null);
+
         var saved = friendRequestRepository.save(request);
-        var response = mapRequestResponse(saved);
+
+        var payload = new HashMap<String, Object>();
+
+        payload.put("type", "FRIEND_ADDED");
+        payload.put("sender", principal.getUsername());
+        var nickname = principal.getProfile() != null ? principal.getProfile().getNickname() : null;
+        if (nickname != null) {
+            payload.put("nickname", nickname);
+        }
 
         messagingTemplate.convertAndSendToUser(
                 request.getRequester().getUsername(),
-                "/queue/notifications",
-                Map.of("type", "FRIEND_REQUEST_ACCEPTED", "data", response));
+                "/queue/friends",
+                payload);
 
-        return response;
+        return mapRequestResponse(saved);
     }
 
     @Transactional
