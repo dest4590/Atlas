@@ -1,5 +1,8 @@
 package org.collapseloader.atlas.domain.users.service;
 
+import org.collapseloader.atlas.domain.clients.dto.response.ClientResponse;
+import org.collapseloader.atlas.domain.clients.entity.Client;
+import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
 import org.collapseloader.atlas.domain.friends.service.FriendshipService;
 import org.collapseloader.atlas.domain.users.dto.request.UpdateProfileRequest;
 import org.collapseloader.atlas.domain.users.dto.response.PublicUserResponse;
@@ -28,18 +31,21 @@ public class UserProfileService {
     private final UserStatusService userStatusService;
     private final UserAvatarStorageService userAvatarStorageService;
     private final FriendshipService friendshipService;
+    private final ClientRepository clientRepository;
 
     public UserProfileService(
             UserRepository userRepository,
             UserProfileRepository userProfileRepository,
             UserStatusService userStatusService,
             UserAvatarStorageService userAvatarStorageService,
-            FriendshipService friendshipService) {
+            FriendshipService friendshipService,
+            ClientRepository clientRepository) {
         this.userRepository = userRepository;
         this.userProfileRepository = userProfileRepository;
         this.userStatusService = userStatusService;
         this.userAvatarStorageService = userAvatarStorageService;
         this.friendshipService = friendshipService;
+        this.clientRepository = clientRepository;
     }
 
     @Transactional
@@ -84,6 +90,15 @@ public class UserProfileService {
         }
 
         profile.setNickname(nickname);
+
+        if (request.favoriteClientId() != null) {
+            Client client = clientRepository.findById(request.favoriteClientId())
+                    .orElseThrow(() -> new EntityNotFoundException("Client not found"));
+            profile.setFavoriteClient(client);
+        } else if (request.nickname() == null) {
+            profile.setFavoriteClient(null);
+        }
+
         var savedProfile = userProfileRepository.save(profile);
         return mapProfile(savedProfile);
     }
@@ -153,7 +168,8 @@ public class UserProfileService {
                 profile.getRole(),
                 mapSocialLinks(profile.getSocialLinks()),
                 profile.getCreatedAt(),
-                profile.getUpdatedAt());
+                profile.getUpdatedAt(),
+                mapClient(profile.getFavoriteClient()));
     }
 
     private List<SocialLinkResponse> mapSocialLinks(List<SocialLink> links) {
@@ -163,6 +179,26 @@ public class UserProfileService {
         return links.stream()
                 .map(link -> new SocialLinkResponse(link.getPlatform(), link.getUrl()))
                 .toList();
+    }
+
+    private ClientResponse mapClient(Client client) {
+        if (client == null) {
+            return null;
+        }
+        return new ClientResponse(
+                client.getId(),
+                client.getName(),
+                client.getVersion() != null ? client.getVersion().name() : null,
+                client.getFilename(),
+                client.getMd5Hash(),
+                client.getSize(),
+                client.getMainClass(),
+                client.isShow(),
+                client.isWorking(),
+                client.getLaunches(),
+                client.getDownloads(),
+                client.getType() != null ? client.getType().name() : null,
+                client.getCreatedAt());
     }
 
     private String normalizeNickname(String value) {

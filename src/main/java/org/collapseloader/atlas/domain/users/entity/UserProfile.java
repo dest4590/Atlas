@@ -3,6 +3,8 @@ package org.collapseloader.atlas.domain.users.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+
+import org.collapseloader.atlas.domain.clients.entity.Client;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -64,6 +66,11 @@ public class UserProfile {
     @Column(name = "launches_count", nullable = false)
     @Builder.Default
     private long launchesCount = 0L;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "favorite_client_id")
+    @ToString.Exclude
+    private Client favoriteClient;
 
     private static String normalizeNickname(String value) {
         if (value == null) {
