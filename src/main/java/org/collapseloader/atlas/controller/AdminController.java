@@ -36,6 +36,7 @@ public class AdminController {
     private final ClientRepository clientRepository;
     private final UserPreferenceRepository userPreferenceRepository;
     private final org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService;
+    private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
 
     @GetMapping("/stats")
     @PreAuthorize("hasRole('ADMIN')")
@@ -242,7 +243,7 @@ public class AdminController {
     @PutMapping("/news/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<org.collapseloader.atlas.domain.news.News> updateNews(@PathVariable Long id,
-                                                                                @RequestBody org.collapseloader.atlas.domain.news.dto.request.NewsRequest request) {
+            @RequestBody org.collapseloader.atlas.domain.news.dto.request.NewsRequest request) {
         var news = newsService.updateNews(id, request);
         auditLogService.log("UPDATE_NEWS", "NEWS", news.getId().toString(),
                 Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())
@@ -289,5 +290,17 @@ public class AdminController {
                 Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getName(),
                 "Revoked achievement " + achievementKey);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/clients/trigger-update")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> triggerUpdate() {
+        Map<String, String> payload = new HashMap<>();
+        payload.put("command", "CHECK_FOR_UPDATES");
+        messagingTemplate.convertAndSend("/topic/commands", payload);
+        auditLogService.log("TRIGGER_UPDATE", "SYSTEM", "ALL",
+                Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getName(),
+                "Triggered manual update check for all clients");
+        return ResponseEntity.ok().build();
     }
 }
