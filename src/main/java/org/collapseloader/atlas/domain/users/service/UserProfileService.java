@@ -1,6 +1,5 @@
 package org.collapseloader.atlas.domain.users.service;
 
-import org.collapseloader.atlas.domain.clients.dto.response.ClientResponse;
 import org.collapseloader.atlas.domain.clients.entity.Client;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
 import org.collapseloader.atlas.domain.friends.service.FriendshipService;
@@ -169,7 +168,7 @@ public class UserProfileService {
                 mapSocialLinks(profile.getSocialLinks()),
                 profile.getCreatedAt(),
                 profile.getUpdatedAt(),
-                mapClient(profile.getFavoriteClient()));
+                profile.getFavoriteClient() != null ? profile.getFavoriteClient().getId() : null);
     }
 
     private List<SocialLinkResponse> mapSocialLinks(List<SocialLink> links) {
@@ -179,26 +178,6 @@ public class UserProfileService {
         return links.stream()
                 .map(link -> new SocialLinkResponse(link.getPlatform(), link.getUrl()))
                 .toList();
-    }
-
-    private ClientResponse mapClient(Client client) {
-        if (client == null) {
-            return null;
-        }
-        return new ClientResponse(
-                client.getId(),
-                client.getName(),
-                client.getVersion() != null ? client.getVersion().name() : null,
-                client.getFilename(),
-                client.getMd5Hash(),
-                client.getSize(),
-                client.getMainClass(),
-                client.isShow(),
-                client.isWorking(),
-                client.getLaunches(),
-                client.getDownloads(),
-                client.getType() != null ? client.getType().name() : null,
-                client.getCreatedAt());
     }
 
     private String normalizeNickname(String value) {
