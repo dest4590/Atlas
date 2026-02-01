@@ -20,6 +20,7 @@ public class UserStatusService {
     private static final String FIELD_UPDATED_AT = "updatedAt";
     private static final String FIELD_STARTED_AT = "startedAt";
     private static final String KEY_ONLINE_SET = "user:online_set";
+    private static final String KEY_HEARTBEATS = "user:status:heartbeats";
 
     private final StringRedisTemplate redisTemplate;
     private final org.collapseloader.atlas.domain.users.repository.UserProfileRepository userProfileRepository;
@@ -35,6 +36,9 @@ public class UserStatusService {
     }
 
     public UserStatusResponse getStatus(Long userId) {
+        if (isStale(userId)) {
+            return new UserStatusResponse(UserStatus.OFFLINE, null, null, null);
+        }
         HashOperations<String, String, String> ops = redisTemplate.opsForHash();
         Map<String, String> data = ops.entries(key(userId));
         if (data == null || data.isEmpty()) {
@@ -47,9 +51,19 @@ public class UserStatusService {
                 parseUpdatedAt(data.get(FIELD_STARTED_AT)));
     }
 
+    private boolean isStale(Long userId) {
+        Double score = redisTemplate.opsForZSet().score(KEY_HEARTBEATS, userId.toString());
+        if (score == null)
+            return false;
+        return (System.currentTimeMillis() - score.longValue()) > 90000; // 90 seconds
+    }
+
     public long getOnlineUserCount() {
         Long count = redisTemplate.opsForSet().size(KEY_ONLINE_SET);
-        return count != null ? count : 0;
+        if (count == null || count == 0)
+            return 0;
+
+        return count;
     }
 
     public UserStatusResponse setStatus(Long userId, UserStatus status, String clientName) {
@@ -69,6 +83,7 @@ public class UserStatusService {
 
         if (status == UserStatus.ONLINE) {
             redisTemplate.opsForSet().add(KEY_ONLINE_SET, userId.toString());
+            redisTemplate.opsForZSet().add(KEY_HEARTBEATS, userId.toString(), System.currentTimeMillis());
 
             if (clientName != null && !clientName.isBlank()) {
                 updates.put(FIELD_CLIENT_NAME, clientName);
@@ -121,6 +136,7 @@ public class UserStatusService {
                 }
             }
             redisTemplate.opsForSet().remove(KEY_ONLINE_SET, userId.toString());
+            redisTemplate.opsForZSet().remove(KEY_HEARTBEATS, userId.toString());
             ops.delete(key, FIELD_CLIENT_NAME);
             ops.delete(key, FIELD_STARTED_AT);
         }
@@ -128,6 +144,21 @@ public class UserStatusService {
         ops.putAll(key, updates);
 
         return getStatus(userId);
+    }
+
+    public void processStaleStatus() {
+        long threshold = System.currentTimeMillis() - 90000;
+        var staleUsers = redisTemplate.opsForZSet().rangeByScore(KEY_HEARTBEATS, 0, threshold);
+        if (staleUsers == null || staleUsers.isEmpty())
+            return;
+
+        for (String userIdStr : staleUsers) {
+            try {
+                Long userId = Long.parseLong(userIdStr);
+                setStatus(userId, UserStatus.OFFLINE, null);
+            } catch (NumberFormatException ignored) {
+            }
+        }
     }
 
     private String key(Long userId) {
