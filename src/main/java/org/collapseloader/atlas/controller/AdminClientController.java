@@ -6,9 +6,8 @@ import org.collapseloader.atlas.domain.clients.dto.request.AdminClientRequest;
 import org.collapseloader.atlas.domain.clients.dto.response.ClientResponse;
 import org.collapseloader.atlas.domain.clients.entity.Client;
 import org.collapseloader.atlas.domain.clients.entity.Version;
-import org.collapseloader.atlas.domain.clients.entity.fabric.FabricClient;
-import org.collapseloader.atlas.domain.clients.entity.forge.ForgeClient;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
+import org.collapseloader.atlas.domain.clients.service.ClientService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,6 +27,7 @@ public class AdminClientController {
     private final ClientRepository clientRepository;
     private final org.collapseloader.atlas.domain.audit.AuditLogService auditLogService;
     private final EntityManager entityManager;
+    private final ClientService clientService;
 
     @GetMapping
     public ResponseEntity<List<ClientResponse>> getAllClients() {
@@ -48,20 +48,14 @@ public class AdminClientController {
 
     @PostMapping
     public ResponseEntity<ClientResponse> createClient(@RequestBody AdminClientRequest request) {
-        Client client = switch (request.type()) {
-            case FORGE -> new ForgeClient();
-            case FABRIC -> new FabricClient();
-            case Vanilla -> new Client();
-        };
-        mapRequestToClient(request, client);
-        var saved = clientRepository.save(client);
+        var saved = clientService.createFromAdmin(request);
 
-        auditLogService.log("CREATE_CLIENT", "CLIENT", saved.getId().toString(),
+        auditLogService.log("CREATE_CLIENT", "CLIENT", saved.id().toString(),
                 Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())
                         .getName(),
-                "Created client: " + saved.getName());
+                "Created client: " + saved.name());
 
-        return ResponseEntity.ok(toResponse(saved));
+        return ResponseEntity.ok(saved);
     }
 
     @Transactional

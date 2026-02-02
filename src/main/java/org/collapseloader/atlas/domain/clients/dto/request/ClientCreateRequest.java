@@ -17,4 +17,21 @@ public record ClientCreateRequest(
         Long downloads,
         @JsonProperty("client_type") ClientType clientType
 ) {
+    public static ClientCreateRequest fromAdmin(AdminClientRequest request) {
+        if (request == null) {
+            return new ClientCreateRequest(null, null, null, null, null, null, null, null, null, null, null);
+        }
+        return new ClientCreateRequest(
+                request.name(),
+                request.version(),
+                request.filename(),
+                request.md5Hash(),
+                request.size(),
+                request.mainClass(),
+                request.show(),
+                request.working(),
+                request.launches(),
+                request.downloads(),
+                request.type());
+    }
 }

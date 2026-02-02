@@ -1,6 +1,7 @@
 package org.collapseloader.atlas.domain.clients.service;
 
 import org.collapseloader.atlas.domain.achievements.service.AchievementService;
+import org.collapseloader.atlas.domain.clients.dto.request.AdminClientRequest;
 import org.collapseloader.atlas.domain.clients.dto.request.ClientCreateRequest;
 import org.collapseloader.atlas.domain.clients.dto.response.ClientResponse;
 import org.collapseloader.atlas.domain.clients.entity.Client;
@@ -36,6 +37,15 @@ public class ClientService {
 
     @CacheEvict(value = "clients_list", allEntries = true)
     public ClientResponse create(ClientCreateRequest request) {
+        return createInternal(request);
+    }
+
+    @CacheEvict(value = "clients_list", allEntries = true)
+    public ClientResponse createFromAdmin(AdminClientRequest request) {
+        return createInternal(ClientCreateRequest.fromAdmin(request));
+    }
+
+    private ClientResponse createInternal(ClientCreateRequest request) {
         ClientType type = request.clientType() == null ? ClientType.Vanilla : request.clientType();
         Client client = switch (type) {
             case FABRIC -> new FabricClient();
