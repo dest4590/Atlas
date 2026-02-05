@@ -3,10 +3,8 @@ package org.collapseloader.atlas.domain.presets.dto.response;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record PresetThemeResponse(
-        @JsonProperty("customCSS")
-        String customCSS,
-        @JsonProperty("enableCustomCSS")
-        boolean enableCustomCSS,
+        @JsonProperty("customCSS") String customCSS,
+        @JsonProperty("enableCustomCSS") boolean enableCustomCSS,
 
         String base100,
         String base200,
@@ -35,6 +33,9 @@ public record PresetThemeResponse(
         String warningContent,
 
         String error,
-        String errorContent
-) {
+        String errorContent,
+
+        String backgroundImage,
+        Double backgroundBlur,
+        Double backgroundOpacity) {
 }

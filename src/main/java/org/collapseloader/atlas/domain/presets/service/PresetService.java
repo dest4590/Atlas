@@ -369,6 +369,13 @@ public class PresetService {
             theme.setError(trimToNull(request.error()));
         if (!patch || request.errorContent() != null)
             theme.setErrorContent(trimToNull(request.errorContent()));
+
+        if (!patch || request.backgroundImage() != null)
+            theme.setBackgroundImage(trimToNull(request.backgroundImage()));
+        if (!patch || request.backgroundBlur() != null)
+            theme.setBackgroundBlur(request.backgroundBlur());
+        if (!patch || request.backgroundOpacity() != null)
+            theme.setBackgroundOpacity(request.backgroundOpacity());
     }
 
     private String trimToNull(String value) {
@@ -434,7 +441,10 @@ public class PresetService {
                 theme.getWarning(),
                 theme.getWarningContent(),
                 theme.getError(),
-                theme.getErrorContent());
+                theme.getErrorContent(),
+                theme.getBackgroundImage(),
+                theme.getBackgroundBlur(),
+                theme.getBackgroundOpacity());
     }
 
     private PresetAuthorResponse toAuthor(User owner) {

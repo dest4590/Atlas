@@ -245,7 +245,7 @@ public class AdminController {
     @PutMapping("/news/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<org.collapseloader.atlas.domain.news.News> updateNews(@PathVariable Long id,
-            @RequestBody org.collapseloader.atlas.domain.news.dto.request.NewsRequest request) {
+                                                                                @RequestBody org.collapseloader.atlas.domain.news.dto.request.NewsRequest request) {
         var news = newsService.updateNews(id, request);
         auditLogService.log("UPDATE_NEWS", "NEWS", news.getId().toString(),
                 Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())

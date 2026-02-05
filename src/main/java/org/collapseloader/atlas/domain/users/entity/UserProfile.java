@@ -3,7 +3,6 @@ package org.collapseloader.atlas.domain.users.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-
 import org.collapseloader.atlas.domain.clients.entity.Client;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;

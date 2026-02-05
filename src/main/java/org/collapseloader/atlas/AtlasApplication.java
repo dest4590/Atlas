@@ -6,7 +6,7 @@ import org.springframework.boot.webmvc.autoconfigure.error.ErrorMvcAutoConfigura
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@SpringBootApplication(exclude = { ErrorMvcAutoConfiguration.class })
+@SpringBootApplication(exclude = {ErrorMvcAutoConfiguration.class})
 @EnableCaching
 @EnableScheduling
 public class AtlasApplication {

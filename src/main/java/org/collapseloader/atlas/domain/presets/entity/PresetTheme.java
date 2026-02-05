@@ -57,4 +57,13 @@ public class PresetTheme {
     private String error;
     @Column(name = "error_content")
     private String errorContent;
+
+    @Column(name = "background_image", columnDefinition = "TEXT")
+    private String backgroundImage;
+
+    @Column(name = "background_blur")
+    private Double backgroundBlur;
+
+    @Column(name = "background_opacity")
+    private Double backgroundOpacity;
 }
