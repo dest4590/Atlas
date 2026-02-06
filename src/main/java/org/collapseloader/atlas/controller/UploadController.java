@@ -24,4 +24,23 @@ public class UploadController {
         FileStorageService.StoredFile storedFile = storageService.store(file, path);
         return ResponseEntity.ok(storedFile);
     }
+
+    @PostMapping("/chunk")
+    public ResponseEntity<Void> uploadChunk(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("uploadId") String uploadId,
+            @RequestParam("chunkIndex") int chunkIndex) {
+        storageService.storeChunk(uploadId, chunkIndex, file);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/merge")
+    public ResponseEntity<FileStorageService.StoredFile> mergeChunks(
+            @RequestParam("uploadId") String uploadId,
+            @RequestParam("filename") String filename,
+            @RequestParam(required = false, defaultValue = "") String path,
+            @RequestParam("totalChunks") int totalChunks) {
+        FileStorageService.StoredFile storedFile = storageService.mergeChunks(uploadId, filename, path, totalChunks);
+        return ResponseEntity.ok(storedFile);
+    }
 }

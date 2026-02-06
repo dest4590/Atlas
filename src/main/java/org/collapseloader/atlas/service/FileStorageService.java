@@ -1,26 +1,20 @@
 package org.collapseloader.atlas.service;
 
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.collapseloader.atlas.domain.storage.entity.FileMetadata;
-import org.collapseloader.atlas.domain.storage.repository.FileMetadataRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Optional;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.stream.Stream;
 
 @Service
@@ -29,12 +23,14 @@ public class FileStorageService {
 
     private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
     private final Path rootLocation = Paths.get("uploads", "public").toAbsolutePath().normalize();
-    private final FileMetadataRepository metadataRepository;
+    private final Path tempLocation = Paths.get("uploads", "temp").toAbsolutePath().normalize();
+    private final FileMetadataService metadataService;
 
-    @PostConstruct
+    @EventListener(ContextRefreshedEvent.class)
     public void init() {
         try {
             Files.createDirectories(rootLocation);
+            Files.createDirectories(tempLocation);
             verifyIntegrity();
         } catch (IOException e) {
             throw new RuntimeException("Could not initialize storage", e);
@@ -48,20 +44,20 @@ public class FileStorageService {
                     .filter(Files::isRegularFile)
                     .forEach(path -> {
                         try {
-                            calculateMD5(path);
+                            metadataService.getOrCalculateMD5(path, rootLocation);
                         } catch (IOException e) {
-                            log.error("Failed to verify file: " + path, e);
+                            log.error("Failed to verify file: {}", path, e);
                         }
                     });
         } catch (IOException e) {
             log.error("Failed to walk files for integrity check", e);
         }
 
-        metadataRepository.findAll().forEach(metadata -> {
+        metadataService.findAll().forEach(metadata -> {
             Path file = rootLocation.resolve(metadata.getFilePath()).normalize();
             if (!Files.exists(file)) {
                 log.info("Removing missing file from database: {}", metadata.getFilePath());
-                metadataRepository.delete(metadata);
+                metadataService.delete(metadata);
             }
         });
 
@@ -72,6 +68,10 @@ public class FileStorageService {
         try {
             if (file.isEmpty()) {
                 throw new RuntimeException("Failed to store empty file.");
+            }
+            String originalFilename = file.getOriginalFilename();
+            if (originalFilename == null || originalFilename.isEmpty()) {
+                throw new RuntimeException("Failed to store file with empty name.");
             }
             Path destinationDir = this.rootLocation;
             if (subDir != null && !subDir.isEmpty()) {
@@ -84,7 +84,7 @@ public class FileStorageService {
             }
 
             Path destinationFile = destinationDir.resolve(
-                    Paths.get(file.getOriginalFilename()))
+                    Paths.get(originalFilename))
                     .normalize().toAbsolutePath();
 
             if (!destinationFile.getParent().startsWith(destinationDir.toAbsolutePath())) {
@@ -97,57 +97,42 @@ public class FileStorageService {
                         StandardCopyOption.REPLACE_EXISTING);
             }
 
-            String md5 = calculateMD5(destinationFile);
+            String md5 = metadataService.getOrCalculateMD5(destinationFile, rootLocation);
             long size = Files.size(destinationFile);
 
             String relativePath = this.rootLocation.relativize(destinationFile).toString().replace("\\", "/");
 
-            return new StoredFile(file.getOriginalFilename(), relativePath, md5, size / (1024 * 1024));
+            return new StoredFile(originalFilename, relativePath, md5, size / (1024 * 1024));
         } catch (IOException e) {
             throw new RuntimeException("Failed to store file.", e);
         }
     }
 
-    public Resource loadAsResource(String filename) {
-        try {
-            Path file = rootLocation.resolve(filename).normalize();
-            if (!file.startsWith(rootLocation)) {
-                throw new RuntimeException("Cannot access file outside current directory.");
-            }
-            Resource resource = new UrlResource(file.toUri());
-            if (resource.exists() || resource.isReadable()) {
-                return resource;
-            } else {
-                throw new RuntimeException(
-                        "Could not read file: " + filename);
-            }
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("Could not read file: " + filename, e);
-        }
-    }
-
-    public java.nio.file.Path load(String filename) {
+    public Path load(String filename) {
         return rootLocation.resolve(filename).normalize();
     }
 
-    public java.util.stream.Stream<Path> loadAll(String subDir) {
-        try {
-            Path startDir = this.rootLocation;
-            if (subDir != null && !subDir.isEmpty()) {
-                startDir = startDir.resolve(subDir).normalize();
-                if (!startDir.startsWith(this.rootLocation)) {
-                    throw new RuntimeException("Cannot list files outside root directory.");
-                }
+    public Stream<Path> loadAll(String subDir) {
+        Path startDir = this.rootLocation;
+        if (subDir != null && !subDir.isEmpty()) {
+            startDir = startDir.resolve(subDir).normalize();
+            if (!startDir.startsWith(this.rootLocation)) {
+                throw new RuntimeException("Cannot list files outside root directory.");
             }
+        }
 
-            if (!Files.exists(startDir)) {
-                return java.util.stream.Stream.empty();
-            }
+        if (!Files.exists(startDir)) {
+            return Stream.empty();
+        }
 
-            Path finalStartDir = startDir;
-            return Files.walk(finalStartDir, 1)
+        Path finalStartDir = startDir;
+
+        try (Stream<Path> walk = Files.walk(finalStartDir, 1)) {
+            var files = walk
                     .filter(path -> !path.equals(finalStartDir))
-                    .map(this.rootLocation::relativize);
+                    .map(this.rootLocation::relativize)
+                    .toList();
+            return files.stream();
         } catch (IOException e) {
             throw new RuntimeException("Failed to read stored files", e);
         }
@@ -160,7 +145,7 @@ public class FileStorageService {
                 throw new RuntimeException("Cannot delete file outside current directory.");
             }
             Files.deleteIfExists(file);
-            metadataRepository.findByFilePath(filename).ifPresent(metadataRepository::delete);
+            metadataService.deleteMetadata(filename);
         } catch (IOException e) {
             throw new RuntimeException("Could not delete file: " + filename, e);
         }
@@ -177,11 +162,7 @@ public class FileStorageService {
 
             Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
 
-            // Update database
-            metadataRepository.findByFilePath(oldName).ifPresent(meta -> {
-                meta.setFilePath(newName);
-                metadataRepository.save(meta);
-            });
+            metadataService.updateMetadataPath(oldName, newName);
         } catch (IOException e) {
             throw new RuntimeException("Failed to rename file", e);
         }
@@ -199,58 +180,105 @@ public class FileStorageService {
         }
     }
 
-    @Transactional
-    public String calculateMD5(Path path) throws IOException {
-        String relativePath = rootLocation.relativize(path).toString().replace("\\", "/");
-
-        // Check database
-        Optional<FileMetadata> existing = metadataRepository.findByFilePath(relativePath);
-        long currentSize = Files.size(path);
-        long currentLastModified = Files.getLastModifiedTime(path).toMillis();
-
-        if (existing.isPresent()) {
-            FileMetadata cached = existing.get();
-            if (cached.getSize() == currentSize && cached.getLastModified() == currentLastModified) {
-                return cached.getMd5();
-            }
-            log.info("File changed, recalculating hash: {}", relativePath);
-        } else {
-            log.info("New file detected or not in database, calculating hash: {}", relativePath);
-        }
-
+    public void storeChunk(String uploadId, int chunkIndex, MultipartFile file) {
         try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            try (var is = Files.newInputStream(path)) {
-                byte[] buffer = new byte[65536]; // 64KB buffer
-                int bytesRead;
-                while ((bytesRead = is.read(buffer)) != -1) {
-                    md.update(buffer, 0, bytesRead);
-                }
+            if (file.isEmpty()) {
+                throw new RuntimeException("Failed to store empty chunk.");
             }
-            StringBuilder sb = new StringBuilder();
-            for (byte b : md.digest()) {
-                sb.append(String.format("%02x", b));
+            Path uploadTempDir = tempLocation.resolve(uploadId);
+            Files.createDirectories(uploadTempDir);
+
+            Path chunkFile = uploadTempDir.resolve(String.valueOf(chunkIndex));
+            try (var inputStream = file.getInputStream()) {
+                Files.copy(inputStream, chunkFile, StandardCopyOption.REPLACE_EXISTING);
             }
-            String md5 = sb.toString();
-
-            // Update database
-            FileMetadata metadata = existing.orElse(new FileMetadata());
-            metadata.setFilePath(relativePath);
-            metadata.setMd5(md5);
-            metadata.setSize(currentSize);
-            metadata.setLastModified(currentLastModified);
-            metadataRepository.save(metadata);
-
-            return md5;
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("MD5 not supported", e);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to store chunk.", e);
         }
     }
 
-    // These records are still useful for API compatibility
-    public record CachedMetadata(String md5, long size, long lastModified) {
+    public StoredFile mergeChunks(String uploadId, String filename, String subDir, int totalChunks) {
+        try {
+            Path uploadTempDir = tempLocation.resolve(uploadId);
+            if (!Files.exists(uploadTempDir)) {
+                throw new RuntimeException("Upload session not found.");
+            }
+
+            Path destinationDir = this.rootLocation;
+            if (subDir != null && !subDir.isEmpty()) {
+                destinationDir = destinationDir.resolve(subDir).normalize();
+                Files.createDirectories(destinationDir);
+            }
+
+            Path destinationFile = destinationDir.resolve(Paths.get(filename)).normalize().toAbsolutePath();
+            if (!destinationFile.getParent().startsWith(destinationDir.toAbsolutePath())) {
+                throw new RuntimeException("Cannot store file outside current directory.");
+            }
+
+            try (var outputStream = Files.newOutputStream(destinationFile, java.nio.file.StandardOpenOption.CREATE,
+                    java.nio.file.StandardOpenOption.TRUNCATE_EXISTING)) {
+                for (int i = 0; i < totalChunks; i++) {
+                    Path chunkFile = uploadTempDir.resolve(String.valueOf(i));
+                    if (!Files.exists(chunkFile)) {
+                        throw new RuntimeException("Missing chunk " + i);
+                    }
+                    Files.copy(chunkFile, outputStream);
+                }
+            }
+
+            // Clean up temp files
+            deleteRecursively(uploadTempDir);
+
+            String md5 = metadataService.getOrCalculateMD5(destinationFile, rootLocation);
+            long size = Files.size(destinationFile);
+            String relativePath = this.rootLocation.relativize(destinationFile).toString().replace("\\", "/");
+
+            return new StoredFile(filename, relativePath, md5, size / (1024 * 1024));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to merge chunks.", e);
+        }
+    }
+
+    public String calculateMD5(Path file) throws IOException {
+        return metadataService.getOrCalculateMD5(file, rootLocation);
     }
 
     public record StoredFile(String originalFilename, String storedPath, String md5, long sizeMb) {
+    }
+
+    @Scheduled(cron = "0 0 * * * *") // Every hour
+    public void cleanupTempFiles() {
+        log.info("Cleaning up stale temp upload files...");
+        try (Stream<Path> stream = Files.list(tempLocation)) {
+            stream.filter(Files::isDirectory)
+                    .forEach(path -> {
+                        try {
+                            BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
+                            long age = System.currentTimeMillis() - attrs.lastModifiedTime().toMillis();
+                            if (age > 24 * 60 * 60 * 1000) { // 24 hours
+                                log.info("Deleting stale upload session: {}", path);
+                                deleteRecursively(path);
+                            }
+                        } catch (IOException e) {
+                            log.error("Failed to cleanup temp path: {}", path, e);
+                        }
+                    });
+        } catch (IOException e) {
+            log.error("Failed to list temp files for cleanup", e);
+        }
+    }
+
+    private void deleteRecursively(Path path) throws IOException {
+        if (!Files.exists(path))
+            return;
+        try (Stream<Path> walk = Files.walk(path)) {
+            walk.sorted(java.util.Comparator.reverseOrder())
+                    .forEach(p -> {
+                        try {
+                            Files.delete(p);
+                        } catch (IOException ignored) {
+                        }
+                    });
+        }
     }
 }
