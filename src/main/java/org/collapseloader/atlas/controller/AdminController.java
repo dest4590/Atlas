@@ -3,25 +3,35 @@ package org.collapseloader.atlas.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.collapseloader.atlas.domain.achievements.service.AchievementService;
+import org.collapseloader.atlas.domain.audit.AuditLog;
+import org.collapseloader.atlas.domain.audit.AuditLogService;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
+import org.collapseloader.atlas.domain.news.News;
 import org.collapseloader.atlas.domain.news.NewsRepository;
+import org.collapseloader.atlas.domain.news.NewsService;
+import org.collapseloader.atlas.domain.news.dto.request.NewsRequest;
 import org.collapseloader.atlas.domain.users.dto.request.AdminUserUpdateRequest;
 import org.collapseloader.atlas.domain.users.dto.response.AdminUserDetailResponse;
 import org.collapseloader.atlas.domain.users.dto.response.UserAdminResponse;
 import org.collapseloader.atlas.domain.users.entity.*;
 import org.collapseloader.atlas.domain.users.repository.UserPreferenceRepository;
 import org.collapseloader.atlas.domain.users.repository.UserRepository;
+import org.collapseloader.atlas.domain.users.service.UserStatusService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -31,13 +41,13 @@ public class AdminController {
 
     private final UserRepository userRepository;
     private final NewsRepository newsRepository;
-    private final org.collapseloader.atlas.domain.news.NewsService newsService;
-    private final org.collapseloader.atlas.domain.audit.AuditLogService auditLogService;
+    private final NewsService newsService;
+    private final AuditLogService auditLogService;
     private final ClientRepository clientRepository;
     private final UserPreferenceRepository userPreferenceRepository;
-    private final org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService;
-    private final org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
-    private final org.collapseloader.atlas.domain.users.service.UserStatusService userStatusService;
+    private final AchievementService achievementService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final UserStatusService userStatusService;
 
     @GetMapping("/stats")
     @PreAuthorize("hasRole('ADMIN')")
@@ -52,8 +62,8 @@ public class AdminController {
 
     @GetMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<org.springframework.data.domain.Page<UserAdminResponse>> getUsers(
-            @org.springframework.data.web.PageableDefault(size = 20, sort = "id", direction = org.springframework.data.domain.Sort.Direction.ASC) org.springframework.data.domain.Pageable pageable,
+    public ResponseEntity<Page<UserAdminResponse>> getUsers(
+            @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String role,
             @RequestParam(required = false) String profileRole,
@@ -107,7 +117,7 @@ public class AdminController {
     @Transactional(readOnly = true)
     public ResponseEntity<AdminUserDetailResponse> getUserDetails(@PathVariable Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND,
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "User not found"));
 
         List<UserPreference> prefs = userPreferenceRepository.findByUserId(user.getId());
@@ -143,7 +153,7 @@ public class AdminController {
     @Transactional
     public ResponseEntity<Void> updateUser(@PathVariable Long id, @RequestBody AdminUserUpdateRequest request) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND,
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "User not found"));
 
         if (request.username() != null)
@@ -168,14 +178,14 @@ public class AdminController {
         }
 
         if (request.socialLinks() != null) {
-            java.util.Map<SocialPlatform, SocialLink> existingMap = new java.util.HashMap<>();
+            Map<SocialPlatform, SocialLink> existingMap = new HashMap<>();
             for (SocialLink link : profile.getSocialLinks()) {
                 if (link.getPlatform() != null) {
                     existingMap.put(link.getPlatform(), link);
                 }
             }
 
-            java.util.Set<SocialLink> linksToKeep = new java.util.HashSet<>();
+            Set<SocialLink> linksToKeep = new HashSet<>();
             for (var linkReq : request.socialLinks()) {
                 if (linkReq.platform() == null)
                     continue;
@@ -226,14 +236,14 @@ public class AdminController {
 
     @GetMapping("/news")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<org.collapseloader.atlas.domain.news.News>> getNews() {
+    public ResponseEntity<List<News>> getNews() {
         return ResponseEntity.ok(newsRepository.findAll());
     }
 
     @PostMapping("/news")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<org.collapseloader.atlas.domain.news.News> createNews(
-            @RequestBody org.collapseloader.atlas.domain.news.dto.request.NewsRequest request) {
+    public ResponseEntity<News> createNews(
+            @RequestBody NewsRequest request) {
         var news = newsService.createNews(request);
         auditLogService.log("CREATE_NEWS", "NEWS", news.getId().toString(),
                 Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())
@@ -244,8 +254,8 @@ public class AdminController {
 
     @PutMapping("/news/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<org.collapseloader.atlas.domain.news.News> updateNews(@PathVariable Long id,
-                                                                                @RequestBody org.collapseloader.atlas.domain.news.dto.request.NewsRequest request) {
+    public ResponseEntity<News> updateNews(@PathVariable Long id,
+                                           @RequestBody NewsRequest request) {
         var news = newsService.updateNews(id, request);
         auditLogService.log("UPDATE_NEWS", "NEWS", news.getId().toString(),
                 Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())
@@ -269,8 +279,8 @@ public class AdminController {
 
     @GetMapping("/audit-logs")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<org.springframework.data.domain.Page<org.collapseloader.atlas.domain.audit.AuditLog>> getAuditLogs(
-            @org.springframework.data.web.PageableDefault(size = 20, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) org.springframework.data.domain.Pageable pageable) {
+    public ResponseEntity<Page<AuditLog>> getAuditLogs(
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(auditLogService.getLogs(pageable));
     }
 

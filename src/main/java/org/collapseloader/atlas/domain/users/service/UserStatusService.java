@@ -1,7 +1,9 @@
 package org.collapseloader.atlas.domain.users.service;
 
+import org.collapseloader.atlas.domain.achievements.service.AchievementService;
 import org.collapseloader.atlas.domain.users.dto.response.UserStatusResponse;
 import org.collapseloader.atlas.domain.users.entity.UserStatus;
+import org.collapseloader.atlas.domain.users.repository.UserProfileRepository;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -23,13 +25,13 @@ public class UserStatusService {
     private static final String KEY_HEARTBEATS = "user:status:heartbeats";
 
     private final StringRedisTemplate redisTemplate;
-    private final org.collapseloader.atlas.domain.users.repository.UserProfileRepository userProfileRepository;
-    private final org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService;
+    private final UserProfileRepository userProfileRepository;
+    private final AchievementService achievementService;
 
     public UserStatusService(
             StringRedisTemplate redisTemplate,
-            org.collapseloader.atlas.domain.users.repository.UserProfileRepository userProfileRepository,
-            org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService) {
+            UserProfileRepository userProfileRepository,
+            AchievementService achievementService) {
         this.redisTemplate = redisTemplate;
         this.userProfileRepository = userProfileRepository;
         this.achievementService = achievementService;

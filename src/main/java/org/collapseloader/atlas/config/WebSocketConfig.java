@@ -34,8 +34,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker("/topic", "/queue")
-                .setHeartbeatValue(new long[]{10000, 10000})
-                .setTaskScheduler(heartbeatTaskScheduler());
+                .setHeartbeatValue(new long[] { 10000, 10000 })
+                .setTaskScheduler(taskScheduler());
         config.setApplicationDestinationPrefixes("/app");
         config.setUserDestinationPrefix("/user");
     }
@@ -57,14 +57,19 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                     String authHeader = accessor.getFirstNativeHeader("Authorization");
                     if (authHeader != null && authHeader.startsWith("Bearer ")) {
                         String jwt = authHeader.substring(7);
-                        String username = jwtService.extractUsername(jwt);
-                        if (username != null) {
-                            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                            if (jwtService.isTokenValid(jwt, userDetails)) {
-                                var authToken = new UsernamePasswordAuthenticationToken(userDetails, null,
-                                        userDetails.getAuthorities());
-                                accessor.setUser(authToken);
+                        try {
+                            String username = jwtService.extractUsername(jwt);
+                            if (username != null) {
+                                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                                if (jwtService.isTokenValid(jwt, userDetails)) {
+                                    var authToken = new UsernamePasswordAuthenticationToken(userDetails, null,
+                                            userDetails.getAuthorities());
+                                    accessor.setUser(authToken);
+                                }
                             }
+                        } catch (org.springframework.security.core.userdetails.UsernameNotFoundException
+                                | io.jsonwebtoken.JwtException
+                                | IllegalArgumentException ignored) {
                         }
                     }
                 }
@@ -74,10 +79,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     @Bean
-    public ThreadPoolTaskScheduler heartbeatTaskScheduler() {
+    public ThreadPoolTaskScheduler taskScheduler() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-        scheduler.setPoolSize(1);
-        scheduler.setThreadNamePrefix("ws-heartbeat-thread-");
+        scheduler.setPoolSize(2);
+        scheduler.setThreadNamePrefix("task-scheduler-");
+        scheduler.initialize();
         return scheduler;
     }
 }

@@ -3,12 +3,15 @@ package org.collapseloader.atlas.exception;
 import org.collapseloader.atlas.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import java.sql.SQLException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -19,7 +22,7 @@ public class GlobalExceptionHandler {
         log.error("Unhandled exception: ", e);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("Internal Server Error: " + e.getMessage()));
+                .body(ApiResponse.error("Internal Server Error"));
     }
 
     @ExceptionHandler(RuntimeException.class)
@@ -27,7 +30,15 @@ public class GlobalExceptionHandler {
         log.error("Runtime exception: ", e);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error(e.getMessage() != null ? e.getMessage() : "Internal Server Error"));
+                .body(ApiResponse.error("Internal Server Error"));
+    }
+
+    @ExceptionHandler({DataAccessException.class, SQLException.class})
+    public ResponseEntity<ApiResponse<Void>> handleDatabaseException(Exception e) {
+        log.error("Database error: ", e);
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("Database error"));
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
@@ -69,13 +80,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException e) {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
-                .body(ApiResponse.error("Access denied: " + e.getMessage()));
+                .body(ApiResponse.error("Access denied"));
     }
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ApiResponse<Void>> handleAuthenticationException(AuthenticationException e) {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("Authentication failed: " + e.getMessage()));
+                .body(ApiResponse.error("Authentication failed"));
     }
 }

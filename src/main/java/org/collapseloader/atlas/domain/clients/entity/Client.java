@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import org.collapseloader.atlas.util.CdnMetadataUtil;
+
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
@@ -79,23 +79,6 @@ public class Client {
                 prefix = "forge/";
             }
             this.filename = prefix + this.name + ".jar";
-        }
-
-        if (this.md5Hash == null || this.md5Hash.isBlank() || this.size == 0) {
-            calculateMetadataFromCdn();
-        }
-    }
-
-    private void calculateMetadataFromCdn() {
-        String cdnUrl = "https://cdn.collapseloader.org/" + this.filename;
-        CdnMetadataUtil.CdnMetadata metadata = CdnMetadataUtil.calculateMetadata(cdnUrl);
-        if (metadata != null) {
-            if (this.md5Hash == null || this.md5Hash.isBlank()) {
-                this.md5Hash = metadata.md5();
-            }
-            if (this.size == 0) {
-                this.size = metadata.sizeMb();
-            }
         }
     }
 }

@@ -2,6 +2,7 @@ package org.collapseloader.atlas.controller;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import org.collapseloader.atlas.domain.audit.AuditLogService;
 import org.collapseloader.atlas.domain.clients.dto.request.AdminClientRequest;
 import org.collapseloader.atlas.domain.clients.dto.response.ClientResponse;
 import org.collapseloader.atlas.domain.clients.entity.Client;
@@ -25,7 +26,7 @@ import java.util.Objects;
 public class AdminClientController {
 
     private final ClientRepository clientRepository;
-    private final org.collapseloader.atlas.domain.audit.AuditLogService auditLogService;
+    private final AuditLogService auditLogService;
     private final EntityManager entityManager;
     private final ClientService clientService;
 

@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.users.service;
 
+import org.collapseloader.atlas.domain.achievements.service.AchievementService;
 import org.collapseloader.atlas.domain.users.dto.request.AuthRequest;
 import org.collapseloader.atlas.domain.users.dto.request.AuthSetPasswordRequest;
 import org.collapseloader.atlas.domain.users.dto.response.AuthResponse;
@@ -9,6 +10,7 @@ import org.collapseloader.atlas.domain.users.repository.UserRepository;
 import org.collapseloader.atlas.exception.ConflictException;
 import org.collapseloader.atlas.exception.UnauthorizedException;
 import org.collapseloader.atlas.exception.ValidationException;
+import org.collapseloader.atlas.util.passwords.HybridPasswordEncoder;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,7 +26,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final UserStatusService userStatusService;
-    private final org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService;
+    private final AchievementService achievementService;
 
     public AuthService(
             UserRepository userRepository,
@@ -33,7 +35,7 @@ public class AuthService {
             JwtService jwtService,
             AuthenticationManager authenticationManager,
             UserStatusService userStatusService,
-            org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService) {
+            AchievementService achievementService) {
         this.userRepository = userRepository;
         this.userProfileRepository = userProfileRepository;
         this.passwordEncoder = passwordEncoder;
@@ -76,7 +78,7 @@ public class AuthService {
         var user = userRepository.findByUsername(request.username())
                 .orElseThrow();
 
-        if (passwordEncoder instanceof org.collapseloader.atlas.util.passwords.HybridPasswordEncoder hybridEncoder
+        if (passwordEncoder instanceof HybridPasswordEncoder hybridEncoder
                 && hybridEncoder.isDjangoHash(user.getPassword())) {
             user.setPassword(hybridEncoder.encode(request.password()));
         }
