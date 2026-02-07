@@ -84,7 +84,7 @@ public class FileStorageService {
             }
 
             Path destinationFile = destinationDir.resolve(
-                    Paths.get(originalFilename))
+                            Paths.get(originalFilename))
                     .normalize().toAbsolutePath();
 
             if (!destinationFile.getParent().startsWith(destinationDir.toAbsolutePath())) {
@@ -106,6 +106,11 @@ public class FileStorageService {
         } catch (IOException e) {
             throw new RuntimeException("Failed to store file.", e);
         }
+    }
+
+    public StoredFile store(MultipartFile file, UploadTarget target) {
+        String subDir = target != null ? target.getSubDir() : "";
+        return store(file, subDir);
     }
 
     public Path load(String filename) {
@@ -239,11 +244,13 @@ public class FileStorageService {
         }
     }
 
-    public String calculateMD5(Path file) throws IOException {
-        return metadataService.getOrCalculateMD5(file, rootLocation);
+    public StoredFile mergeChunks(String uploadId, String filename, UploadTarget target, int totalChunks) {
+        String subDir = target != null ? target.getSubDir() : "";
+        return mergeChunks(uploadId, filename, subDir, totalChunks);
     }
 
-    public record StoredFile(String originalFilename, String storedPath, String md5, long sizeMb) {
+    public String calculateMD5(Path file) throws IOException {
+        return metadataService.getOrCalculateMD5(file, rootLocation);
     }
 
     @Scheduled(cron = "0 0 * * * *") // Every hour
@@ -280,5 +287,39 @@ public class FileStorageService {
                         }
                     });
         }
+    }
+
+    public enum UploadTarget {
+        CLIENTS("clients"),
+        FABRIC_CLIENTS("fabric-clients"),
+        FABRIC_DEPS("fabric-deps"),
+        FORGE_CLIENTS("forge-clients"),
+        FORGE_DEPS("forge-deps");
+
+        private final String subDir;
+
+        UploadTarget(String subDir) {
+            this.subDir = subDir;
+        }
+
+        public static UploadTarget fromString(String raw) {
+            if (raw == null) {
+                return null;
+            }
+            String normalized = raw.trim().toLowerCase();
+            for (UploadTarget target : values()) {
+                if (target.subDir.equals(normalized) || target.name().equalsIgnoreCase(normalized)) {
+                    return target;
+                }
+            }
+            return null;
+        }
+
+        public String getSubDir() {
+            return subDir;
+        }
+    }
+
+    public record StoredFile(String originalFilename, String storedPath, String md5, long sizeMb) {
     }
 }

@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
@@ -74,9 +73,11 @@ public class Client {
         if (this.filename == null || this.filename.isBlank()) {
             String prefix = "";
             if (this.type == ClientType.FABRIC) {
-                prefix = "fabric/";
+                prefix = "fabric-clients/";
             } else if (this.type == ClientType.FORGE) {
-                prefix = "forge/";
+                prefix = "forge-clients/";
+            } else {
+                prefix = "clients/";
             }
             this.filename = prefix + this.name + ".jar";
         }

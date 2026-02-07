@@ -34,7 +34,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker("/topic", "/queue")
-                .setHeartbeatValue(new long[] { 10000, 10000 })
+                .setHeartbeatValue(new long[]{10000, 10000})
                 .setTaskScheduler(taskScheduler());
         config.setApplicationDestinationPrefixes("/app");
         config.setUserDestinationPrefix("/user");
@@ -68,8 +68,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                                 }
                             }
                         } catch (org.springframework.security.core.userdetails.UsernameNotFoundException
-                                | io.jsonwebtoken.JwtException
-                                | IllegalArgumentException ignored) {
+                                 | io.jsonwebtoken.JwtException
+                                 | IllegalArgumentException ignored) {
                         }
                     }
                 }

@@ -1,6 +1,7 @@
 package org.collapseloader.atlas.domain.clients.service;
 
 import org.collapseloader.atlas.domain.clients.dto.response.ForgeClientResponse;
+import org.collapseloader.atlas.domain.clients.dto.response.ForgeDependenceResponse;
 import org.collapseloader.atlas.domain.clients.entity.ClientType;
 import org.collapseloader.atlas.domain.clients.entity.forge.ForgeClient;
 import org.collapseloader.atlas.domain.clients.repository.ForgeClientRepository;
@@ -34,6 +35,14 @@ public class ForgeClientService {
     }
 
     private ForgeClientResponse toResponse(ForgeClient client) {
+        var dependencies = client.getDependencies().stream()
+                .map(dep -> new ForgeDependenceResponse(
+                        dep.getName(),
+                        dep.getMd5Hash(),
+                        dep.getSize()
+                ))
+                .toList();
+
         return new ForgeClientResponse(
                 client.getId(),
                 client.getName(),
@@ -47,7 +56,8 @@ public class ForgeClientService {
                 client.getLaunches(),
                 client.getDownloads(),
                 client.getType() != null ? client.getType().getApiValue() : null,
-                client.getCreatedAt()
+                client.getCreatedAt(),
+                dependencies
         );
     }
 }

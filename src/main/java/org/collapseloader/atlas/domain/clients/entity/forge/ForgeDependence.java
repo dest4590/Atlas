@@ -1,19 +1,19 @@
-package org.collapseloader.atlas.domain.clients.entity.fabric;
+package org.collapseloader.atlas.domain.clients.entity.forge;
 
 import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
-@Table(name = "fabric_dependences", uniqueConstraints = @UniqueConstraint(columnNames = {"client_id", "name"}))
+@Table(name = "forge_dependences", uniqueConstraints = @UniqueConstraint(columnNames = {"client_id", "name"}))
 @Data
-public class FabricDependence {
+public class ForgeDependence {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id")
-    private FabricClient client;
+    private ForgeClient client;
 
     private String name;
 

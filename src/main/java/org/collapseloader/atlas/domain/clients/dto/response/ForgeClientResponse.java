@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.List;
 
 public record ForgeClientResponse(
         Long id,
@@ -19,7 +20,8 @@ public record ForgeClientResponse(
         long launches,
         long downloads,
         @JsonProperty("client_type") String clientType,
-        @JsonProperty("created_at") Instant createdAt
+        @JsonProperty("created_at") Instant createdAt,
+        List<ForgeDependenceResponse> dependencies
 ) implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
