@@ -20,6 +20,12 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
+    @Value("${jwt.access-token-minutes:1440}")
+    private long ACCESS_TOKEN_MINUTES;
+
+    @Value("${jwt.refresh-token-days:30}")
+    private long REFRESH_TOKEN_DAYS;
+
     public String extractUsername(String token) {
         if (token == null || token.isBlank()) {
             return null;
@@ -36,11 +42,23 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    public String generateToken(UserDetails userDetails) {
+    public String generateAccessToken(UserDetails userDetails) {
+        var now = System.currentTimeMillis();
         return Jwts.builder()
                 .subject(userDetails.getUsername())
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
+                .issuedAt(new Date(now))
+                .expiration(new Date(now + ACCESS_TOKEN_MINUTES * 60 * 1000))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    public String generateRefreshToken(UserDetails userDetails) {
+        var now = System.currentTimeMillis();
+        return Jwts.builder()
+                .subject(userDetails.getUsername())
+                .claim("type", "refresh")
+                .issuedAt(new Date(now))
+                .expiration(new Date(now + REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000))
                 .signWith(getSigningKey())
                 .compact();
     }
@@ -49,6 +67,15 @@ public class JwtService {
         try {
             final String username = extractUsername(token);
             return (username != null && username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+        } catch (JwtException | IllegalArgumentException ignored) {
+            return false;
+        }
+    }
+
+    public boolean isRefreshTokenValid(String token, UserDetails userDetails) {
+        try {
+            final String type = extractClaim(token, c -> c.get("type", String.class));
+            return "refresh".equals(type) && isTokenValid(token, userDetails);
         } catch (JwtException | IllegalArgumentException ignored) {
             return false;
         }

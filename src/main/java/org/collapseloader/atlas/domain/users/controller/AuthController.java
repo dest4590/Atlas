@@ -39,6 +39,11 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(authService.setPassword(user, password)));
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(@RequestBody org.collapseloader.atlas.domain.users.dto.request.RefreshRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(authService.refresh(request)));
+    }
+
     private User requireUser(Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
             throw new RuntimeException("Unauthorized");

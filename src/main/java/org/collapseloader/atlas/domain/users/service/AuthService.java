@@ -67,8 +67,9 @@ public class AuthService {
         savedUser.setProfile(profile);
         userProfileRepository.save(profile);
 
-        var jwt = jwtService.generateToken(savedUser);
-        return new AuthResponse(jwt);
+        var access = jwtService.generateAccessToken(savedUser);
+        var refresh = jwtService.generateRefreshToken(savedUser);
+        return new AuthResponse(access, refresh);
     }
 
     public AuthResponse login(AuthRequest request) {
@@ -92,8 +93,9 @@ public class AuthService {
             achievementService.unlockAchievement(user.getId(), "BETA_TESTER");
         }
 
-        var jwt = jwtService.generateToken(user);
-        return new AuthResponse(jwt);
+        var access = jwtService.generateAccessToken(user);
+        var refresh = jwtService.generateRefreshToken(user);
+        return new AuthResponse(access, refresh);
     }
 
     public AuthResponse setPassword(User user, AuthSetPasswordRequest password) {
@@ -104,7 +106,20 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(password.newPassword()));
         userRepository.save(user);
 
-        var jwt = jwtService.generateToken(user);
-        return new AuthResponse(jwt);
+        var access = jwtService.generateAccessToken(user);
+        var refresh = jwtService.generateRefreshToken(user);
+        return new AuthResponse(access, refresh);
+    }
+
+    public AuthResponse refresh(org.collapseloader.atlas.domain.users.dto.request.RefreshRequest request) {
+        var refreshToken = request.refreshToken();
+        var username = jwtService.extractUsername(refreshToken);
+        var user = userRepository.findByUsername(username).orElseThrow();
+        if (!jwtService.isRefreshTokenValid(refreshToken, user)) {
+            throw new UnauthorizedException("Invalid refresh token");
+        }
+        var access = jwtService.generateAccessToken(user);
+        var newRefresh = jwtService.generateRefreshToken(user);
+        return new AuthResponse(access, newRefresh);
     }
 }
