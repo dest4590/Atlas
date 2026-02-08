@@ -62,7 +62,7 @@ public class UserProfile {
     @Builder.Default
     private long totalPlaytimeSeconds = 0L;
 
-    @Column(name = "launches_count", nullable = false)
+    @Column(name = "launches_count", nullable = false, columnDefinition = "bigint default 0")
     @Builder.Default
     private long launchesCount = 0L;
 

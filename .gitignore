@@ -39,5 +39,10 @@ uploads/
 __pycache__/
 
 logs/
-migration/
+migration/*
+!migration/migrate.py
 .agent/
+
+!migration/
+!migration/migrate.py
+!migration/export.py
