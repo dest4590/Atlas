@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,7 @@ import java.util.Date;
 import java.util.function.Function;
 
 @Service
-public class JwtService {
+public class JwtService implements InitializingBean {
 
 
     @Value("${jwt.secret}")
@@ -101,5 +102,17 @@ public class JwtService {
             );
         }
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        if (SECRET_KEY == null || SECRET_KEY.isBlank()) {
+            throw new IllegalStateException("Missing required configuration: jwt.secret (environment variable JWT_SECRET)");
+        }
+
+        String defaultPlaceholder = "default_jwt_secret_key_32bytes!x";
+        if (SECRET_KEY.equals(defaultPlaceholder) || SECRET_KEY.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("Invalid jwt.secret: must be at least 32 bytes and not the default placeholder. Set JWT_SECRET environment variable to a strong secret.");
+        }
     }
 }

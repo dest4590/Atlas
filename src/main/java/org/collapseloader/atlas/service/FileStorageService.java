@@ -20,8 +20,8 @@ import java.util.stream.Stream;
 @Service
 @RequiredArgsConstructor
 public class FileStorageService {
-
     private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
+    private static final long ASYNC_MD5_THRESHOLD_BYTES = 5 * 1024 * 1024;
     private final Path rootLocation = Paths.get("uploads", "public").toAbsolutePath().normalize();
     private final Path tempLocation = Paths.get("uploads", "temp").toAbsolutePath().normalize();
     private final FileMetadataService metadataService;
@@ -97,8 +97,15 @@ public class FileStorageService {
                         StandardCopyOption.REPLACE_EXISTING);
             }
 
-            String md5 = metadataService.getOrCalculateMD5(destinationFile, rootLocation);
             long size = Files.size(destinationFile);
+
+            String md5 = null;
+
+            if (size <= ASYNC_MD5_THRESHOLD_BYTES) {
+                md5 = metadataService.getOrCalculateMD5(destinationFile, rootLocation);
+            } else {
+                metadataService.calculateMd5Async(destinationFile, rootLocation);
+            }
 
             String relativePath = this.rootLocation.relativize(destinationFile).toString().replace("\\", "/");
 
@@ -231,11 +238,15 @@ public class FileStorageService {
                 }
             }
 
-            // Clean up temp files
             deleteRecursively(uploadTempDir);
 
-            String md5 = metadataService.getOrCalculateMD5(destinationFile, rootLocation);
             long size = Files.size(destinationFile);
+            String md5 = null;
+            if (size <= ASYNC_MD5_THRESHOLD_BYTES) {
+                md5 = metadataService.getOrCalculateMD5(destinationFile, rootLocation);
+            } else {
+                metadataService.calculateMd5Async(destinationFile, rootLocation);
+            }
             String relativePath = this.rootLocation.relativize(destinationFile).toString().replace("\\", "/");
 
             return new StoredFile(filename, relativePath, md5, size / (1024 * 1024));
@@ -253,7 +264,7 @@ public class FileStorageService {
         return metadataService.getOrCalculateMD5(file, rootLocation);
     }
 
-    @Scheduled(cron = "0 0 * * * *") // Every hour
+    @Scheduled(cron = "0 0 * * * *")
     public void cleanupTempFiles() {
         log.info("Cleaning up stale temp upload files...");
         try (Stream<Path> stream = Files.list(tempLocation)) {
@@ -262,7 +273,7 @@ public class FileStorageService {
                         try {
                             BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
                             long age = System.currentTimeMillis() - attrs.lastModifiedTime().toMillis();
-                            if (age > 24 * 60 * 60 * 1000) { // 24 hours
+                            if (age > 24 * 60 * 60 * 1000) {
                                 log.info("Deleting stale upload session: {}", path);
                                 deleteRecursively(path);
                             }

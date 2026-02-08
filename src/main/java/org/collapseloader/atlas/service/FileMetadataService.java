@@ -5,6 +5,7 @@ import org.collapseloader.atlas.domain.storage.entity.FileMetadata;
 import org.collapseloader.atlas.domain.storage.repository.FileMetadataRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,5 +93,16 @@ public class FileMetadataService {
     @Transactional
     public void delete(FileMetadata metadata) {
         metadataRepository.delete(metadata);
+    }
+
+    @Async
+    @Transactional
+    public void calculateMd5Async(Path path, Path rootLocation) {
+        try {
+            getOrCalculateMD5(path, rootLocation);
+            log.info("Asynchronously calculated MD5 for {}", path);
+        } catch (IOException e) {
+            log.error("Failed to calculate MD5 asynchronously for {}", path, e);
+        }
     }
 }

@@ -9,6 +9,7 @@ import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.domain.users.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,23 +18,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@Validated
 public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthResponse>> register(@RequestBody AuthRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> register(@jakarta.validation.Valid @RequestBody AuthRequest request) {
         return ResponseEntity.ok(ApiResponse.success(authService.register(request)));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody AuthRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@jakarta.validation.Valid @RequestBody AuthRequest request) {
         return ResponseEntity.ok(ApiResponse.success(authService.login(request)));
     }
 
     @PostMapping("/setPassword")
     public ResponseEntity<ApiResponse<AuthResponse>> setPassword(
             Authentication authentication,
-            @RequestBody AuthSetPasswordRequest password
+            @jakarta.validation.Valid @RequestBody AuthSetPasswordRequest password
     ) {
         var user = requireUser(authentication);
         return ResponseEntity.ok(ApiResponse.success(authService.setPassword(user, password)));

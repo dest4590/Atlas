@@ -19,6 +19,7 @@ import org.collapseloader.atlas.exception.UnauthorizedException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,6 +29,7 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/users")
+@Validated
 public class UserController {
     private final UserProfileService userProfileService;
     private final FriendshipService friendshipService;
@@ -122,7 +124,7 @@ public class UserController {
     @PatchMapping("/me/profile")
     public ResponseEntity<ApiResponse<UserProfileResponse>> updateProfile(
             Authentication authentication,
-            @RequestBody UpdateProfileRequest request) {
+            @jakarta.validation.Valid @RequestBody UpdateProfileRequest request) {
         var user = requireUser(authentication);
         return ResponseEntity.ok(ApiResponse.success(userProfileService.updateProfile(user, request)));
     }
