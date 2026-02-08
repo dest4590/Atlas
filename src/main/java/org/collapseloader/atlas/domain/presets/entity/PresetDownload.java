@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 
@@ -26,6 +28,7 @@ public class PresetDownload {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "preset_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Preset preset;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

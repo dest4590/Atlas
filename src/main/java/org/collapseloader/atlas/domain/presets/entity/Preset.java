@@ -64,6 +64,11 @@ public class Preset {
     @Builder.Default
     private List<PresetComment> comments = new ArrayList<>();
 
+    @OneToMany(mappedBy = "preset", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @Builder.Default
+    private List<PresetDownload> downloads = new ArrayList<>();
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
