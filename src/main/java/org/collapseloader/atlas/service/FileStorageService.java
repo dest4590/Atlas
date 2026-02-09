@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 public class FileStorageService {
     private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
     private static final long ASYNC_MD5_THRESHOLD_BYTES = 5 * 1024 * 1024;
-    private final Path rootLocation = Paths.get("uploads", "public").toAbsolutePath().normalize();
+    private final Path rootLocation = Paths.get("uploads").toAbsolutePath().normalize();
     private final Path tempLocation = Paths.get("uploads", "temp").toAbsolutePath().normalize();
     private final FileMetadataService metadataService;
 
