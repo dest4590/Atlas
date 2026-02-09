@@ -78,6 +78,15 @@ public class FileMetadataService {
     }
 
     @Transactional
+    public void deleteMetadataPrefix(String prefix) {
+        if (prefix == null || prefix.isEmpty()) return;
+        String withSlash = prefix.endsWith("/") ? prefix : prefix + "/";
+        metadataRepository.findAll().stream()
+                .filter(meta -> meta.getFilePath().equals(prefix) || meta.getFilePath().startsWith(withSlash))
+                .forEach(metadataRepository::delete);
+    }
+
+    @Transactional
     public void updateMetadataPath(String oldPath, String newPath) {
         metadataRepository.findByFilePath(oldPath).ifPresent(meta -> {
             meta.setFilePath(newPath);

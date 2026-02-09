@@ -20,7 +20,7 @@ public class UploadResourceConfig implements WebMvcConfigurer {
     @Override
     @NullMarked
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        Path root = Paths.get(uploadDir).toAbsolutePath().normalize();
+        Path root = Paths.get(uploadDir, "public").toAbsolutePath().normalize();
         String location = root.toUri().toString();
         if (!location.endsWith("/")) {
             location = location + "/";

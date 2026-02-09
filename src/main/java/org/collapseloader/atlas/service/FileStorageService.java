@@ -156,8 +156,14 @@ public class FileStorageService {
             if (!file.startsWith(rootLocation)) {
                 throw new RuntimeException("Cannot delete file outside current directory.");
             }
-            Files.deleteIfExists(file);
-            metadataService.deleteMetadata(filename);
+            if (Files.exists(file) && Files.isDirectory(file)) {
+                deleteRecursively(file);
+                String relative = this.rootLocation.relativize(file).toString().replace("\\", "/");
+                metadataService.deleteMetadataPrefix(relative);
+            } else {
+                Files.deleteIfExists(file);
+                metadataService.deleteMetadata(filename);
+            }
         } catch (IOException e) {
             throw new RuntimeException("Could not delete file: " + filename, e);
         }
