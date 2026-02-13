@@ -160,10 +160,19 @@ public class FileStorageService {
                 deleteRecursively(file);
                 String relative = this.rootLocation.relativize(file).toString().replace("\\", "/");
                 metadataService.deleteMetadataPrefix(relative);
-            } else {
-                Files.deleteIfExists(file);
-                metadataService.deleteMetadata(filename);
+                return;
             }
+
+            try {
+                Files.deleteIfExists(file);
+            } catch (java.nio.file.DirectoryNotEmptyException e) {
+                deleteRecursively(file);
+                String relative = this.rootLocation.relativize(file).toString().replace("\\", "/");
+                metadataService.deleteMetadataPrefix(relative);
+                return;
+            }
+
+            metadataService.deleteMetadata(filename);
         } catch (IOException e) {
             throw new RuntimeException("Could not delete file: " + filename, e);
         }
