@@ -1,9 +1,7 @@
 package org.collapseloader.atlas.config;
 
 import lombok.RequiredArgsConstructor;
-import org.collapseloader.atlas.domain.users.repository.UserRepository;
 import org.collapseloader.atlas.util.passwords.HybridPasswordEncoder;
-import org.collapseloader.atlas.util.passwords.PasswordUpgradeSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,7 +13,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -28,9 +25,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
-            PasswordUpgradeSuccessHandler successHandler) {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new org.springframework.web.cors.CorsConfiguration();
@@ -83,17 +78,9 @@ public class SecurityConfig {
                             } else {
                                 response.sendRedirect("/login");
                             }
-                        }))
-                .formLogin(login -> login
-                        .successHandler(successHandler));
+                        }));
 
         return http.build();
-    }
-
-    @Bean
-    public UserDetailsService userDetailsService(UserRepository userRepository) {
-        return username -> userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     @Bean

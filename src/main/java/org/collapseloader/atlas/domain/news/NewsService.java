@@ -1,5 +1,7 @@
 package org.collapseloader.atlas.domain.news;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,10 +15,12 @@ public class NewsService {
         this.newsRepository = newsRepository;
     }
 
+    @Cacheable("news_list")
     public List<News> findAll() {
         return newsRepository.findAll();
     }
 
+    @Cacheable("news_list")
     public List<News> findByLanguage(String language) {
         if (language == null || language.isBlank()) {
             return findAll();
@@ -24,10 +28,12 @@ public class NewsService {
         return newsRepository.findByLanguage(language);
     }
 
+    @CacheEvict(value = "news_list", allEntries = true)
     public void save(News news) {
         newsRepository.save(news);
     }
 
+    @CacheEvict(value = "news_list", allEntries = true)
     public News createNews(org.collapseloader.atlas.domain.news.dto.request.NewsRequest request) {
         News news = new News();
         news.setTitle(request.getTitle());
@@ -36,6 +42,7 @@ public class NewsService {
         return newsRepository.save(news);
     }
 
+    @CacheEvict(value = "news_list", allEntries = true)
     public News updateNews(Long id, org.collapseloader.atlas.domain.news.dto.request.NewsRequest request) {
         News news = newsRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("News not found"));
@@ -48,6 +55,7 @@ public class NewsService {
         return newsRepository.save(news);
     }
 
+    @CacheEvict(value = "news_list", allEntries = true)
     public void deleteNews(Long id) {
         if (!newsRepository.existsById(id)) {
             throw new RuntimeException("News not found");

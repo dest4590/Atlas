@@ -99,7 +99,7 @@ public class ArtifactStorageService {
                 throw new ResponseStatusException(INTERNAL_SERVER_ERROR, "Failed to read checksum cache", e);
             }
         }
-        // fallback: compute and persist hash file
+
         String hash = computeMd5(target);
         writeHashFile(target, hash);
         return hash;

@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.users.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.collapseloader.atlas.ApiResponse;
 import org.collapseloader.atlas.domain.users.dto.request.AuthRequest;
@@ -23,27 +24,38 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthResponse>> register(@jakarta.validation.Valid @RequestBody AuthRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> register(
+            @Valid @RequestBody AuthRequest request) {
         return ResponseEntity.ok(ApiResponse.success(authService.register(request)));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@jakarta.validation.Valid @RequestBody AuthRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody AuthRequest request) {
         return ResponseEntity.ok(ApiResponse.success(authService.login(request)));
     }
 
     @PostMapping("/setPassword")
     public ResponseEntity<ApiResponse<AuthResponse>> setPassword(
             Authentication authentication,
-            @jakarta.validation.Valid @RequestBody AuthSetPasswordRequest password
-    ) {
+            @Valid @RequestBody AuthSetPasswordRequest password) {
         var user = requireUser(authentication);
         return ResponseEntity.ok(ApiResponse.success(authService.setPassword(user, password)));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<AuthResponse>> refresh(@RequestBody org.collapseloader.atlas.domain.users.dto.request.RefreshRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(
+            @RequestBody org.collapseloader.atlas.domain.users.dto.request.RefreshRequest request) {
         return ResponseEntity.ok(ApiResponse.success(authService.refresh(request)));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(jakarta.servlet.http.HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            authService.logout(token);
+        }
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     private User requireUser(Authentication authentication) {

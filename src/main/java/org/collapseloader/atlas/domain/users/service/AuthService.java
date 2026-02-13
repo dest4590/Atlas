@@ -26,7 +26,8 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final UserStatusService userStatusService;
-    private final AchievementService achievementService;
+    private final org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     public AuthService(
             UserRepository userRepository,
@@ -35,7 +36,8 @@ public class AuthService {
             JwtService jwtService,
             AuthenticationManager authenticationManager,
             UserStatusService userStatusService,
-            AchievementService achievementService) {
+            AchievementService achievementService,
+            TokenBlacklistService tokenBlacklistService) {
         this.userRepository = userRepository;
         this.userProfileRepository = userProfileRepository;
         this.passwordEncoder = passwordEncoder;
@@ -43,6 +45,7 @@ public class AuthService {
         this.authenticationManager = authenticationManager;
         this.userStatusService = userStatusService;
         this.achievementService = achievementService;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     public AuthResponse register(AuthRequest request) {
@@ -121,5 +124,26 @@ public class AuthService {
         var access = jwtService.generateAccessToken(user);
         var newRefresh = jwtService.generateRefreshToken(user);
         return new AuthResponse(access, newRefresh);
+    }
+
+    public void logout(String token) {
+        String username = jwtService.extractUsername(token);
+        if (username != null) {
+            userRepository.findByUsername(username).ifPresent(user -> {
+                userStatusService.setStatus(user.getId(), UserStatus.OFFLINE, null);
+
+                try {
+                    java.util.Date expiration = jwtService.extractClaim(token, io.jsonwebtoken.Claims::getExpiration);
+                    if (expiration != null) {
+                        long remainingMillis = expiration.getTime() - System.currentTimeMillis();
+                        if (remainingMillis > 0) {
+                            tokenBlacklistService.blacklistToken(token, remainingMillis);
+                        }
+                    }
+                } catch (Exception e) {
+
+                }
+            });
+        }
     }
 }
