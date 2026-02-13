@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.service;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,13 +139,14 @@ public class FileStorageService {
         }
 
         Path finalStartDir = startDir;
-
-        try (Stream<Path> walk = Files.walk(finalStartDir, 1)) {
-            var files = walk
-                    .filter(path -> !path.equals(finalStartDir))
-                    .map(this.rootLocation::relativize)
-                    .toList();
-            return files.stream();
+        try {
+            try (Stream<Path> walk = Files.walk(finalStartDir, 1)) {
+                return walk
+                        .filter(path -> !path.equals(finalStartDir))
+                        .map(this.rootLocation::relativize)
+                        .toList()
+                        .stream();
+            }
         } catch (IOException e) {
             throw new RuntimeException("Failed to read stored files", e);
         }
@@ -155,6 +157,9 @@ public class FileStorageService {
             Path file = rootLocation.resolve(filename).normalize();
             if (!file.startsWith(rootLocation)) {
                 throw new RuntimeException("Cannot delete file outside current directory.");
+            }
+            if (file.equals(rootLocation)) {
+                throw new RuntimeException("Cannot delete root directory.");
             }
             if (Files.exists(file) && Files.isDirectory(file)) {
                 deleteRecursively(file);
@@ -186,6 +191,9 @@ public class FileStorageService {
             if (!source.startsWith(rootLocation) || !target.startsWith(rootLocation)) {
                 throw new RuntimeException("Cannot rename outside current directory.");
             }
+            if (source.equals(rootLocation) || target.equals(rootLocation)) {
+                throw new RuntimeException("Cannot rename root directory.");
+            }
 
             Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
 
@@ -200,6 +208,9 @@ public class FileStorageService {
             Path dir = rootLocation.resolve(dirName).normalize();
             if (!dir.startsWith(rootLocation)) {
                 throw new RuntimeException("Cannot create directory outside root.");
+            }
+            if (dir.equals(rootLocation)) {
+                return;
             }
             Files.createDirectories(dir);
         } catch (IOException e) {
@@ -238,7 +249,7 @@ public class FileStorageService {
             }
 
             Path destinationFile = destinationDir.resolve(Paths.get(filename)).normalize().toAbsolutePath();
-            if (!destinationFile.getParent().startsWith(destinationDir.toAbsolutePath())) {
+            if (!destinationFile.startsWith(destinationDir.toAbsolutePath())) {
                 throw new RuntimeException("Cannot store file outside current directory.");
             }
 
@@ -315,6 +326,7 @@ public class FileStorageService {
         }
     }
 
+    @Getter
     public enum UploadTarget {
         CLIENTS("clients"),
         FABRIC_CLIENTS("fabric-clients"),
@@ -341,9 +353,6 @@ public class FileStorageService {
             return null;
         }
 
-        public String getSubDir() {
-            return subDir;
-        }
     }
 
     public record StoredFile(String originalFilename, String storedPath, String md5, long sizeMb) {

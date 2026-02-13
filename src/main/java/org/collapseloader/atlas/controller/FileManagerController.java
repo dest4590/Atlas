@@ -5,9 +5,7 @@ import org.collapseloader.atlas.service.FileStorageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,11 +24,12 @@ public class FileManagerController {
     @GetMapping
     public ResponseEntity<List<FileResponse>> listFiles(
             @RequestParam(required = false, defaultValue = "") String path) {
-        UriComponentsBuilder baseUrlBuilder = ServletUriComponentsBuilder.fromCurrentContextPath();
-        List<FileResponse> files = storageService.loadAll(path).parallel().map(filePath -> {
+        List<FileResponse> files = storageService.loadAll(path).map(filePath -> {
             String filename = filePath.toString().replace("\\", "/");
-            String url = MvcUriComponentsBuilder.fromMethodName(baseUrlBuilder.cloneBuilder(), ResourceController.class,
-                    "serveFile", filename).build().toString();
+            String url = ServletUriComponentsBuilder.fromCurrentContextPath()
+                    .path("/uploads/")
+                    .path(filename)
+                    .toUriString();
 
             String md5 = "";
             long size = 0;
@@ -39,14 +38,16 @@ public class FileManagerController {
             boolean isDir = false;
             try {
                 Path file = storageService.load(filename);
-                BasicFileAttributes attrs = Files.readAttributes(file, BasicFileAttributes.class);
-                isDir = attrs.isDirectory();
-                if (!isDir) {
-                    size = Files.size(file);
-                    md5 = storageService.calculateMD5(file);
+                if (Files.exists(file)) {
+                    BasicFileAttributes attrs = Files.readAttributes(file, BasicFileAttributes.class);
+                    isDir = attrs.isDirectory();
+                    if (!isDir) {
+                        size = Files.size(file);
+                        md5 = storageService.calculateMD5(file);
+                    }
+                    lastModified = attrs.lastModifiedTime().toMillis();
+                    created = attrs.creationTime().toMillis();
                 }
-                lastModified = attrs.lastModifiedTime().toMillis();
-                created = attrs.creationTime().toMillis();
             } catch (Exception ignored) {
             }
             return new FileResponse(filename, url, size, lastModified, created, isDir, md5);
@@ -67,9 +68,10 @@ public class FileManagerController {
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/{filename:.+}")
+    @DeleteMapping("/{*filename}")
     public ResponseEntity<Void> deleteFile(@PathVariable String filename) {
-        storageService.delete(filename);
+        String path = filename.startsWith("/") ? filename.substring(1) : filename;
+        storageService.delete(path);
         return ResponseEntity.noContent().build();
     }
 
