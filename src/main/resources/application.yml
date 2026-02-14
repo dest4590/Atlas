@@ -69,5 +69,3 @@ management:
 
 jwt:
   secret: ${JWT_SECRET:default_jwt_secret_key_32bytes!x}
-  access-token-minutes: ${JWT_ACCESS_TOKEN_MINUTES:1440}
-  refresh-token-days: ${JWT_REFRESH_TOKEN_DAYS:30}

@@ -21,12 +21,6 @@ public class JwtService implements InitializingBean {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
-    @Value("${jwt.access-token-minutes:1440}")
-    private long ACCESS_TOKEN_MINUTES;
-
-    @Value("${jwt.refresh-token-days:30}")
-    private long REFRESH_TOKEN_DAYS;
-
     public String extractUsername(String token) {
         if (token == null || token.isBlank()) {
             return null;
@@ -48,7 +42,6 @@ public class JwtService implements InitializingBean {
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(now))
-                .expiration(new Date(now + ACCESS_TOKEN_MINUTES * 60 * 1000))
                 .signWith(getSigningKey())
                 .compact();
     }
@@ -59,7 +52,6 @@ public class JwtService implements InitializingBean {
                 .subject(userDetails.getUsername())
                 .claim("type", "refresh")
                 .issuedAt(new Date(now))
-                .expiration(new Date(now + REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000))
                 .signWith(getSigningKey())
                 .compact();
     }
@@ -67,7 +59,7 @@ public class JwtService implements InitializingBean {
     public boolean isTokenValid(String token, UserDetails userDetails) {
         try {
             final String username = extractUsername(token);
-            return (username != null && username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+            return (username != null && username.equals(userDetails.getUsername()));
         } catch (JwtException | IllegalArgumentException ignored) {
             return false;
         }
@@ -80,10 +72,6 @@ public class JwtService implements InitializingBean {
         } catch (JwtException | IllegalArgumentException ignored) {
             return false;
         }
-    }
-
-    private boolean isTokenExpired(String token) {
-        return extractClaim(token, Claims::getExpiration).before(new Date());
     }
 
     private Claims extractAllClaims(String token) {
@@ -105,7 +93,7 @@ public class JwtService implements InitializingBean {
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         if (SECRET_KEY == null || SECRET_KEY.isBlank()) {
             throw new IllegalStateException("Missing required configuration: jwt.secret (environment variable JWT_SECRET)");
         }
