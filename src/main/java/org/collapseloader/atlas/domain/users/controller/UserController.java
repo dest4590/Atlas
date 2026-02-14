@@ -1,6 +1,6 @@
 package org.collapseloader.atlas.domain.users.controller;
 
-import org.collapseloader.atlas.ApiResponse;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.domain.achievements.dto.UserAchievementResponse;
 import org.collapseloader.atlas.domain.achievements.service.AchievementService;
 import org.collapseloader.atlas.domain.friends.dto.response.FriendRequestsBatchResponse;

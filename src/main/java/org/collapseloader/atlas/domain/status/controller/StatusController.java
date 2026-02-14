@@ -1,9 +1,9 @@
-package org.collapseloader.atlas.controller;
+package org.collapseloader.atlas.domain.status.controller;
 
-import org.collapseloader.atlas.ApiResponse;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.AtlasApplication;
-import org.collapseloader.atlas.dto.ServerStatusResponse;
-import org.collapseloader.atlas.dto.SubsystemStatusResponse;
+import org.collapseloader.atlas.domain.status.dto.ServerStatusResponse;
+import org.collapseloader.atlas.domain.status.dto.SubsystemStatusResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.StringRedisTemplate;

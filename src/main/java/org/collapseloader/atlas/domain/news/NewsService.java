@@ -34,7 +34,7 @@ public class NewsService {
     }
 
     @CacheEvict(value = "news_list", allEntries = true)
-    public News createNews(org.collapseloader.atlas.domain.news.dto.request.NewsRequest request) {
+    public News createNews(NewsRequest request) {
         News news = new News();
         news.setTitle(request.getTitle());
         news.setContent(request.getContent());
@@ -43,7 +43,7 @@ public class NewsService {
     }
 
     @CacheEvict(value = "news_list", allEntries = true)
-    public News updateNews(Long id, org.collapseloader.atlas.domain.news.dto.request.NewsRequest request) {
+    public News updateNews(Long id, NewsRequest request) {
         News news = newsRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("News not found"));
         if (request.getTitle() != null)

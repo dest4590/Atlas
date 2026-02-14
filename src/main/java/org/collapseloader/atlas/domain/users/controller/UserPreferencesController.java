@@ -1,6 +1,6 @@
 package org.collapseloader.atlas.domain.users.controller;
 
-import org.collapseloader.atlas.ApiResponse;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.domain.users.dto.response.UserPreferenceResponse;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.domain.users.service.UserPreferencesService;

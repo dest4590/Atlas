@@ -1,6 +1,6 @@
 package org.collapseloader.atlas.domain.presets.controller;
 
-import org.collapseloader.atlas.ApiResponse;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.domain.presets.dto.request.PresetCommentRequest;
 import org.collapseloader.atlas.domain.presets.dto.request.PresetUpsertRequest;
 import org.collapseloader.atlas.domain.presets.dto.response.PresetCommentResponse;

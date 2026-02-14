@@ -1,6 +1,6 @@
 package org.collapseloader.atlas.domain.clients.controller;
 
-import org.collapseloader.atlas.ApiResponse;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.domain.clients.dto.response.FabricClientResponse;
 import org.collapseloader.atlas.domain.clients.service.FabricClientService;
 import org.springframework.http.ResponseEntity;

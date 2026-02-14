@@ -1,7 +1,7 @@
-package org.collapseloader.atlas.controller;
+package org.collapseloader.atlas.domain.admin.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.collapseloader.atlas.ApiResponse;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.domain.clients.entity.ClientScreenshot;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
 import org.collapseloader.atlas.domain.clients.repository.ClientScreenshotRepository;

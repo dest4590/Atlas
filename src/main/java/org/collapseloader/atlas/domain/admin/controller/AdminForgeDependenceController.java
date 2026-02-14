@@ -1,11 +1,11 @@
-package org.collapseloader.atlas.controller;
+package org.collapseloader.atlas.domain.admin.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.collapseloader.atlas.ApiResponse;
-import org.collapseloader.atlas.domain.clients.dto.request.FabricDependenceRequest;
+import org.collapseloader.atlas.dto.ApiResponse;
+import org.collapseloader.atlas.domain.clients.dto.request.ForgeDependenceRequest;
 import org.collapseloader.atlas.domain.clients.entity.ClientType;
-import org.collapseloader.atlas.domain.clients.entity.fabric.FabricDependence;
-import org.collapseloader.atlas.domain.clients.repository.FabricClientRepository;
+import org.collapseloader.atlas.domain.clients.entity.forge.ForgeDependence;
+import org.collapseloader.atlas.domain.clients.repository.ForgeClientRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,14 +19,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 @RequestMapping("/api/v1/admin/clients")
-public class AdminFabricDependenceController {
-    private final FabricClientRepository fabricClientRepository;
+public class AdminForgeDependenceController {
+    private final ForgeClientRepository forgeClientRepository;
 
-    @GetMapping("/{clientId}/fabric-deps")
+    @GetMapping("/{clientId}/forge-deps")
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> listDependencies(@PathVariable Long clientId) {
-        var client = fabricClientRepository.findByIdAndType(clientId, ClientType.FABRIC)
+        var client = forgeClientRepository.findByIdAndType(clientId, ClientType.FORGE)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Fabric client not found"));
+                        "Forge client not found"));
 
         var items = client.getDependencies().stream()
                 .map(dep -> Map.<String, Object>of(
@@ -39,13 +39,13 @@ public class AdminFabricDependenceController {
         return ResponseEntity.ok(ApiResponse.success(items));
     }
 
-    @PostMapping("/{clientId}/fabric-deps")
+    @PostMapping("/{clientId}/forge-deps")
     public ResponseEntity<ApiResponse<Map<String, Object>>> addDependency(
             @PathVariable Long clientId,
-            @RequestBody FabricDependenceRequest request) {
-        var client = fabricClientRepository.findByIdAndType(clientId, ClientType.FABRIC)
+            @RequestBody ForgeDependenceRequest request) {
+        var client = forgeClientRepository.findByIdAndType(clientId, ClientType.FORGE)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Fabric client not found"));
+                        "Forge client not found"));
 
         boolean exists = client.getDependencies().stream()
                 .anyMatch(dep -> dep.getName() != null
@@ -54,14 +54,14 @@ public class AdminFabricDependenceController {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Dependency already exists");
         }
 
-        FabricDependence dep = new FabricDependence();
+        ForgeDependence dep = new ForgeDependence();
         dep.setClient(client);
         dep.setName(request.name());
         dep.setMd5Hash(request.md5Hash());
         dep.setSize(request.size());
         client.getDependencies().add(dep);
 
-        var savedClient = fabricClientRepository.save(client);
+        var savedClient = forgeClientRepository.save(client);
 
         var savedDep = savedClient.getDependencies().stream()
                 .filter(d -> d.getName().equalsIgnoreCase(request.name()))
@@ -78,14 +78,14 @@ public class AdminFabricDependenceController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @PutMapping("/{clientId}/fabric-deps/{depId}")
+    @PutMapping("/{clientId}/forge-deps/{depId}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> updateDependency(
             @PathVariable Long clientId,
             @PathVariable Long depId,
-            @RequestBody FabricDependenceRequest request) {
-        var client = fabricClientRepository.findByIdAndType(clientId, ClientType.FABRIC)
+            @RequestBody ForgeDependenceRequest request) {
+        var client = forgeClientRepository.findByIdAndType(clientId, ClientType.FORGE)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Fabric client not found"));
+                        "Forge client not found"));
 
         var dep = client.getDependencies().stream()
                 .filter(d -> d.getId().equals(depId))
@@ -96,7 +96,7 @@ public class AdminFabricDependenceController {
         dep.setName(request.name());
         dep.setMd5Hash(request.md5Hash());
         dep.setSize(request.size());
-        fabricClientRepository.save(client);
+        forgeClientRepository.save(client);
 
         Map<String, Object> response = new java.util.HashMap<>();
         response.put("id", dep.getId());
@@ -107,19 +107,19 @@ public class AdminFabricDependenceController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @DeleteMapping("/{clientId}/fabric-deps/{depId}")
+    @DeleteMapping("/{clientId}/forge-deps/{depId}")
     public ResponseEntity<ApiResponse<Void>> deleteDependency(
             @PathVariable Long clientId,
             @PathVariable Long depId) {
-        var client = fabricClientRepository.findByIdAndType(clientId, ClientType.FABRIC)
+        var client = forgeClientRepository.findByIdAndType(clientId, ClientType.FORGE)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Fabric client not found"));
+                        "Forge client not found"));
 
         boolean removed = client.getDependencies().removeIf(dep -> dep.getId().equals(depId));
         if (!removed) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Dependency not found");
         }
-        fabricClientRepository.save(client);
+        forgeClientRepository.save(client);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 }

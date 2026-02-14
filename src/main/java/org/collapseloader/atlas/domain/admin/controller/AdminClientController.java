@@ -1,4 +1,4 @@
-package org.collapseloader.atlas.controller;
+package org.collapseloader.atlas.domain.admin.controller;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;

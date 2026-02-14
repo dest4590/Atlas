@@ -1,4 +1,4 @@
-package org.collapseloader.atlas.domain.news.dto.request;
+package org.collapseloader.atlas.domain.news;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,6 +1,6 @@
 package org.collapseloader.atlas.domain.clients.controller;
 
-import org.collapseloader.atlas.ApiResponse;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.domain.clients.dto.request.ClientCommentRequest;
 import org.collapseloader.atlas.domain.clients.dto.request.ClientCreateRequest;
 import org.collapseloader.atlas.domain.clients.dto.request.ClientRatingRequest;

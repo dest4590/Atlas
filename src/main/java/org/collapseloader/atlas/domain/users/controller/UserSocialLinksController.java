@@ -1,6 +1,6 @@
 package org.collapseloader.atlas.domain.users.controller;
 
-import org.collapseloader.atlas.ApiResponse;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.domain.users.dto.request.UpdateSocialLinksRequest;
 import org.collapseloader.atlas.domain.users.dto.response.SocialLinkResponse;
 import org.collapseloader.atlas.domain.users.entity.User;

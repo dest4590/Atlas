@@ -1,4 +1,4 @@
-package org.collapseloader.atlas.controller;
+package org.collapseloader.atlas.domain.admin.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,7 +10,7 @@ import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
 import org.collapseloader.atlas.domain.news.News;
 import org.collapseloader.atlas.domain.news.NewsRepository;
 import org.collapseloader.atlas.domain.news.NewsService;
-import org.collapseloader.atlas.domain.news.dto.request.NewsRequest;
+import org.collapseloader.atlas.domain.news.NewsRequest;
 import org.collapseloader.atlas.domain.users.dto.request.AdminUserUpdateRequest;
 import org.collapseloader.atlas.domain.users.dto.response.AdminUserDetailResponse;
 import org.collapseloader.atlas.domain.users.dto.response.UserAdminResponse;
@@ -286,7 +286,7 @@ public class AdminController {
     @PutMapping("/news/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<News> updateNews(@PathVariable Long id,
-            @RequestBody NewsRequest request) {
+                                           @RequestBody NewsRequest request) {
         var news = newsService.updateNews(id, request);
         auditLogService.log("UPDATE_NEWS", "NEWS", news.getId().toString(),
                 Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())

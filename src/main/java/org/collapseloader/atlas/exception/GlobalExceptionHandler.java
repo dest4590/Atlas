@@ -1,6 +1,6 @@
 package org.collapseloader.atlas.exception;
 
-import org.collapseloader.atlas.ApiResponse;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
@@ -80,14 +80,14 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException e) {
+    public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException() {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error("Access denied"));
     }
 
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ApiResponse<Void>> handleAuthenticationException(AuthenticationException e) {
+    public ResponseEntity<ApiResponse<Void>> handleAuthenticationException() {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error("Authentication failed"));
@@ -106,16 +106,18 @@ public class GlobalExceptionHandler {
         var messages = new StringBuilder();
         if (ex instanceof MethodArgumentNotValidException manv) {
             manv.getBindingResult().getFieldErrors().forEach(fe -> {
-                if (messages.length() > 0) messages.append("; ");
+                if (!messages.isEmpty())
+                    messages.append("; ");
                 messages.append(fe.getField()).append(": ").append(fe.getDefaultMessage());
             });
         } else if (ex instanceof BindException be) {
             be.getBindingResult().getFieldErrors().forEach(fe -> {
-                if (messages.length() > 0) messages.append("; ");
+                if (!messages.isEmpty())
+                    messages.append("; ");
                 messages.append(fe.getField()).append(": ").append(fe.getDefaultMessage());
             });
         }
-        String msg = messages.length() > 0 ? messages.toString() : "Validation failed";
+        String msg = !messages.isEmpty() ? messages.toString() : "Validation failed";
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error(msg));
     }
 }

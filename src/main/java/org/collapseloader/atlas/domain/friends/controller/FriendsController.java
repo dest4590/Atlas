@@ -1,6 +1,6 @@
 package org.collapseloader.atlas.domain.friends.controller;
 
-import org.collapseloader.atlas.ApiResponse;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.domain.friends.dto.request.FriendRequestCreateRequest;
 import org.collapseloader.atlas.domain.friends.dto.response.FriendRequestResponse;
 import org.collapseloader.atlas.domain.friends.dto.response.FriendRequestsBatchResponse;

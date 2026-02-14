@@ -1,4 +1,4 @@
-package org.collapseloader.atlas.dto;
+package org.collapseloader.atlas.domain.status.dto;
 
 import java.util.Map;
 

@@ -69,3 +69,10 @@ management:
 
 jwt:
   secret: ${JWT_SECRET:default_jwt_secret_key_32bytes!x}
+
+atlas:
+  storage:
+    upload-dir: uploads
+    temp-dir: temp
+    trash-dir: .trash
+    trash-retention-days: 30

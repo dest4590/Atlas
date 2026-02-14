@@ -1,6 +1,6 @@
 package org.collapseloader.atlas.controller;
 
-import org.collapseloader.atlas.ApiResponse;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.service.ArtifactStorageService;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;

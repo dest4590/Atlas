@@ -1,6 +1,6 @@
 package org.collapseloader.atlas.controller;
 
-import org.collapseloader.atlas.ApiResponse;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.domain.analytics.dto.StatisticsResponse;
 import org.collapseloader.atlas.domain.analytics.service.AnalyticsService;
 import org.springframework.http.ResponseEntity;

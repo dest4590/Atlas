@@ -32,10 +32,11 @@ public class FileMetadataService {
 
         if (existing.isPresent()) {
             FileMetadata cached = existing.get();
-            if (cached.getSize() == currentSize && cached.getLastModified() == currentLastModified) {
+            if (cached.getSize() == currentSize && cached.getLastModified() == currentLastModified
+                    && !cached.isDeleted()) {
                 return cached.getMd5();
             }
-            log.info("File changed, recalculating hash: {}", relativePath);
+            log.info("File changed or was deleted, recalculating hash: {}", relativePath);
         } else {
             log.info("New file detected or not in database, calculating hash: {}", relativePath);
         }
@@ -64,6 +65,8 @@ public class FileMetadataService {
             metadata.setMd5(md5);
             metadata.setSize(currentSize);
             metadata.setLastModified(currentLastModified);
+            metadata.setDeleted(false);
+            metadata.setDeletedAt(null);
             metadataRepository.save(metadata);
 
             return md5;
@@ -72,14 +75,29 @@ public class FileMetadataService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public Optional<FileMetadata> findByFilePath(String filePath) {
+        return metadataRepository.findByFilePath(filePath);
+    }
+
     @Transactional
     public void deleteMetadata(String filePath) {
+        metadataRepository.findByFilePath(filePath).ifPresent(metadata -> {
+            metadata.setDeleted(true);
+            metadata.setDeletedAt(java.time.Instant.now());
+            metadataRepository.save(metadata);
+        });
+    }
+
+    @Transactional
+    public void purgeMetadata(String filePath) {
         metadataRepository.findByFilePath(filePath).ifPresent(metadataRepository::delete);
     }
 
     @Transactional
-    public void deleteMetadataPrefix(String prefix) {
-        if (prefix == null || prefix.isEmpty()) return;
+    public void purgeMetadataPrefix(String prefix) {
+        if (prefix == null || prefix.isEmpty())
+            return;
         String withSlash = prefix.endsWith("/") ? prefix : prefix + "/";
         metadataRepository.findAll().stream()
                 .filter(meta -> meta.getFilePath().equals(prefix) || meta.getFilePath().startsWith(withSlash))
@@ -95,13 +113,27 @@ public class FileMetadataService {
     }
 
     @Transactional(readOnly = true)
-    public Iterable<FileMetadata> findAll() {
-        return metadataRepository.findAll();
+    public java.util.List<FileMetadata> findAll() {
+        return metadataRepository.findByDeletedFalse();
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<FileMetadata> findTrash() {
+        return metadataRepository.findByDeletedTrue();
     }
 
     @Transactional
     public void delete(FileMetadata metadata) {
         metadataRepository.delete(metadata);
+    }
+
+    @Transactional
+    public void restore(String filePath) {
+        metadataRepository.findByFilePath(filePath).ifPresent(metadata -> {
+            metadata.setDeleted(false);
+            metadata.setDeletedAt(null);
+            metadataRepository.save(metadata);
+        });
     }
 
     @Async

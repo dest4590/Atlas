@@ -1,4 +1,4 @@
-package org.collapseloader.atlas;
+package org.collapseloader.atlas.dto;
 
 public record ApiResponse<T>(
         boolean success,

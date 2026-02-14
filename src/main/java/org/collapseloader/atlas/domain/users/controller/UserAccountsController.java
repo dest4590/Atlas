@@ -2,7 +2,7 @@ package org.collapseloader.atlas.domain.users.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.collapseloader.atlas.ApiResponse;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.domain.users.dto.request.UserExternalAccountRequest;
 import org.collapseloader.atlas.domain.users.dto.response.UserExternalAccountResponse;
 import org.collapseloader.atlas.domain.users.entity.User;
