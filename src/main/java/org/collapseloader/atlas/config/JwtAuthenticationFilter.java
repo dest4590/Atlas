@@ -5,6 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.collapseloader.atlas.domain.users.repository.UserRepository;
 import org.collapseloader.atlas.domain.users.service.JwtService;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.context.annotation.Lazy;
@@ -22,12 +23,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final org.collapseloader.atlas.domain.users.service.TokenBlacklistService tokenBlacklistService;
+    private final UserRepository userRepository;
 
     public JwtAuthenticationFilter(JwtService jwtService, @Lazy UserDetailsService userDetailsService,
-                                   org.collapseloader.atlas.domain.users.service.TokenBlacklistService tokenBlacklistService) {
+                                   org.collapseloader.atlas.domain.users.service.TokenBlacklistService tokenBlacklistService,
+                                   UserRepository userRepository) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
         this.tokenBlacklistService = tokenBlacklistService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -70,9 +74,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 try {
                     if (jwtService.isTokenValid(jwt, userDetails)) {
-                        var authToken = new UsernamePasswordAuthenticationToken(userDetails, null,
-                                userDetails.getAuthorities());
-                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                        var user = userRepository.findByUsername(username).orElse(null);
+                        if (user != null) {
+                            var authToken = new UsernamePasswordAuthenticationToken(user, null,
+                                    userDetails.getAuthorities());
+                            SecurityContextHolder.getContext().setAuthentication(authToken);
+                        }
                     }
                 } catch (JwtException | IllegalArgumentException ignored) {
                 }
