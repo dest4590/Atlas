@@ -27,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -48,6 +49,7 @@ public class AdminController {
     private final AchievementService achievementService;
     private final SimpMessagingTemplate messagingTemplate;
     private final UserStatusService userStatusService;
+    private final PasswordEncoder passwordEncoder;
 
     @GetMapping("/stats")
     @PreAuthorize("hasRole('ADMIN')")
@@ -160,6 +162,9 @@ public class AdminController {
             user.setUsername(request.username());
         if (request.role() != null)
             user.setRole(Role.valueOf(request.role()));
+        if (request.password() != null && !request.password().isBlank()) {
+            user.setPassword(passwordEncoder.encode(request.password()));
+        }
         user.setEnabled(request.enabled());
 
         if (user.getProfile() == null) {
@@ -227,10 +232,36 @@ public class AdminController {
         }
 
         userRepository.save(user);
+        String logMessage = "Updated user details for " + user.getUsername();
+        if (request.password() != null && !request.password().isBlank()) {
+            logMessage += " (including password reset)";
+        }
         auditLogService.log("UPDATE_USER", "USER", user.getId().toString(),
                 Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())
                         .getName(),
-                "Updated user details for " + user.getUsername());
+                logMessage);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/users/{id}/reset-password")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public ResponseEntity<Void> resetPassword(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        String newPassword = request.get("password");
+        if (newPassword == null || newPassword.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password cannot be empty");
+        }
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        auditLogService.log("RESET_PASSWORD", "USER", user.getId().toString(),
+                Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getName(),
+                "Reset password for user " + user.getUsername());
+
         return ResponseEntity.ok().build();
     }
 
@@ -255,7 +286,7 @@ public class AdminController {
     @PutMapping("/news/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<News> updateNews(@PathVariable Long id,
-                                           @RequestBody NewsRequest request) {
+            @RequestBody NewsRequest request) {
         var news = newsService.updateNews(id, request);
         auditLogService.log("UPDATE_NEWS", "NEWS", news.getId().toString(),
                 Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())
