@@ -42,12 +42,6 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(authService.setPassword(user, password)));
     }
 
-    @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<AuthResponse>> refresh(
-            @RequestBody org.collapseloader.atlas.domain.users.dto.request.RefreshRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(authService.refresh(request)));
-    }
-
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(jakarta.servlet.http.HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");

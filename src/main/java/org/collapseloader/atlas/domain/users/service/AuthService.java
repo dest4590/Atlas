@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Date;
 
 @Service
 public class AuthService {
@@ -71,8 +72,7 @@ public class AuthService {
         userProfileRepository.save(profile);
 
         var access = jwtService.generateAccessToken(savedUser);
-        var refresh = jwtService.generateRefreshToken(savedUser);
-        return new AuthResponse(access, refresh);
+        return new AuthResponse(access);
     }
 
     public AuthResponse login(AuthRequest request) {
@@ -97,8 +97,7 @@ public class AuthService {
         }
 
         var access = jwtService.generateAccessToken(user);
-        var refresh = jwtService.generateRefreshToken(user);
-        return new AuthResponse(access, refresh);
+        return new AuthResponse(access);
     }
 
     public AuthResponse setPassword(User user, AuthSetPasswordRequest password) {
@@ -110,20 +109,7 @@ public class AuthService {
         userRepository.save(user);
 
         var access = jwtService.generateAccessToken(user);
-        var refresh = jwtService.generateRefreshToken(user);
-        return new AuthResponse(access, refresh);
-    }
-
-    public AuthResponse refresh(org.collapseloader.atlas.domain.users.dto.request.RefreshRequest request) {
-        var refreshToken = request.refreshToken();
-        var username = jwtService.extractUsername(refreshToken);
-        var user = userRepository.findByUsername(username).orElseThrow();
-        if (!jwtService.isRefreshTokenValid(refreshToken, user)) {
-            throw new UnauthorizedException("Invalid refresh token");
-        }
-        var access = jwtService.generateAccessToken(user);
-        var newRefresh = jwtService.generateRefreshToken(user);
-        return new AuthResponse(access, newRefresh);
+        return new AuthResponse(access);
     }
 
     public void logout(String token) {
@@ -133,14 +119,14 @@ public class AuthService {
                 userStatusService.setStatus(user.getId(), UserStatus.OFFLINE, null);
 
                 try {
-                    java.util.Date expiration = jwtService.extractClaim(token, io.jsonwebtoken.Claims::getExpiration);
+                    Date expiration = jwtService.extractClaim(token, io.jsonwebtoken.Claims::getExpiration);
                     if (expiration != null) {
                         long remainingMillis = expiration.getTime() - System.currentTimeMillis();
                         if (remainingMillis > 0) {
                             tokenBlacklistService.blacklistToken(token, remainingMillis);
                         }
                     }
-                } catch (Exception e) {
+                } catch (Exception ignored) {
 
                 }
             });

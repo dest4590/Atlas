@@ -46,29 +46,10 @@ public class JwtService implements InitializingBean {
                 .compact();
     }
 
-    public String generateRefreshToken(UserDetails userDetails) {
-        var now = System.currentTimeMillis();
-        return Jwts.builder()
-                .subject(userDetails.getUsername())
-                .claim("type", "refresh")
-                .issuedAt(new Date(now))
-                .signWith(getSigningKey())
-                .compact();
-    }
-
     public boolean isTokenValid(String token, UserDetails userDetails) {
         try {
             final String username = extractUsername(token);
             return (username != null && username.equals(userDetails.getUsername()));
-        } catch (JwtException | IllegalArgumentException ignored) {
-            return false;
-        }
-    }
-
-    public boolean isRefreshTokenValid(String token, UserDetails userDetails) {
-        try {
-            final String type = extractClaim(token, c -> c.get("type", String.class));
-            return "refresh".equals(type) && isTokenValid(token, userDetails);
         } catch (JwtException | IllegalArgumentException ignored) {
             return false;
         }
