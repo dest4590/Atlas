@@ -1,11 +1,12 @@
 package org.collapseloader.atlas.domain.admin.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.domain.clients.entity.ClientScreenshot;
+import org.collapseloader.atlas.domain.clients.entity.ClientType;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
 import org.collapseloader.atlas.domain.clients.repository.ClientScreenshotRepository;
-import org.collapseloader.atlas.service.ArtifactStorageService;
+import org.collapseloader.atlas.dto.ApiResponse;
+import org.collapseloader.atlas.service.FileStorageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -22,21 +23,19 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/v1/admin")
 public class AdminClientScreenshotController {
 
-    private final ArtifactStorageService storageService;
+    private final FileStorageService storageService;
     private final ClientRepository clientRepository;
     private final ClientScreenshotRepository screenshotRepository;
 
     @GetMapping("/clients/{clientId}/screenshots")
     public ResponseEntity<ApiResponse<Map<String, Object>>> listScreenshots(
-            @PathVariable Long clientId
-    ) {
+            @PathVariable Long clientId) {
         var items = screenshotRepository.findAllByClientIdOrderBySortOrderAsc(clientId)
                 .stream()
                 .map(screenshot -> Map.of(
                         "id", screenshot.getId(),
                         "imageUrl", screenshot.getImageUrl(),
-                        "sortOrder", screenshot.getSortOrder()
-                ))
+                        "sortOrder", screenshot.getSortOrder()))
                 .toList();
 
         return ResponseEntity.ok(ApiResponse.success(Map.of("items", items)));
@@ -45,8 +44,7 @@ public class AdminClientScreenshotController {
     @PostMapping("/clients/{clientId}/screenshots")
     public ResponseEntity<ApiResponse<Map<String, Object>>> uploadScreenshot(
             @PathVariable Long clientId,
-            @RequestParam("file") List<MultipartFile> files
-    ) {
+            @RequestParam("file") List<MultipartFile> files) {
         var client = clientRepository.findById(clientId).orElseThrow(() -> new RuntimeException("Client not found"));
         if (files == null || files.isEmpty()) {
             throw new RuntimeException("No files provided");
@@ -56,13 +54,16 @@ public class AdminClientScreenshotController {
         int startOrder = existing.size();
         List<Map<String, Object>> items = new ArrayList<>();
 
+        String typeName = client.getType() == ClientType.Vanilla ? "vanilla" : client.getType().getApiValue();
+
         for (int i = 0; i < files.size(); i++) {
             MultipartFile file = files.get(i);
             String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "screenshot";
             String filename = System.currentTimeMillis() + "-" + originalName;
-            String relative = "clients/" + clientId + "/screenshots/" + filename;
-            storageService.store(relative, file);
-            String url = "/uploads/" + relative;
+            String subDir = "clients/" + typeName + "/screenshots/" + clientId;
+
+            var storedFile = storageService.store(file, subDir, filename);
+            String url = "/uploads/" + storedFile.storedPath();
 
             ClientScreenshot screenshot = new ClientScreenshot();
             screenshot.setClient(client);
@@ -79,9 +80,9 @@ public class AdminClientScreenshotController {
     @DeleteMapping("/clients/{clientId}/screenshots/{screenshotId}")
     public ResponseEntity<ApiResponse<Void>> deleteScreenshot(
             @PathVariable Long clientId,
-            @PathVariable Long screenshotId
-    ) {
-        var screenshot = screenshotRepository.findById(screenshotId).orElseThrow(() -> new RuntimeException("Screenshot not found"));
+            @PathVariable Long screenshotId) {
+        var screenshot = screenshotRepository.findById(screenshotId)
+                .orElseThrow(() -> new RuntimeException("Screenshot not found"));
         if (screenshot.getClient() == null || !screenshot.getClient().getId().equals(clientId)) {
             throw new RuntimeException("Mismatched client id");
         }
@@ -92,8 +93,7 @@ public class AdminClientScreenshotController {
     @PutMapping("/clients/{clientId}/screenshots/order")
     public ResponseEntity<ApiResponse<Void>> updateOrder(
             @PathVariable Long clientId,
-            @RequestBody List<Long> orderedIds
-    ) {
+            @RequestBody List<Long> orderedIds) {
         if (orderedIds == null || orderedIds.isEmpty()) {
             return ResponseEntity.ok(ApiResponse.success(null));
         }

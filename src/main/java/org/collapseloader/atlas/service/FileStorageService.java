@@ -94,13 +94,17 @@ public class FileStorageService {
     }
 
     public StoredFile store(MultipartFile file, String subDir) {
-        log.info("[SECURITY] Attempting to store file: {} in subDir: {}", file.getOriginalFilename(), subDir);
+        return store(file, subDir, file.getOriginalFilename());
+    }
+
+    public StoredFile store(MultipartFile file, String subDir, String customFilename) {
+        log.info("[SECURITY] Attempting to store file: {} as {} in subDir: {}", file.getOriginalFilename(),
+                customFilename, subDir);
         try {
             if (file.isEmpty()) {
                 throw new RuntimeException("Failed to store empty file.");
             }
-            String originalFilename = file.getOriginalFilename();
-            if (originalFilename == null || originalFilename.isEmpty()) {
+            if (customFilename == null || customFilename.isEmpty()) {
                 throw new RuntimeException("Failed to store file with empty name.");
             }
             Path destinationDir = this.rootLocation;
@@ -115,7 +119,7 @@ public class FileStorageService {
             }
 
             Path destinationFile = destinationDir.resolve(
-                    Paths.get(originalFilename))
+                    Paths.get(customFilename))
                     .normalize().toAbsolutePath();
 
             if (!destinationFile.startsWith(rootLocation.toAbsolutePath())) {
@@ -140,7 +144,7 @@ public class FileStorageService {
             String relativePath = this.rootLocation.relativize(destinationFile).toString().replace("\\", "/");
             log.info("[SECURITY] File stored successfully: {}", relativePath);
 
-            return new StoredFile(originalFilename, relativePath, md5, size / (1024 * 1024));
+            return new StoredFile(customFilename, relativePath, md5, size / (1024 * 1024));
         } catch (IOException e) {
             log.error("[SECURITY] Failed to store file: {}", file.getOriginalFilename(), e);
             throw new RuntimeException("Failed to store file.", e);
@@ -417,12 +421,17 @@ public class FileStorageService {
 
     @Getter
     public enum UploadTarget {
-        CLIENTS("clients"), FABRIC_CLIENTS("fabric-clients"), FABRIC_DEPS("fabric-deps"),
-        FORGE_CLIENTS("forge-clients"), FORGE_DEPS("forge-deps");
+        CLIENTS("clients", "clients/vanilla/jars"),
+        FABRIC_CLIENTS("fabric-clients", "clients/fabric/jars"),
+        FABRIC_DEPS("fabric-deps", "clients/fabric/deps/jars"),
+        FORGE_CLIENTS("forge-clients", "clients/forge/jars"),
+        FORGE_DEPS("forge-deps", "clients/forge/deps/jars");
 
+        private final String label;
         private final String subDir;
 
-        UploadTarget(String subDir) {
+        UploadTarget(String label, String subDir) {
+            this.label = label;
             this.subDir = subDir;
         }
 
@@ -431,7 +440,7 @@ public class FileStorageService {
                 return null;
             String normalized = raw.trim().toLowerCase();
             for (UploadTarget target : values()) {
-                if (target.subDir.equals(normalized) || target.name().equalsIgnoreCase(normalized))
+                if (target.label.equals(normalized) || target.name().equalsIgnoreCase(normalized.replace("-", "_")))
                     return target;
             }
             return null;
