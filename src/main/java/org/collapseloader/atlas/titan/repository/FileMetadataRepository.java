@@ -1,6 +1,6 @@
-package org.collapseloader.atlas.domain.storage.repository;
+package org.collapseloader.atlas.titan.repository;
 
-import org.collapseloader.atlas.domain.storage.entity.FileMetadata;
+import org.collapseloader.atlas.titan.model.FileMetadata;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

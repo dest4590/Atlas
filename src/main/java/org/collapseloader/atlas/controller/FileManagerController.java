@@ -1,10 +1,10 @@
 package org.collapseloader.atlas.controller;
 
 import lombok.RequiredArgsConstructor;
-
 import org.collapseloader.atlas.domain.clients.repository.FabricDependenceRepository;
-import org.collapseloader.atlas.service.FileMetadataService;
-import org.collapseloader.atlas.service.FileStorageService;
+import org.collapseloader.atlas.titan.model.FileMetadata;
+import org.collapseloader.atlas.titan.service.FileMetadataService;
+import org.collapseloader.atlas.titan.service.FileStorageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +31,7 @@ public class FileManagerController {
     public ResponseEntity<List<FileResponse>> listFiles(
             @RequestParam(required = false, defaultValue = "") String path) {
 
-        List<org.collapseloader.atlas.domain.storage.entity.FileMetadata> allMetadata = metadataService.findAll();
+        List<FileMetadata> allMetadata = metadataService.findAll();
 
         List<FileResponse> files = storageService.loadAll(path).map(filePath -> {
             String filename = filePath.toString().replace("\\", "/");
@@ -57,7 +57,7 @@ public class FileManagerController {
                         size = Files.size(file);
                         md5 = allMetadata.stream()
                                 .filter(m -> m.getFilePath().equals(filename))
-                                .map(org.collapseloader.atlas.domain.storage.entity.FileMetadata::getMd5)
+                                .map(FileMetadata::getMd5)
                                 .findFirst().orElse("");
 
                         if (md5 != null && !md5.isEmpty()) {
@@ -130,6 +130,7 @@ public class FileManagerController {
     }
 
     public record FileResponse(String name, String url, long size, long lastModified, long created, boolean isDir,
-            String md5, boolean isDeleted, Long deletedAt, boolean isFabricDep, List<String> fabricClientNames) {
+                               String md5, boolean isDeleted, Long deletedAt, boolean isFabricDep,
+                               List<String> fabricClientNames) {
     }
 }

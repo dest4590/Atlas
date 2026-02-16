@@ -1,9 +1,9 @@
-package org.collapseloader.atlas.service;
+package org.collapseloader.atlas.titan.service;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.collapseloader.atlas.config.StorageProperties;
-import org.collapseloader.atlas.domain.storage.entity.FileMetadata;
+import org.collapseloader.atlas.titan.model.FileMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.ContextRefreshedEvent;

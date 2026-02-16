@@ -6,7 +6,7 @@ import org.collapseloader.atlas.domain.clients.entity.ClientType;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
 import org.collapseloader.atlas.domain.clients.repository.ClientScreenshotRepository;
 import org.collapseloader.atlas.dto.ApiResponse;
-import org.collapseloader.atlas.service.FileStorageService;
+import org.collapseloader.atlas.titan.service.FileStorageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

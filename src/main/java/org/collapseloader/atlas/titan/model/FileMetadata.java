@@ -1,4 +1,4 @@
-package org.collapseloader.atlas.domain.storage.entity;
+package org.collapseloader.atlas.titan.model;
 
 import jakarta.persistence.*;
 import lombok.*;

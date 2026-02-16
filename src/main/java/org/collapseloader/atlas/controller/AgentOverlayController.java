@@ -1,8 +1,8 @@
 package org.collapseloader.atlas.controller;
 
 import org.collapseloader.atlas.dto.ApiResponse;
-import org.collapseloader.atlas.service.FileMetadataService;
-import org.collapseloader.atlas.service.FileStorageService;
+import org.collapseloader.atlas.titan.service.FileMetadataService;
+import org.collapseloader.atlas.titan.service.FileStorageService;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;

@@ -1,8 +1,8 @@
-package org.collapseloader.atlas.service;
+package org.collapseloader.atlas.titan.service;
 
 import lombok.RequiredArgsConstructor;
-import org.collapseloader.atlas.domain.storage.entity.FileMetadata;
-import org.collapseloader.atlas.domain.storage.repository.FileMetadataRepository;
+import org.collapseloader.atlas.titan.model.FileMetadata;
+import org.collapseloader.atlas.titan.repository.FileMetadataRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
