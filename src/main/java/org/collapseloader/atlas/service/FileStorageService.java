@@ -3,6 +3,7 @@ package org.collapseloader.atlas.service;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.collapseloader.atlas.config.StorageProperties;
+import org.collapseloader.atlas.domain.storage.entity.FileMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -19,7 +20,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 import java.util.stream.Stream;
-import org.collapseloader.atlas.domain.storage.entity.FileMetadata;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +34,7 @@ public class FileStorageService {
     private Path tempLocation;
     private Path trashLocation;
 
-    @EventListener({ ContextRefreshedEvent.class })
+    @EventListener({ContextRefreshedEvent.class})
     public void init() {
         this.rootLocation = Paths.get(properties.getUploadDir()).toAbsolutePath().normalize();
         this.tempLocation = this.rootLocation.resolve(properties.getTempDir()).normalize();
@@ -119,7 +119,7 @@ public class FileStorageService {
             }
 
             Path destinationFile = destinationDir.resolve(
-                    Paths.get(customFilename))
+                            Paths.get(customFilename))
                     .normalize().toAbsolutePath();
 
             if (!destinationFile.startsWith(rootLocation.toAbsolutePath())) {
@@ -158,6 +158,10 @@ public class FileStorageService {
 
     public Path load(String filename) {
         return rootLocation.resolve(filename).normalize();
+    }
+
+    public Path getRootLocation() {
+        return rootLocation;
     }
 
     public Stream<Path> loadAll(String subDir) {
@@ -429,7 +433,8 @@ public class FileStorageService {
         FABRIC_CLIENTS("fabric-clients", "clients/fabric/jars"),
         FABRIC_DEPS("fabric-deps", "clients/fabric/deps/jars"),
         FORGE_CLIENTS("forge-clients", "clients/forge/jars"),
-        FORGE_DEPS("forge-deps", "clients/forge/deps/jars");
+        FORGE_DEPS("forge-deps", "clients/forge/deps/jars"),
+        AGENT("agent", "agent");
 
         private final String label;
         private final String subDir;

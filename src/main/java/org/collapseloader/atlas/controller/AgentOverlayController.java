@@ -1,7 +1,8 @@
 package org.collapseloader.atlas.controller;
 
 import org.collapseloader.atlas.dto.ApiResponse;
-import org.collapseloader.atlas.service.ArtifactStorageService;
+import org.collapseloader.atlas.service.FileMetadataService;
+import org.collapseloader.atlas.service.FileStorageService;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -11,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -24,14 +28,18 @@ public class AgentOverlayController {
     private static final String AGENT_JAR = "agent/CollapseAgent.jar";
     private static final String OVERLAY_DLL = "agent/CollapseOverlay.dll";
     private static final String OVERLAY_SO = "agent/libCollapseOverlay.so";
-    private static final OverlayAsset WINDOWS_OVERLAY = new OverlayAsset(OVERLAY_DLL, "CollapseOverlay.dll", MediaType.parseMediaType("application/x-msdownload"), ".dll");
-    private static final OverlayAsset LINUX_OVERLAY = new OverlayAsset(OVERLAY_SO, "libCollapseOverlay.so", MediaType.APPLICATION_OCTET_STREAM, ".so");
+    private static final OverlayAsset WINDOWS_OVERLAY = new OverlayAsset(OVERLAY_DLL, "CollapseOverlay.dll",
+            MediaType.parseMediaType("application/x-msdownload"), ".dll");
+    private static final OverlayAsset LINUX_OVERLAY = new OverlayAsset(OVERLAY_SO, "libCollapseOverlay.so",
+            MediaType.APPLICATION_OCTET_STREAM, ".so");
     private static final MediaType JAR_MEDIA_TYPE = MediaType.parseMediaType("application/java-archive");
 
-    private final ArtifactStorageService storageService;
+    private final FileStorageService storageService;
+    private final FileMetadataService metadataService;
 
-    public AgentOverlayController(ArtifactStorageService storageService) {
+    public AgentOverlayController(FileStorageService storageService, FileMetadataService metadataService) {
         this.storageService = storageService;
+        this.metadataService = metadataService;
     }
 
     @GetMapping({"/agent/download", "/agent/download/windows", "/agent/download/linux"})
@@ -46,7 +54,8 @@ public class AgentOverlayController {
     }
 
     @GetMapping("/agent-overlay/checksums")
-    public ResponseEntity<ApiResponse<Map<String, String>>> checksum(@RequestParam(value = "os", required = false) String os) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> checksum(
+            @RequestParam(value = "os", required = false) String os) {
         Map<String, String> hashes = new LinkedHashMap<>();
         hashes.put("agent_hash", safeGetMd5(AGENT_JAR));
 
@@ -69,37 +78,45 @@ public class AgentOverlayController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/overlay/upload/{os:windows|linux}")
-    public ResponseEntity<ApiResponse<Map<String, String>>> uploadOverlay(@PathVariable String os, @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> uploadOverlay(@PathVariable String os,
+                                                                          @RequestParam("file") MultipartFile file) {
         OverlayAsset overlay = resolveOverlay(os);
         return ResponseEntity.ok(ApiResponse.success(storeOverlay(file, overlay)));
     }
 
     private ResponseEntity<Resource> serveFile(String relativePath, String fileName, MediaType mediaType) {
-        Resource resource = storageService.load(relativePath);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"");
-        return ResponseEntity.ok()
-                .headers(headers)
-                .contentType(mediaType)
-                .body(resource);
+        try {
+            Path path = storageService.load(relativePath);
+            if (!Files.exists(path)) {
+                throw new ResponseStatusException(NOT_FOUND, "Requested artifact is missing");
+            }
+            Resource resource = new org.springframework.core.io.UrlResource(path.toUri());
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"");
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentType(mediaType)
+                    .body(resource);
+        } catch (java.net.MalformedURLException e) {
+            throw new ResponseStatusException(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to resolve artifact location", e);
+        }
     }
 
     private Map<String, String> storeAgent(MultipartFile file) {
         validateFile(file, ".jar");
-        String hash = storageService.store(AGENT_JAR, file);
+        FileStorageService.StoredFile stored = storageService.store(file, "agent", "CollapseAgent.jar");
         return Map.of(
-                "path", "/uploads/" + AGENT_JAR,
-                "agent_hash", hash
-        );
+                "path", "/uploads/" + stored.storedPath(),
+                "agent_hash", stored.md5());
     }
 
     private Map<String, String> storeOverlay(MultipartFile file, OverlayAsset overlay) {
         validateFile(file, overlay.expectedExtension());
-        String hash = storageService.store(overlay.path(), file);
+        FileStorageService.StoredFile stored = storageService.store(file, "agent", overlay.fileName());
         return Map.of(
-                "path", "/uploads/" + overlay.path(),
-                "overlay_hash", hash
-        );
+                "path", "/uploads/" + stored.storedPath(),
+                "overlay_hash", stored.md5());
     }
 
     private OverlayAsset resolveOverlay(String os) {
@@ -113,12 +130,13 @@ public class AgentOverlayController {
 
     private String safeGetMd5(String relativePath) {
         try {
-            return storageService.getMd5(relativePath);
-        } catch (ResponseStatusException e) {
-            if (e.getStatusCode().equals(NOT_FOUND)) {
+            Path path = storageService.load(relativePath);
+            if (!Files.exists(path)) {
                 return null;
             }
-            throw e;
+            return metadataService.getOrCalculateMD5(path, storageService.getRootLocation());
+        } catch (IOException e) {
+            return null;
         }
     }
 
