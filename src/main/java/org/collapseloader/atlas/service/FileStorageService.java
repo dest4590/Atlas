@@ -25,7 +25,7 @@ import org.collapseloader.atlas.domain.storage.entity.FileMetadata;
 @RequiredArgsConstructor
 public class FileStorageService {
     private static final Logger log = LoggerFactory.getLogger(FileStorageService.class);
-    private static final long ASYNC_MD5_THRESHOLD_BYTES = 5 * 1024 * 1024;
+    private static final long ASYNC_MD5_THRESHOLD_BYTES = 512 * 1024 * 1024;
 
     private final StorageProperties properties;
     private final FileMetadataService metadataService;
