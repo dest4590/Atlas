@@ -72,11 +72,11 @@ public class Client {
         if (this.filename == null || this.filename.isBlank()) {
             String prefix = "";
             if (this.type == ClientType.FABRIC) {
-                prefix = "fabric-clients/";
+                prefix = "clients/fabric/jars/";
             } else if (this.type == ClientType.FORGE) {
-                prefix = "forge-clients/";
+                prefix = "clients/forge/jars/";
             } else {
-                prefix = "clients/";
+                prefix = "clients/vanilla/jars/";
             }
             this.filename = prefix + this.name + ".jar";
         }
