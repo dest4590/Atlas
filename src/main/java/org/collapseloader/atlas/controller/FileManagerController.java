@@ -1,6 +1,8 @@
 package org.collapseloader.atlas.controller;
 
 import lombok.RequiredArgsConstructor;
+
+import org.collapseloader.atlas.domain.clients.repository.FabricDependenceRepository;
 import org.collapseloader.atlas.service.FileMetadataService;
 import org.collapseloader.atlas.service.FileStorageService;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,7 @@ public class FileManagerController {
 
     private final FileStorageService storageService;
     private final FileMetadataService metadataService;
+    private final FabricDependenceRepository fabricDependenceRepository;
 
     @GetMapping
     public ResponseEntity<List<FileResponse>> listFiles(
@@ -42,6 +45,9 @@ public class FileManagerController {
             long lastModified = 0;
             long created = 0;
             boolean isDir = false;
+            boolean isFabricDep = false;
+            List<String> fabricClientNames = new java.util.ArrayList<>();
+
             try {
                 Path file = storageService.load(filename);
                 if (Files.exists(file)) {
@@ -53,13 +59,25 @@ public class FileManagerController {
                                 .filter(m -> m.getFilePath().equals(filename))
                                 .map(org.collapseloader.atlas.domain.storage.entity.FileMetadata::getMd5)
                                 .findFirst().orElse("");
+
+                        if (md5 != null && !md5.isEmpty()) {
+                            var deps = fabricDependenceRepository.findAllByMd5Hash(md5);
+                            if (!deps.isEmpty()) {
+                                isFabricDep = true;
+                                fabricClientNames = deps.stream()
+                                        .map(d -> d.getClient().getName())
+                                        .distinct()
+                                        .collect(Collectors.toList());
+                            }
+                        }
                     }
                     lastModified = attrs.lastModifiedTime().toMillis();
                     created = attrs.creationTime().toMillis();
                 }
             } catch (Exception ignored) {
             }
-            return new FileResponse(filename, url, size, lastModified, created, isDir, md5, false, null);
+            return new FileResponse(filename, url, size, lastModified, created, isDir, md5, false, null, isFabricDep,
+                    fabricClientNames);
         }).collect(Collectors.toList());
 
         return ResponseEntity.ok(files);
@@ -79,7 +97,8 @@ public class FileManagerController {
                     meta.getCreatedAt().toEpochMilli(), false, meta.getMd5(), true,
                     meta.getDeletedAt() != null
                             ? meta.getDeletedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                            : null);
+                            : null,
+                    false, List.of());
         }).collect(Collectors.toList());
         return ResponseEntity.ok(trash);
     }
@@ -111,6 +130,6 @@ public class FileManagerController {
     }
 
     public record FileResponse(String name, String url, long size, long lastModified, long created, boolean isDir,
-                               String md5, boolean isDeleted, Long deletedAt) {
+            String md5, boolean isDeleted, Long deletedAt, boolean isFabricDep, List<String> fabricClientNames) {
     }
 }
