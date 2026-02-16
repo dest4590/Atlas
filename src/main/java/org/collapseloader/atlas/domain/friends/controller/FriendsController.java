@@ -1,6 +1,5 @@
 package org.collapseloader.atlas.domain.friends.controller;
 
-import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.domain.friends.dto.request.FriendRequestCreateRequest;
 import org.collapseloader.atlas.domain.friends.dto.response.FriendRequestResponse;
 import org.collapseloader.atlas.domain.friends.dto.response.FriendRequestsBatchResponse;
@@ -8,6 +7,7 @@ import org.collapseloader.atlas.domain.friends.dto.response.FriendResponse;
 import org.collapseloader.atlas.domain.friends.dto.response.FriendsBatchResponse;
 import org.collapseloader.atlas.domain.friends.service.FriendshipService;
 import org.collapseloader.atlas.domain.users.entity.User;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;

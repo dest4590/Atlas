@@ -2,12 +2,12 @@ package org.collapseloader.atlas.domain.users.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.domain.users.dto.request.AuthRequest;
 import org.collapseloader.atlas.domain.users.dto.request.AuthSetPasswordRequest;
 import org.collapseloader.atlas.domain.users.dto.response.AuthResponse;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.domain.users.service.AuthService;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;

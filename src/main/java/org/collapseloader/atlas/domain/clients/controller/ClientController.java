@@ -1,6 +1,5 @@
 package org.collapseloader.atlas.domain.clients.controller;
 
-import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.domain.clients.dto.request.ClientCommentRequest;
 import org.collapseloader.atlas.domain.clients.dto.request.ClientCreateRequest;
 import org.collapseloader.atlas.domain.clients.dto.request.ClientRatingRequest;
@@ -10,6 +9,7 @@ import org.collapseloader.atlas.domain.clients.service.ClientDetailsService;
 import org.collapseloader.atlas.domain.clients.service.ClientRatingService;
 import org.collapseloader.atlas.domain.clients.service.ClientService;
 import org.collapseloader.atlas.domain.users.entity.User;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.exception.UnauthorizedException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

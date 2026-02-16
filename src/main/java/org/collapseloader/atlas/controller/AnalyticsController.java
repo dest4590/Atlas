@@ -1,8 +1,8 @@
 package org.collapseloader.atlas.controller;
 
-import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.domain.analytics.dto.StatisticsResponse;
 import org.collapseloader.atlas.domain.analytics.service.AnalyticsService;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;

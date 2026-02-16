@@ -1,6 +1,5 @@
 package org.collapseloader.atlas.domain.users.controller;
 
-import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.domain.achievements.dto.UserAchievementResponse;
 import org.collapseloader.atlas.domain.achievements.service.AchievementService;
 import org.collapseloader.atlas.domain.friends.dto.response.FriendRequestsBatchResponse;
@@ -15,6 +14,7 @@ import org.collapseloader.atlas.domain.users.service.UserExternalAccountsService
 import org.collapseloader.atlas.domain.users.service.UserFavoritesService;
 import org.collapseloader.atlas.domain.users.service.UserPreferencesService;
 import org.collapseloader.atlas.domain.users.service.UserProfileService;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.exception.UnauthorizedException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

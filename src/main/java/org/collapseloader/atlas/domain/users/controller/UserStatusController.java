@@ -1,10 +1,10 @@
 package org.collapseloader.atlas.domain.users.controller;
 
-import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.domain.users.dto.request.UserStatusUpdateRequest;
 import org.collapseloader.atlas.domain.users.dto.response.UserStatusResponse;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.domain.users.service.UserStatusService;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;

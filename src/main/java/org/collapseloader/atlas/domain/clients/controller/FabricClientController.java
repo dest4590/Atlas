@@ -1,8 +1,8 @@
 package org.collapseloader.atlas.domain.clients.controller;
 
-import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.domain.clients.dto.response.FabricClientResponse;
 import org.collapseloader.atlas.domain.clients.service.FabricClientService;
+import org.collapseloader.atlas.dto.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

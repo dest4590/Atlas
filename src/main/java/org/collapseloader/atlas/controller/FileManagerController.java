@@ -111,6 +111,6 @@ public class FileManagerController {
     }
 
     public record FileResponse(String name, String url, long size, long lastModified, long created, boolean isDir,
-            String md5, boolean isDeleted, Long deletedAt) {
+                               String md5, boolean isDeleted, Long deletedAt) {
     }
 }

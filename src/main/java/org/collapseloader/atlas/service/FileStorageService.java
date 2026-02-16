@@ -310,7 +310,11 @@ public class FileStorageService {
     public void storeChunk(String uploadId, int chunkIndex, MultipartFile file) {
         try {
             Path uploadTempDir = tempLocation.resolve(uploadId);
-            Files.createDirectories(uploadTempDir);
+
+            if (!Files.exists(uploadTempDir)) {
+                Files.createDirectories(uploadTempDir);
+            }
+
             Path chunkFile = uploadTempDir.resolve(String.valueOf(chunkIndex));
             try (var inputStream = file.getInputStream()) {
                 Files.copy(inputStream, chunkFile, StandardCopyOption.REPLACE_EXISTING);
