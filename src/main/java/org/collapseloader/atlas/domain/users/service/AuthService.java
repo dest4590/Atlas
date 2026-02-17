@@ -50,9 +50,10 @@ public class AuthService {
     }
 
     public AuthResponse register(AuthRequest request) {
-        if (userRepository.findByUsername(request.username()).isPresent()) {
+        if (userRepository.existsByUsernameIgnoreCase(request.username().trim())) {
             throw new ConflictException("User already exists");
         }
+
         if (request.email() == null || request.email().isBlank()) {
             throw new ValidationException("Email is required");
         }
@@ -79,7 +80,7 @@ public class AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.username(), request.password()));
 
-        var user = userRepository.findByUsername(request.username())
+        var user = userRepository.findByUsernameIgnoreCase(request.username())
                 .orElseThrow();
 
         if (passwordEncoder instanceof HybridPasswordEncoder hybridEncoder
@@ -115,7 +116,7 @@ public class AuthService {
     public void logout(String token) {
         String username = jwtService.extractUsername(token);
         if (username != null) {
-            userRepository.findByUsername(username).ifPresent(user -> {
+            userRepository.findByUsernameIgnoreCase(username).ifPresent(user -> {
                 userStatusService.setStatus(user.getId(), UserStatus.OFFLINE, null);
 
                 try {

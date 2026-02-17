@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.domain.users.repository.UserRepository;
 import org.collapseloader.atlas.domain.users.security.CachedUser;
+import org.jspecify.annotations.NonNull;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -20,8 +21,9 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     @Cacheable(value = "users", key = "#username")
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
+    @NonNull
+    public UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
+        User user = userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         return CachedUser.builder()
