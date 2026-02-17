@@ -75,7 +75,25 @@ management:
 jwt:
   secret: ${JWT_SECRET:default_jwt_secret_key_32bytes!x}
 
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: false
+          ssl:
+            enable: true
+        transport:
+          protocol: smtps
+    default-encoding: UTF-8
+
 atlas:
+  app-url: ${APP_URL:http://localhost:8082}
   storage:
     upload-dir: uploads
     temp-dir: temp

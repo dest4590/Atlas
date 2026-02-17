@@ -13,13 +13,10 @@ import java.util.Collection;
 import java.util.List;
 
 @Entity
-@Table(
-        name = "users",
-        indexes = {
-                @Index(name = "users_created_idx", columnList = "created_at"),
-                @Index(name = "users_updated_idx", columnList = "updated_at")
-        }
-)
+@Table(name = "users", indexes = {
+        @Index(name = "users_created_idx", columnList = "created_at"),
+        @Index(name = "users_updated_idx", columnList = "updated_at")
+})
 @Getter
 @Setter
 @ToString
@@ -42,7 +39,7 @@ public class User implements UserDetails {
 
     @Column(nullable = false)
     @Builder.Default
-    private boolean enabled = true;
+    private boolean enabled = false;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude

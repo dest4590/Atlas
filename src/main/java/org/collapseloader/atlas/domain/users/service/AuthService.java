@@ -7,10 +7,14 @@ import org.collapseloader.atlas.domain.users.dto.response.AuthResponse;
 import org.collapseloader.atlas.domain.users.entity.*;
 import org.collapseloader.atlas.domain.users.repository.UserProfileRepository;
 import org.collapseloader.atlas.domain.users.repository.UserRepository;
+import org.collapseloader.atlas.domain.users.repository.VerificationTokenRepository;
 import org.collapseloader.atlas.exception.ConflictException;
+import org.collapseloader.atlas.exception.EntityNotFoundException;
 import org.collapseloader.atlas.exception.UnauthorizedException;
 import org.collapseloader.atlas.exception.ValidationException;
+import org.collapseloader.atlas.service.EmailService;
 import org.collapseloader.atlas.util.passwords.HybridPasswordEncoder;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +33,8 @@ public class AuthService {
     private final UserStatusService userStatusService;
     private final org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService;
     private final TokenBlacklistService tokenBlacklistService;
+    private final EmailService emailService;
+    private final VerificationTokenRepository verificationTokenRepository;
 
     public AuthService(
             UserRepository userRepository,
@@ -38,7 +44,9 @@ public class AuthService {
             AuthenticationManager authenticationManager,
             UserStatusService userStatusService,
             AchievementService achievementService,
-            TokenBlacklistService tokenBlacklistService) {
+            TokenBlacklistService tokenBlacklistService,
+            EmailService emailService,
+            VerificationTokenRepository verificationTokenRepository) {
         this.userRepository = userRepository;
         this.userProfileRepository = userProfileRepository;
         this.passwordEncoder = passwordEncoder;
@@ -47,6 +55,8 @@ public class AuthService {
         this.userStatusService = userStatusService;
         this.achievementService = achievementService;
         this.tokenBlacklistService = tokenBlacklistService;
+        this.emailService = emailService;
+        this.verificationTokenRepository = verificationTokenRepository;
     }
 
     public AuthResponse register(AuthRequest request) {
@@ -74,8 +84,31 @@ public class AuthService {
         savedUser.setProfile(profile);
         userProfileRepository.save(profile);
 
-        var access = jwtService.generateAccessToken(savedUser);
-        return new AuthResponse(access);
+        String token = java.util.UUID.randomUUID().toString();
+        var verificationToken = VerificationToken.builder()
+                .token(token)
+                .user(savedUser)
+                .expiryDate(Instant.now().plus(java.time.Duration.ofHours(24)))
+                .build();
+        verificationTokenRepository.save(verificationToken);
+
+        emailService.sendVerificationEmail(savedUser.getEmail(), token);
+
+        return new AuthResponse(null);
+    }
+
+    public void verifyEmail(String token) {
+        VerificationToken verificationToken = verificationTokenRepository.findByToken(token)
+                .orElseThrow(() -> new EntityNotFoundException("Invalid verification token"));
+
+        if (verificationToken.isExpired()) {
+            throw new ValidationException("Verification token has expired");
+        }
+
+        User user = verificationToken.getUser();
+        user.setEnabled(true);
+        userRepository.save(user);
+        verificationTokenRepository.delete(verificationToken);
     }
 
     public AuthResponse login(AuthRequest request) {
