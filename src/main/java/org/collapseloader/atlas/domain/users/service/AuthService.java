@@ -50,6 +50,8 @@ public class AuthService {
     }
 
     public AuthResponse register(AuthRequest request) {
+        UsernameValidator.validate(request.username());
+
         if (userRepository.existsByUsernameIgnoreCase(request.username().trim())) {
             throw new ConflictException("User already exists");
         }

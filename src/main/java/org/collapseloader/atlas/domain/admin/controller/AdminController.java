@@ -18,6 +18,7 @@ import org.collapseloader.atlas.domain.users.entity.*;
 import org.collapseloader.atlas.domain.users.repository.UserPreferenceRepository;
 import org.collapseloader.atlas.domain.users.repository.UserRepository;
 import org.collapseloader.atlas.domain.users.service.UserStatusService;
+import org.collapseloader.atlas.domain.users.service.UsernameValidator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -171,8 +172,10 @@ public class AdminController {
             user.setProfile(UserProfile.builder().user(user).build());
         }
         UserProfile profile = user.getProfile();
-        if (request.nickname() != null)
+        if (request.nickname() != null) {
+            UsernameValidator.validate(request.nickname());
             profile.setNickname(request.nickname());
+        }
         if (request.avatarPath() != null)
             profile.setAvatarPath(request.avatarPath());
         if (request.profileRole() != null)

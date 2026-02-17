@@ -79,6 +79,7 @@ public class UserProfileService {
         String nickname = normalizeNickname(request.nickname());
 
         if (nickname != null) {
+            UsernameValidator.validate(nickname);
             String normalized = nickname.toLowerCase(Locale.ROOT);
             boolean exists = profile.getId() == null
                     ? userProfileRepository.existsByNickname(normalized)
