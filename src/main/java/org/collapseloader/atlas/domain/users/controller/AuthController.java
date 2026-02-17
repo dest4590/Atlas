@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.users.controller;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.collapseloader.atlas.domain.users.dto.request.AuthRequest;
@@ -27,9 +28,14 @@ public class AuthController {
     }
 
     @GetMapping("/verify")
-    public ResponseEntity<ApiResponse<String>> verifyEmail(@RequestParam String token) {
-        authService.verifyEmail(token);
-        return ResponseEntity.ok(ApiResponse.success("Email verified successfully"));
+    public ResponseEntity<ApiResponse<AuthResponse>> verifyEmail(@RequestParam String token) {
+        return ResponseEntity.ok(ApiResponse.success(authService.verifyEmail(token)));
+    }
+
+    @GetMapping("/verify-redirect")
+    public void verifyRedirect(@RequestParam String code, @RequestParam String email,
+                               HttpServletResponse response) throws java.io.IOException {
+        response.sendRedirect("collapseloader://verify?code=" + code + "&email=" + email);
     }
 
     @PostMapping("/resend-verification")

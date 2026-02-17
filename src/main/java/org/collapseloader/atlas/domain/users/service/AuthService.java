@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.users.service;
 
+import jakarta.transaction.Transactional;
 import org.collapseloader.atlas.domain.achievements.service.AchievementService;
 import org.collapseloader.atlas.domain.users.dto.request.AuthRequest;
 import org.collapseloader.atlas.domain.users.dto.request.AuthSetPasswordRequest;
@@ -59,6 +60,7 @@ public class AuthService {
         this.verificationTokenRepository = verificationTokenRepository;
     }
 
+    @Transactional
     public AuthResponse register(AuthRequest request) {
         UsernameValidator.validate(request.username());
 
@@ -70,11 +72,16 @@ public class AuthService {
             throw new ValidationException("Email is required");
         }
 
+        if (userRepository.findByEmailIgnoreCase(request.email().trim()).isPresent()) {
+            throw new ConflictException("Email is already registered");
+        }
+
         var user = new User();
-        user.setUsername(request.username());
+        user.setUsername(request.username().trim());
         user.setPassword(passwordEncoder.encode(request.password()));
-        user.setEmail(request.email());
+        user.setEmail(request.email().trim());
         user.setRole(Role.USER);
+        user.setEnabled(false);
 
         var savedUser = userRepository.save(user);
         var profile = UserProfile.builder()
@@ -84,7 +91,7 @@ public class AuthService {
         savedUser.setProfile(profile);
         userProfileRepository.save(profile);
 
-        String token = java.util.UUID.randomUUID().toString();
+        String token = String.format("%06d", new java.util.Random().nextInt(999999));
         var verificationToken = VerificationToken.builder()
                 .token(token)
                 .user(savedUser)
@@ -97,7 +104,8 @@ public class AuthService {
         return new AuthResponse(null);
     }
 
-    public void verifyEmail(String token) {
+    @Transactional
+    public AuthResponse verifyEmail(String token) {
         VerificationToken verificationToken = verificationTokenRepository.findByToken(token)
                 .orElseThrow(() -> new EntityNotFoundException("Invalid verification token"));
 
@@ -109,8 +117,12 @@ public class AuthService {
         user.setEnabled(true);
         userRepository.save(user);
         verificationTokenRepository.delete(verificationToken);
+
+        String jwtToken = jwtService.generateAccessToken(user);
+        return new AuthResponse(jwtToken);
     }
 
+    @Transactional
     public void resendVerification(String email) {
         User user = userRepository.findByEmailIgnoreCase(email.trim())
                 .orElseThrow(() -> new EntityNotFoundException("User with this email not found"));
@@ -120,8 +132,9 @@ public class AuthService {
         }
 
         verificationTokenRepository.deleteByUser(user);
+        verificationTokenRepository.flush();
 
-        String token = java.util.UUID.randomUUID().toString();
+        String token = String.format("%06d", new java.util.Random().nextInt(999999));
         var verificationToken = VerificationToken.builder()
                 .token(token)
                 .user(user)
@@ -133,15 +146,20 @@ public class AuthService {
     }
 
     public AuthResponse login(AuthRequest request) {
+        String trimmedUsername = request.username().trim();
+        var user = userRepository.findByUsernameIgnoreCase(trimmedUsername)
+                .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
+
+        if (!user.isEnabled()) {
+            throw new UnauthorizedException("Email not verified: " + user.getEmail());
+        }
+
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.username(), request.password()));
         } catch (DisabledException e) {
-            throw new UnauthorizedException("Email not verified");
+            throw new UnauthorizedException("Email not verified: " + user.getEmail());
         }
-
-        var user = userRepository.findByUsernameIgnoreCase(request.username())
-                .orElseThrow();
 
         if (passwordEncoder instanceof HybridPasswordEncoder hybridEncoder
                 && hybridEncoder.isDjangoHash(user.getPassword())) {
