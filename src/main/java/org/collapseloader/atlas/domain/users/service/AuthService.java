@@ -14,8 +14,8 @@ import org.collapseloader.atlas.exception.UnauthorizedException;
 import org.collapseloader.atlas.exception.ValidationException;
 import org.collapseloader.atlas.service.EmailService;
 import org.collapseloader.atlas.util.passwords.HybridPasswordEncoder;
-
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -111,9 +111,34 @@ public class AuthService {
         verificationTokenRepository.delete(verificationToken);
     }
 
+    public void resendVerification(String email) {
+        User user = userRepository.findByEmailIgnoreCase(email.trim())
+                .orElseThrow(() -> new EntityNotFoundException("User with this email not found"));
+
+        if (user.isEnabled()) {
+            throw new ValidationException("Email is already verified");
+        }
+
+        verificationTokenRepository.deleteByUser(user);
+
+        String token = java.util.UUID.randomUUID().toString();
+        var verificationToken = VerificationToken.builder()
+                .token(token)
+                .user(user)
+                .expiryDate(Instant.now().plus(java.time.Duration.ofHours(24)))
+                .build();
+        verificationTokenRepository.save(verificationToken);
+
+        emailService.sendVerificationEmail(user.getEmail(), token);
+    }
+
     public AuthResponse login(AuthRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.username(), request.password()));
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.username(), request.password()));
+        } catch (DisabledException e) {
+            throw new UnauthorizedException("Email not verified");
+        }
 
         var user = userRepository.findByUsernameIgnoreCase(request.username())
                 .orElseThrow();
