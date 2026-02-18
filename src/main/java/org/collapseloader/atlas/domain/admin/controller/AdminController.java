@@ -46,10 +46,12 @@ public class AdminController {
     private final NewsService newsService;
     private final AuditLogService auditLogService;
     private final ClientRepository clientRepository;
+    private final org.collapseloader.atlas.domain.reports.repository.UserReportRepository reportRepository;
     private final UserPreferenceRepository userPreferenceRepository;
     private final AchievementService achievementService;
     private final SimpMessagingTemplate messagingTemplate;
     private final UserStatusService userStatusService;
+    private final org.collapseloader.atlas.service.WebSocketSessionService webSocketSessionService;
     private final PasswordEncoder passwordEncoder;
 
     @GetMapping("/stats")
@@ -59,7 +61,10 @@ public class AdminController {
         stats.put("users", userRepository.count());
         stats.put("news", newsRepository.count());
         stats.put("clients", clientRepository.count());
-        stats.put("online", userStatusService.getOnlineUserCount());
+        stats.put("reports", reportRepository.count());
+        stats.put("online", (long) webSocketSessionService.getTotalCount());
+        stats.put("onlineUsers", (long) webSocketSessionService.getUserCount());
+        stats.put("onlineGuests", (long) webSocketSessionService.getGuestCount());
         return ResponseEntity.ok(stats);
     }
 
