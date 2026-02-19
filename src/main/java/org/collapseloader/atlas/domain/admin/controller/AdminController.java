@@ -169,6 +169,8 @@ public class AdminController {
 
         if (request.username() != null)
             user.setUsername(request.username());
+        if (request.email() != null)
+            user.setEmail(request.email());
         if (request.role() != null)
             user.setRole(Role.valueOf(request.role()));
         if (request.password() != null && !request.password().isBlank()) {

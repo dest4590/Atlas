@@ -8,6 +8,7 @@ import java.util.List;
 
 public record AdminUserUpdateRequest(
         String username,
+        String email,
         @JsonProperty("enabled") boolean enabled,
         String role,
         String password,
