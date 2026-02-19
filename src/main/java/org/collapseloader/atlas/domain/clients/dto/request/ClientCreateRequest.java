@@ -2,11 +2,10 @@ package org.collapseloader.atlas.domain.clients.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.collapseloader.atlas.domain.clients.entity.ClientType;
-import org.collapseloader.atlas.domain.clients.entity.Version;
 
 public record ClientCreateRequest(
         String name,
-        Version version,
+        String version,
         String filename,
         @JsonProperty("md5_hash") String md5Hash,
         Long size,

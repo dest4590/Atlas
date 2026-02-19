@@ -1,11 +1,10 @@
 package org.collapseloader.atlas.domain.clients.dto.request;
 
 import org.collapseloader.atlas.domain.clients.entity.ClientType;
-import org.collapseloader.atlas.domain.clients.entity.Version;
 
 public record AdminClientRequest(
         String name,
-        Version version,
+        String version,
         String filename,
         String md5Hash,
         Long size,

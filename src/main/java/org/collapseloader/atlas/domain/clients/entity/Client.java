@@ -28,7 +28,7 @@ public class Client {
 
     private String name;
 
-    private Version version;
+    private String version;
 
     private String filename;
 

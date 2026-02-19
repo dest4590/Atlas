@@ -6,7 +6,6 @@ import org.collapseloader.atlas.domain.audit.AuditLogService;
 import org.collapseloader.atlas.domain.clients.dto.request.AdminClientRequest;
 import org.collapseloader.atlas.domain.clients.dto.response.ClientResponse;
 import org.collapseloader.atlas.domain.clients.entity.Client;
-import org.collapseloader.atlas.domain.clients.entity.Version;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
 import org.collapseloader.atlas.domain.clients.service.ClientService;
 import org.springframework.http.ResponseEntity;
@@ -128,16 +127,16 @@ public class AdminClientController {
 
     @GetMapping("/versions")
     public ResponseEntity<List<String>> getAllVersions() {
-        return ResponseEntity.ok(Version.KNOWN_VERSIONS.stream()
-                .map(Version::getApiValue)
-                .toList());
+        return ResponseEntity.ok(List.of(
+            "1.21.11", "1.21.8", "1.21.1", "1.21.4", "1.16.5", "1.12.2", "1.8.9"
+        ));
     }
 
     private ClientResponse toResponse(Client client) {
         return new ClientResponse(
                 client.getId(),
                 client.getName(),
-                client.getVersion() != null ? client.getVersion().getApiValue() : null,
+                client.getVersion(),
                 client.getFilename(),
                 client.getMd5Hash(),
                 client.getSize(),
