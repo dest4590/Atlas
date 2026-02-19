@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
@@ -29,6 +31,7 @@ public class Preset {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @ToString.Exclude
     private User owner;
 

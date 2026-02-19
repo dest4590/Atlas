@@ -3,6 +3,8 @@ package org.collapseloader.atlas.domain.clients.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.collapseloader.atlas.domain.users.entity.User;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "client_ratings", uniqueConstraints = {
@@ -18,6 +20,8 @@ public class ClientRating {
     private Client client;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     private double rating;

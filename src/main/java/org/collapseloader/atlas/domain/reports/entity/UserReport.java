@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
@@ -22,10 +24,12 @@ public class UserReport {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reporter_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User reporter;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reported_user_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User reportedUser;
 
     @Column(nullable = false)

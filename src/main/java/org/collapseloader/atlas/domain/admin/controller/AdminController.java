@@ -177,9 +177,11 @@ public class AdminController {
             user.setProfile(UserProfile.builder().user(user).build());
         }
         UserProfile profile = user.getProfile();
-        if (request.nickname() != null) {
+        if (request.nickname() != null && !request.nickname().isBlank()) {
             UsernameValidator.validate(request.nickname());
             profile.setNickname(request.nickname());
+        } else if (request.nickname() != null) {
+            profile.setNickname(null);
         }
         if (request.avatarPath() != null)
             profile.setAvatarPath(request.avatarPath());
@@ -249,6 +251,25 @@ public class AdminController {
                         .getName(),
                 logMessage);
         return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/users/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "User not found"));
+
+        String username = user.getUsername();
+        userRepository.delete(user);
+
+        auditLogService.log("DELETE_USER", "USER", id.toString(),
+                Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())
+                        .getName(),
+                "Deleted user " + username);
+
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/users/{id}/reset-password")

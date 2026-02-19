@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
@@ -19,6 +21,8 @@ public class ClientComment {
     private Client client;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @Column(columnDefinition = "TEXT")

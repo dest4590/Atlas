@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
@@ -34,11 +36,13 @@ public class FriendRequest {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requester_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @ToString.Exclude
     private User requester;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "addressee_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @ToString.Exclude
     private User addressee;
 
@@ -48,6 +52,7 @@ public class FriendRequest {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "blocked_by_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @ToString.Exclude
     private User blockedBy;
 
