@@ -20,10 +20,11 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
-    @Cacheable(value = "users", key = "#username")
+    @Cacheable(value = "users", key = "#username.trim()")
     @NonNull
     public UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsernameIgnoreCase(username)
+        String trimmedUsername = username.trim();
+        User user = userRepository.findByUsernameIgnoreCase(trimmedUsername)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         return CachedUser.builder()
