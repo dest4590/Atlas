@@ -46,7 +46,7 @@ public class FabricClientService {
         return new FabricClientResponse(
                 client.getId(),
                 client.getName(),
-                client.getVersion() != null ? client.getVersion().getApiValue() : null,
+                client.getVersion(),
                 client.getFilename(),
                 client.getMd5Hash(),
                 client.getSize(),

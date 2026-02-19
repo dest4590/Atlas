@@ -26,7 +26,7 @@ public class ClientDetailsService {
     @Transactional(readOnly = true)
     public ClientDetailedResponse getDetailedInfo(Long clientId) throws NotFoundException {
         var client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new NotFoundException());
+                .orElseThrow(NotFoundException::new);
 
         Double avgRating = ratingRepository.getAverageRating(clientId);
         Integer ratingCount = ratingRepository.getRatingCount(clientId);
@@ -40,7 +40,7 @@ public class ClientDetailsService {
         return new ClientDetailedResponse(
                 client.getId(),
                 client.getName(),
-                client.getVersion() != null ? client.getVersion().getApiValue() : null,
+                client.getVersion(),
                 null,
                 screenshots,
                 avgRating != null ? avgRating : 0.0,
