@@ -5,6 +5,7 @@ import org.collapseloader.atlas.domain.users.dto.response.SocialLinkResponse;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.domain.users.service.UserSocialLinksService;
 import org.collapseloader.atlas.dto.ApiResponse;
+import org.collapseloader.atlas.exception.UnauthorizedException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -23,8 +24,7 @@ public class UserSocialLinksController {
     @PutMapping("/me/social-links")
     public ResponseEntity<ApiResponse<List<SocialLinkResponse>>> replaceSocialLinks(
             Authentication authentication,
-            @RequestBody UpdateSocialLinksRequest request
-    ) {
+            @RequestBody UpdateSocialLinksRequest request) {
         var user = requireUser(authentication);
         return ResponseEntity.ok(ApiResponse.success(userSocialLinksService.replaceSocialLinks(user, request)));
     }
@@ -37,7 +37,7 @@ public class UserSocialLinksController {
 
     private User requireUser(Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            throw new RuntimeException("Unauthorized");
+            throw new UnauthorizedException("Unauthorized");
         }
         return user;
     }

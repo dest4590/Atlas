@@ -54,16 +54,20 @@ public class SecurityConfig {
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/ws", "/ws/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
+
+
                         .requestMatchers("/api/v1/agent/download/**", "/api/v1/overlay/download/**").permitAll()
                         .requestMatchers("/api/v1/agent-overlay/**").permitAll()
 
                         .requestMatchers("/api/v1/loader/**").permitAll()
                         .requestMatchers("/api/v1/statistics").permitAll()
+
                         .requestMatchers("/api/v1/clients/**").permitAll()
                         .requestMatchers("/api/v1/fabric-clients/**").permitAll()
                         .requestMatchers("/api/v1/forge-clients/**").permitAll()
+
                         .requestMatchers("/api/v1/news/**").permitAll()
-                        .requestMatchers("/api/presets/**").permitAll()
+                        .requestMatchers("/api/v1/presets/**").permitAll()
 
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")

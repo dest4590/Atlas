@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.clients.controller;
 
+import org.apache.coyote.BadRequestException;
 import org.collapseloader.atlas.domain.clients.dto.request.ClientCommentRequest;
 import org.collapseloader.atlas.domain.clients.dto.request.ClientCreateRequest;
 import org.collapseloader.atlas.domain.clients.dto.request.ClientRatingRequest;
@@ -10,7 +11,9 @@ import org.collapseloader.atlas.domain.clients.service.ClientRatingService;
 import org.collapseloader.atlas.domain.clients.service.ClientService;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.dto.ApiResponse;
+import org.collapseloader.atlas.exception.ForbiddenException;
 import org.collapseloader.atlas.exception.UnauthorizedException;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -65,7 +68,8 @@ public class ClientController {
     }
 
     @GetMapping("/{id}/detailed")
-    public ResponseEntity<ApiResponse<ClientDetailedResponse>> getDetailed(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<ClientDetailedResponse>> getDetailed(@PathVariable Long id)
+            throws NotFoundException {
         var data = detailsService.getDetailedInfo(id);
         return ResponseEntity.ok(ApiResponse.success(data));
     }
@@ -81,7 +85,7 @@ public class ClientController {
     public ResponseEntity<ApiResponse<ClientCommentResponse>> addComment(
             Authentication authentication,
             @PathVariable Long id,
-            @RequestBody ClientCommentRequest request) {
+            @RequestBody ClientCommentRequest request) throws BadRequestException, NotFoundException {
         var user = requireUser(authentication);
         var data = commentService.addComment(id, user, request != null ? request.content() : null);
         return ResponseEntity.ok(ApiResponse.success(data));
@@ -92,7 +96,7 @@ public class ClientController {
     public ResponseEntity<ApiResponse<Void>> deleteComment(
             Authentication authentication,
             @PathVariable Long clientId,
-            @PathVariable Long commentId) {
+            @PathVariable Long commentId) throws ForbiddenException, NotFoundException {
         var user = requireUser(authentication);
         commentService.deleteComment(clientId, commentId, user);
         return ResponseEntity.ok(ApiResponse.success(null));
@@ -103,7 +107,7 @@ public class ClientController {
     public ResponseEntity<ApiResponse<ClientRatingResponse>> submitRating(
             Authentication authentication,
             @PathVariable Long id,
-            @RequestBody ClientRatingRequest request) {
+            @RequestBody ClientRatingRequest request) throws NotFoundException {
         var user = requireUser(authentication);
         var data = ratingService.submitRating(id, user, request.rating());
         return ResponseEntity.ok(ApiResponse.success(data));

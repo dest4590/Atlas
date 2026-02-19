@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.users.service;
 
+import org.apache.coyote.BadRequestException;
 import org.collapseloader.atlas.domain.achievements.service.AchievementService;
 import org.collapseloader.atlas.domain.users.dto.response.UserStatusResponse;
 import org.collapseloader.atlas.domain.users.entity.UserStatus;
@@ -68,9 +69,9 @@ public class UserStatusService {
         return count;
     }
 
-    public UserStatusResponse setStatus(Long userId, UserStatus status, String clientName) {
+    public UserStatusResponse setStatus(Long userId, UserStatus status, String clientName) throws BadRequestException {
         if (status == null) {
-            throw new RuntimeException("Status is required");
+            throw new BadRequestException("Status is required");
         }
         HashOperations<String, String, String> ops = redisTemplate.opsForHash();
         String key = key(userId);
@@ -148,7 +149,7 @@ public class UserStatusService {
         return getStatus(userId);
     }
 
-    public void processStaleStatus() {
+    public void processStaleStatus() throws BadRequestException {
         long threshold = System.currentTimeMillis() - 90000;
         var staleUsers = redisTemplate.opsForZSet().rangeByScore(KEY_HEARTBEATS, 0, threshold);
         if (staleUsers == null || staleUsers.isEmpty())

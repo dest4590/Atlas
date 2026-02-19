@@ -109,7 +109,7 @@ public class ClientService {
         return new ClientResponse(
                 client.getId(),
                 client.getName(),
-                client.getVersion().getApiValue(),
+                client.getVersion() != null ? client.getVersion().getApiValue() : null,
                 client.getFilename(),
                 client.getMd5Hash(),
                 client.getSize(),
@@ -118,7 +118,7 @@ public class ClientService {
                 client.isWorking(),
                 client.getLaunches(),
                 client.getDownloads(),
-                client.getType().getApiValue(),
+                client.getType() != null ? client.getType().getApiValue() : null,
                 client.getCreatedAt());
     }
 }

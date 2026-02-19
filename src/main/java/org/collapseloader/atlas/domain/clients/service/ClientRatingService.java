@@ -7,6 +7,7 @@ import org.collapseloader.atlas.domain.clients.entity.ClientRating;
 import org.collapseloader.atlas.domain.clients.repository.ClientRatingRepository;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
 import org.collapseloader.atlas.domain.users.entity.User;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,13 +18,13 @@ public class ClientRatingService {
     private final ClientRatingRepository ratingRepository;
 
     @Transactional
-    public ClientRatingResponse submitRating(Long clientId, User user, double rating) {
+    public ClientRatingResponse submitRating(Long clientId, User user, double rating) throws NotFoundException {
         if (rating < 0.5 || rating > 5 || (rating * 2) % 1 != 0) {
             throw new IllegalArgumentException("Rating must be between 0.5 and 5 in 0.5 increments");
         }
 
         var client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new RuntimeException("Client not found"));
+                .orElseThrow(() -> new NotFoundException());
 
         var existing = ratingRepository.findByClientIdAndUserId(clientId, user.getId());
         ClientRating savedRating = existing.orElseGet(ClientRating::new);

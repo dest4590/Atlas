@@ -8,6 +8,7 @@ import org.collapseloader.atlas.domain.friends.dto.response.FriendsBatchResponse
 import org.collapseloader.atlas.domain.friends.service.FriendshipService;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.dto.ApiResponse;
+import org.collapseloader.atlas.exception.UnauthorizedException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -103,7 +104,7 @@ public class FriendsController {
 
     private User requireUser(Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            throw new RuntimeException("Unauthorized");
+            throw new UnauthorizedException("Unauthorized");
         }
         return user;
     }

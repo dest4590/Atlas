@@ -11,6 +11,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface PresetRepository extends JpaRepository<Preset, Long> {
+    void deleteAllByOwnerId(Long ownerId);
+
     @EntityGraph(attributePaths = {"owner", "owner.profile"})
     Page<Preset> findByIsPublicTrue(Pageable pageable);
 

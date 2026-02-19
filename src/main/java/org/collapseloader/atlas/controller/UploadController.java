@@ -1,13 +1,14 @@
 package org.collapseloader.atlas.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.collapseloader.atlas.domain.clients.entity.ClientType;
 import org.collapseloader.atlas.domain.clients.entity.fabric.FabricDependence;
 import org.collapseloader.atlas.domain.clients.repository.FabricClientRepository;
+import org.collapseloader.atlas.exception.EntityNotFoundException;
 import org.collapseloader.atlas.titan.service.FileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/v1/admin/upload")
@@ -31,7 +31,7 @@ public class UploadController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(required = false) String target,
             @RequestParam(required = false, defaultValue = "") String path,
-            @RequestParam(required = false) Long clientId) {
+            @RequestParam(required = false) Long clientId) throws BadRequestException {
 
         FileStorageService.UploadTarget uploadTarget = parseTarget(target);
         FileStorageService.StoredFile storedFile = uploadTarget != null
@@ -61,7 +61,7 @@ public class UploadController {
             @RequestParam(required = false) String target,
             @RequestParam(required = false, defaultValue = "") String path,
             @RequestParam("totalChunks") int totalChunks,
-            @RequestParam(required = false) Long clientId) {
+            @RequestParam(required = false) Long clientId) throws BadRequestException {
 
         FileStorageService.UploadTarget uploadTarget = parseTarget(target);
         FileStorageService.StoredFile storedFile = uploadTarget != null
@@ -78,7 +78,7 @@ public class UploadController {
     private void registerFabricDep(FileStorageService.StoredFile storedFile, Long clientId) {
         try {
             var client = fabricClientRepository.findByIdAndType(clientId, ClientType.FABRIC)
-                    .orElseThrow(() -> new RuntimeException("Fabric client not found: " + clientId));
+                    .orElseThrow(() -> new EntityNotFoundException("Fabric client not found with ID: " + clientId));
 
             final String baseName = storedFile.originalFilename().endsWith(".jar")
                     ? storedFile.originalFilename().substring(0, storedFile.originalFilename().length() - 4)
@@ -102,13 +102,13 @@ public class UploadController {
         }
     }
 
-    private FileStorageService.UploadTarget parseTarget(String raw) {
+    private FileStorageService.UploadTarget parseTarget(String raw) throws BadRequestException {
         if (raw == null || raw.isBlank()) {
             return null;
         }
         FileStorageService.UploadTarget target = FileStorageService.UploadTarget.fromString(raw);
         if (target == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown upload target: " + raw);
+            throw new BadRequestException("Unknown upload target: " + raw);
         }
         return target;
     }

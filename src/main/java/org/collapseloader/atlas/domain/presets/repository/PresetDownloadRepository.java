@@ -6,5 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PresetDownloadRepository extends JpaRepository<PresetDownload, Long> {
+    void deleteAllByUserId(Long userId);
+
     boolean existsByPresetIdAndUserId(Long presetId, Long userId);
 }

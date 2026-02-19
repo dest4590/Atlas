@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PresetCommentRepository extends JpaRepository<PresetComment, Long> {
+    void deleteAllByUserId(Long userId);
+
     @Query("""
             select c from PresetComment c
             join fetch c.user u

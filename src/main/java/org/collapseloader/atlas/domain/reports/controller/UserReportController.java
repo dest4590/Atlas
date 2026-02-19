@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.reports.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.collapseloader.atlas.domain.reports.dto.CreateReportRequest;
 import org.collapseloader.atlas.domain.reports.dto.ResolveReportRequest;
@@ -16,8 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1")

@@ -28,7 +28,6 @@ public class Client {
 
     private String name;
 
-    @Enumerated(EnumType.STRING)
     private Version version;
 
     private String filename;

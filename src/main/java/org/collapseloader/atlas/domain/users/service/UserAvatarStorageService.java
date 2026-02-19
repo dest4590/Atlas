@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.users.service;
 
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -25,14 +26,12 @@ public class UserAvatarStorageService {
             "image/jpeg",
             "image/png",
             "image/webp",
-            "image/gif"
-    );
+            "image/gif");
     private static final Map<String, String> CONTENT_TYPE_TO_EXTENSION = Map.of(
             "image/jpeg", "jpg",
             "image/png", "png",
             "image/webp", "webp",
-            "image/gif", "gif"
-    );
+            "image/gif", "gif");
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp", "gif");
 
     private final Path uploadRoot;
@@ -48,23 +47,23 @@ public class UserAvatarStorageService {
         }
     }
 
-    public String storeAvatar(Long userId, MultipartFile file) {
+    public String storeAvatar(Long userId, MultipartFile file) throws BadRequestException {
         if (file == null || file.isEmpty()) {
-            throw new RuntimeException("Avatar file is required");
+            throw new BadRequestException("Avatar file is required");
         }
         if (file.getSize() > MAX_AVATAR_SIZE_BYTES) {
-            throw new RuntimeException("Avatar file is too large");
+            throw new BadRequestException("Avatar file is too large");
         }
         String contentType = normalize(file.getContentType());
         String extension = extractExtension(file, contentType);
         if (contentType != null && !ALLOWED_CONTENT_TYPES.contains(contentType)) {
-            throw new RuntimeException("Unsupported avatar content type");
+            throw new BadRequestException("Unsupported avatar content type");
         }
         String fileName = "user-" + userId + "-" + Instant.now().getEpochSecond() + "-" + UUID.randomUUID()
                 + "." + extension;
         Path target = avatarsRoot.resolve(fileName).normalize();
         if (!target.startsWith(avatarsRoot)) {
-            throw new RuntimeException("Invalid avatar file path");
+            throw new BadRequestException("Invalid avatar file path");
         }
         try {
             Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);

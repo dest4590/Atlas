@@ -4,6 +4,7 @@ import org.collapseloader.atlas.domain.users.dto.response.UserPreferenceResponse
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.domain.users.service.UserPreferencesService;
 import org.collapseloader.atlas.dto.ApiResponse;
+import org.collapseloader.atlas.exception.UnauthorizedException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -29,8 +30,7 @@ public class UserPreferencesController {
     public ResponseEntity<ApiResponse<UserPreferenceResponse>> upsertPreference(
             Authentication authentication,
             @PathVariable String key,
-            @RequestBody Object value
-    ) {
+            @RequestBody Object value) {
         var user = requireUser(authentication);
         return ResponseEntity.ok(ApiResponse.success(userPreferencesService.upsertPreference(user, key, value)));
     }
@@ -38,8 +38,7 @@ public class UserPreferencesController {
     @DeleteMapping("/me/preferences/{key:.+}")
     public ResponseEntity<ApiResponse<Void>> deletePreference(
             Authentication authentication,
-            @PathVariable String key
-    ) {
+            @PathVariable String key) {
         var user = requireUser(authentication);
         userPreferencesService.deletePreference(user, key);
         return ResponseEntity.ok(ApiResponse.success(null));
@@ -47,7 +46,7 @@ public class UserPreferencesController {
 
     private User requireUser(Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            throw new RuntimeException("Unauthorized");
+            throw new UnauthorizedException("Unauthorized");
         }
         return user;
     }

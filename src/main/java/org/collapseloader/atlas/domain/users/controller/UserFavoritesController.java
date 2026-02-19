@@ -7,6 +7,7 @@ import org.collapseloader.atlas.domain.users.dto.response.UserFavoriteResponse;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.domain.users.service.UserFavoritesService;
 import org.collapseloader.atlas.dto.ApiResponse;
+import org.collapseloader.atlas.exception.UnauthorizedException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -50,8 +51,7 @@ public class UserFavoritesController {
     @PostMapping("/me/favorites")
     public ResponseEntity<ApiResponse<UserFavoriteResponse>> addFavorite(
             Authentication authentication,
-            @RequestBody Map<String, Object> payload
-    ) {
+            @RequestBody Map<String, Object> payload) {
         var user = requireUser(authentication);
         return ResponseEntity.ok(ApiResponse.success(
                 userFavoritesService.addFavorite(user, mapToRequest(payload))));
@@ -60,8 +60,7 @@ public class UserFavoritesController {
     @DeleteMapping("/me/favorites/{favoriteId}")
     public ResponseEntity<ApiResponse<Void>> deleteFavorite(
             Authentication authentication,
-            @PathVariable Long favoriteId
-    ) {
+            @PathVariable Long favoriteId) {
         var user = requireUser(authentication);
         userFavoritesService.deleteFavorite(user, favoriteId);
         return ResponseEntity.ok(ApiResponse.success(null));
@@ -69,7 +68,7 @@ public class UserFavoritesController {
 
     private User requireUser(Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            throw new RuntimeException("Unauthorized");
+            throw new UnauthorizedException("Unauthorized");
         }
         return user;
     }
@@ -81,7 +80,6 @@ public class UserFavoritesController {
         return new UserFavoriteRequest(
                 stringValue(payload, "type"),
                 stringValue(payload, "reference"),
-                asJsonNode(payload.get("metadata"))
-        );
+                asJsonNode(payload.get("metadata")));
     }
 }

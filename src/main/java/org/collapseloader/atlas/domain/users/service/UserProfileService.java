@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.users.service;
 
+import org.apache.coyote.BadRequestException;
 import org.collapseloader.atlas.domain.clients.entity.Client;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
 import org.collapseloader.atlas.domain.friends.service.FriendshipService;
@@ -104,7 +105,7 @@ public class UserProfileService {
     }
 
     @Transactional
-    public UserProfileResponse uploadAvatar(User principal, MultipartFile avatar) {
+    public UserProfileResponse uploadAvatar(User principal, MultipartFile avatar) throws BadRequestException {
         var user = userRepository.findById(principal.getId())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         var profile = ensureProfile(user);

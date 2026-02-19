@@ -1,10 +1,12 @@
 package org.collapseloader.atlas.domain.users.controller;
 
+import org.apache.coyote.BadRequestException;
 import org.collapseloader.atlas.domain.users.dto.request.UserStatusUpdateRequest;
 import org.collapseloader.atlas.domain.users.dto.response.UserStatusResponse;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.domain.users.service.UserStatusService;
 import org.collapseloader.atlas.dto.ApiResponse;
+import org.collapseloader.atlas.exception.UnauthorizedException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -27,10 +29,10 @@ public class UserStatusController {
     @PutMapping("/me/status")
     public ResponseEntity<ApiResponse<UserStatusResponse>> updateMyStatus(
             Authentication authentication,
-            @RequestBody UserStatusUpdateRequest request) {
+            @RequestBody UserStatusUpdateRequest request) throws BadRequestException {
         var user = requireUser(authentication);
         if (request == null || request.status() == null) {
-            throw new RuntimeException("Status is required");
+            throw new BadRequestException("Status is required");
         }
         return ResponseEntity.ok(ApiResponse.success(
                 userStatusService.setStatus(user.getId(), request.status(), request.clientName())));
@@ -43,7 +45,7 @@ public class UserStatusController {
 
     private User requireUser(Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            throw new RuntimeException("Unauthorized");
+            throw new UnauthorizedException("Unauthorized");
         }
         return user;
     }

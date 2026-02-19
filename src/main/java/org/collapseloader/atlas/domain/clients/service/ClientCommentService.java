@@ -1,12 +1,15 @@
 package org.collapseloader.atlas.domain.clients.service;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.collapseloader.atlas.domain.clients.dto.response.ClientCommentResponse;
 import org.collapseloader.atlas.domain.clients.entity.ClientComment;
 import org.collapseloader.atlas.domain.clients.repository.ClientCommentRepository;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
 import org.collapseloader.atlas.domain.users.entity.Role;
 import org.collapseloader.atlas.domain.users.entity.User;
+import org.collapseloader.atlas.exception.ForbiddenException;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -30,17 +33,18 @@ public class ClientCommentService {
     }
 
     @Transactional
-    public ClientCommentResponse addComment(Long clientId, User user, String content) {
+    public ClientCommentResponse addComment(Long clientId, User user, String content)
+            throws BadRequestException, NotFoundException {
         if (!StringUtils.hasText(content)) {
-            throw new RuntimeException("Comment content cannot be empty");
+            throw new BadRequestException("Comment content cannot be empty");
         }
         String normalized = content.trim();
         if (normalized.length() > MAX_COMMENT_LENGTH) {
-            throw new RuntimeException("Comment content is too long");
+            throw new BadRequestException("Comment content is too long");
         }
 
         var client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new RuntimeException("Client not found"));
+                .orElseThrow(() -> new NotFoundException());
 
         var comment = new ClientComment();
         comment.setClient(client);
@@ -52,14 +56,14 @@ public class ClientCommentService {
     }
 
     @Transactional
-    public void deleteComment(Long clientId, Long commentId, User user) {
+    public void deleteComment(Long clientId, Long commentId, User user) throws NotFoundException, ForbiddenException {
         var comment = commentRepository.findByIdAndClientId(commentId, clientId)
-                .orElseThrow(() -> new RuntimeException("Comment not found"));
+                .orElseThrow(() -> new NotFoundException());
 
         boolean isAuthor = comment.getUser() != null && comment.getUser().getId().equals(user.getId());
         boolean isAdmin = user.getRole() == Role.ADMIN;
         if (!isAuthor && !isAdmin) {
-            throw new RuntimeException("Forbidden");
+            throw new ForbiddenException("Forbidden");
         }
 
         commentRepository.delete(comment);

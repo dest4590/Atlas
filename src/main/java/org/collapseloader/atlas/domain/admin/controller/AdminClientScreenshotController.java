@@ -1,12 +1,14 @@
 package org.collapseloader.atlas.domain.admin.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.collapseloader.atlas.domain.clients.entity.ClientScreenshot;
 import org.collapseloader.atlas.domain.clients.entity.ClientType;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
 import org.collapseloader.atlas.domain.clients.repository.ClientScreenshotRepository;
 import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.titan.service.FileStorageService;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -44,10 +46,10 @@ public class AdminClientScreenshotController {
     @PostMapping("/clients/{clientId}/screenshots")
     public ResponseEntity<ApiResponse<Map<String, Object>>> uploadScreenshot(
             @PathVariable Long clientId,
-            @RequestParam("file") List<MultipartFile> files) {
-        var client = clientRepository.findById(clientId).orElseThrow(() -> new RuntimeException("Client not found"));
+            @RequestParam("file") List<MultipartFile> files) throws NotFoundException, BadRequestException {
+        var client = clientRepository.findById(clientId).orElseThrow(() -> new NotFoundException());
         if (files == null || files.isEmpty()) {
-            throw new RuntimeException("No files provided");
+            throw new BadRequestException("No files provided");
         }
 
         var existing = screenshotRepository.findAllByClientIdOrderBySortOrderAsc(clientId);
@@ -80,11 +82,11 @@ public class AdminClientScreenshotController {
     @DeleteMapping("/clients/{clientId}/screenshots/{screenshotId}")
     public ResponseEntity<ApiResponse<Void>> deleteScreenshot(
             @PathVariable Long clientId,
-            @PathVariable Long screenshotId) {
+            @PathVariable Long screenshotId) throws NotFoundException, BadRequestException {
         var screenshot = screenshotRepository.findById(screenshotId)
-                .orElseThrow(() -> new RuntimeException("Screenshot not found"));
+                .orElseThrow(() -> new NotFoundException());
         if (screenshot.getClient() == null || !screenshot.getClient().getId().equals(clientId)) {
-            throw new RuntimeException("Mismatched client id");
+            throw new BadRequestException("Mismatched client id");
         }
         screenshotRepository.deleteById(screenshotId);
         return ResponseEntity.ok(ApiResponse.success(null));

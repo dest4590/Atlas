@@ -3,6 +3,7 @@ package org.collapseloader.atlas.titan.service;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.collapseloader.atlas.config.StorageProperties;
+import org.collapseloader.atlas.exception.TitanException;
 import org.collapseloader.atlas.titan.model.FileMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,7 @@ public class FileStorageService {
     private final StorageProperties properties;
     private final FileMetadataService metadataService;
 
+    @Getter
     private Path rootLocation;
     private Path tempLocation;
     private Path trashLocation;
@@ -47,7 +49,7 @@ public class FileStorageService {
             log.info("[STORAGE] Initialized. Root: {}, Trash: {}", rootLocation, trashLocation);
             verifyIntegrity();
         } catch (IOException e) {
-            throw new RuntimeException("Could not initialize storage", e);
+            throw new TitanException("Could not initialize storage: " + e);
         }
     }
 
@@ -102,17 +104,17 @@ public class FileStorageService {
                 customFilename, subDir);
         try {
             if (file.isEmpty()) {
-                throw new RuntimeException("Failed to store empty file.");
+                throw new TitanException("Failed to store empty file.");
             }
             if (customFilename == null || customFilename.isEmpty()) {
-                throw new RuntimeException("Failed to store file with empty name.");
+                throw new TitanException("Failed to store file with empty name.");
             }
             Path destinationDir = this.rootLocation;
             if (subDir != null && !subDir.isEmpty()) {
                 Path resolvedSubDir = destinationDir.resolve(subDir).normalize();
                 if (!resolvedSubDir.startsWith(destinationDir)) {
                     log.warn("[SECURITY] Path traversal attempt detected while storing file: {}", subDir);
-                    throw new RuntimeException("Cannot store file outside current directory.");
+                    throw new TitanException("Cannot store file outside current directory.");
                 }
                 destinationDir = resolvedSubDir;
                 Files.createDirectories(destinationDir);
@@ -124,7 +126,7 @@ public class FileStorageService {
 
             if (!destinationFile.startsWith(rootLocation.toAbsolutePath())) {
                 log.warn("[SECURITY] Path traversal attempt detected at file level: {}", destinationFile);
-                throw new RuntimeException("Cannot store file outside current directory.");
+                throw new TitanException("Cannot store file outside current directory.");
             }
 
             try (var inputStream = file.getInputStream()) {
@@ -147,7 +149,7 @@ public class FileStorageService {
             return new StoredFile(customFilename, relativePath, md5, size / (1024 * 1024));
         } catch (IOException e) {
             log.error("[SECURITY] Failed to store file: {}", file.getOriginalFilename(), e);
-            throw new RuntimeException("Failed to store file.", e);
+            throw new TitanException("Failed to store file: '" + file.getOriginalFilename() + "', " + e);
         }
     }
 
@@ -160,16 +162,12 @@ public class FileStorageService {
         return rootLocation.resolve(filename).normalize();
     }
 
-    public Path getRootLocation() {
-        return rootLocation;
-    }
-
     public Stream<Path> loadAll(String subDir) {
         Path startDir = this.rootLocation;
         if (subDir != null && !subDir.isEmpty()) {
             startDir = startDir.resolve(subDir).normalize();
             if (!startDir.startsWith(this.rootLocation)) {
-                throw new RuntimeException("Cannot list files outside root directory.");
+                throw new TitanException("Cannot list files outside root directory.");
             }
         }
 
@@ -188,7 +186,7 @@ public class FileStorageService {
                         .stream();
             }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read stored files", e);
+            throw new TitanException("Failed to read stored files: " + e);
         }
     }
 
@@ -198,10 +196,10 @@ public class FileStorageService {
             Path file = rootLocation.resolve(filename).normalize();
             if (!file.startsWith(rootLocation)) {
                 log.warn("[SECURITY] Attempted to delete outside root: {}", filename);
-                throw new RuntimeException("Cannot delete file outside current directory.");
+                throw new TitanException("Cannot delete file outside current directory.");
             }
             if (file.equals(rootLocation)) {
-                throw new RuntimeException("Cannot delete root directory.");
+                throw new TitanException("Cannot delete root directory.");
             }
 
             Optional<FileMetadata> metadata = metadataService.findByFilePath(filename);
@@ -234,7 +232,7 @@ public class FileStorageService {
             log.info("[SECURITY] File moved to trash: {}", filename);
         } catch (IOException e) {
             log.error("[SECURITY] Failed to soft-delete file: {}", filename, e);
-            throw new RuntimeException("Could not delete file: " + filename, e);
+            throw new TitanException("Could not delete file: '" + filename + "', " + e);
         }
     }
 
@@ -243,10 +241,10 @@ public class FileStorageService {
         try {
             Path trashFile = trashLocation.resolve(filename).normalize();
             if (!trashFile.startsWith(trashLocation)) {
-                throw new RuntimeException("Cannot restore file from outside trash.");
+                throw new TitanException("Cannot restore file from outside trash.");
             }
             if (!Files.exists(trashFile)) {
-                throw new RuntimeException("File not found in trash.");
+                throw new TitanException("File not found in trash.");
             }
 
             Path originalFile = rootLocation.resolve(filename).normalize();
@@ -257,7 +255,7 @@ public class FileStorageService {
             log.info("[SECURITY] File restored from trash: {}", filename);
         } catch (IOException e) {
             log.error("[SECURITY] Failed to restore file: {}", filename, e);
-            throw new RuntimeException("Could not restore file: " + filename, e);
+            throw new TitanException("Could not restore file: '" + filename + "', " + e);
         }
     }
 
@@ -286,14 +284,14 @@ public class FileStorageService {
             Path target = rootLocation.resolve(newName).normalize();
 
             if (!source.startsWith(rootLocation) || !target.startsWith(rootLocation)) {
-                throw new RuntimeException("Cannot rename outside current directory.");
+                throw new TitanException("Cannot rename outside current directory.");
             }
 
             Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
             metadataService.updateMetadataPath(oldName, newName);
         } catch (IOException e) {
             log.error("[SECURITY] Failed to rename file from {} to {}", oldName, newName, e);
-            throw new RuntimeException("Failed to rename file", e);
+            throw new TitanException("Failed to rename file from '" + oldName + "' to '" + newName + "'" + ", " + e);
         }
     }
 
@@ -302,12 +300,12 @@ public class FileStorageService {
         try {
             Path dir = rootLocation.resolve(dirName).normalize();
             if (!dir.startsWith(rootLocation)) {
-                throw new RuntimeException("Cannot create directory outside root.");
+                throw new TitanException("Cannot create directory outside root.");
             }
             Files.createDirectories(dir);
         } catch (IOException e) {
             log.error("[SECURITY] Failed to create directory: {}", dirName, e);
-            throw new RuntimeException("Failed to create directory", e);
+            throw new TitanException("Failed to create directory: '" + dirName + "'" + ", " + e);
         }
     }
 
@@ -324,7 +322,8 @@ public class FileStorageService {
                 Files.copy(inputStream, chunkFile, StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to store chunk.", e);
+            throw new TitanException(
+                    "Failed to store chunk for uploadId: '" + uploadId + "', chunkIndex: " + chunkIndex + ", " + e);
         }
     }
 
@@ -338,7 +337,7 @@ public class FileStorageService {
 
             Path destinationFile = destinationDir.resolve(Paths.get(filename)).normalize().toAbsolutePath();
             if (!destinationFile.startsWith(rootLocation.toAbsolutePath())) {
-                throw new RuntimeException("Cannot store file outside root.");
+                throw new TitanException("Cannot store file outside root.");
             }
 
             try (var outputStream = Files.newOutputStream(destinationFile, java.nio.file.StandardOpenOption.CREATE,
@@ -361,7 +360,7 @@ public class FileStorageService {
             return new StoredFile(filename, relativePath, md5, size / (1024 * 1024));
         } catch (IOException e) {
             log.error("[SECURITY] Failed to merge chunks for: {}", filename, e);
-            throw new RuntimeException("Failed to merge chunks.", e);
+            throw new TitanException("Failed to merge chunks for file: '" + filename + "'" + ", " + e);
         }
     }
 
@@ -405,7 +404,7 @@ public class FileStorageService {
                                 deleteRecursively(path);
                             }
                         } catch (IOException e) {
-                            log.error("Failed to cleanup temp path: {}", path, e);
+                            log.error("Failed to cleanup temp path: '{}'", path, e);
                         }
                     });
         } catch (IOException e) {

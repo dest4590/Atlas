@@ -2,11 +2,14 @@ package org.collapseloader.atlas.domain.users.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.coyote.BadRequestException;
 import org.collapseloader.atlas.domain.users.dto.request.UserExternalAccountRequest;
 import org.collapseloader.atlas.domain.users.dto.response.UserExternalAccountResponse;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.domain.users.service.UserExternalAccountsService;
 import org.collapseloader.atlas.dto.ApiResponse;
+import org.collapseloader.atlas.exception.UnauthorizedException;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -50,8 +53,7 @@ public class UserAccountsController {
     @PostMapping("/me/accounts")
     public ResponseEntity<ApiResponse<UserExternalAccountResponse>> addAccount(
             Authentication authentication,
-            @RequestBody Map<String, Object> payload
-    ) {
+            @RequestBody Map<String, Object> payload) throws BadRequestException, NotFoundException {
         var user = requireUser(authentication);
         return ResponseEntity.ok(ApiResponse.success(
                 userExternalAccountsService.addExternalAccount(user, mapToRequest(payload))));
@@ -60,8 +62,7 @@ public class UserAccountsController {
     @DeleteMapping("/me/accounts/{accountId}")
     public ResponseEntity<ApiResponse<Void>> deleteAccount(
             Authentication authentication,
-            @PathVariable Long accountId
-    ) {
+            @PathVariable Long accountId) throws BadRequestException, NotFoundException {
         var user = requireUser(authentication);
         userExternalAccountsService.deleteExternalAccount(user, accountId);
         return ResponseEntity.ok(ApiResponse.success(null));
@@ -69,7 +70,7 @@ public class UserAccountsController {
 
     private User requireUser(Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            throw new RuntimeException("Unauthorized");
+            throw new UnauthorizedException("Unauthorized");
         }
         return user;
     }
@@ -79,10 +80,7 @@ public class UserAccountsController {
             return null;
         }
         return new UserExternalAccountRequest(
-                stringValue(payload, "provider"),
-                stringValue(payload, "external_id"),
                 stringValue(payload, "display_name"),
-                asJsonNode(payload.get("metadata"))
-        );
+                asJsonNode(payload.get("metadata")));
     }
 }

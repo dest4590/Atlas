@@ -11,6 +11,7 @@ import org.collapseloader.atlas.domain.news.News;
 import org.collapseloader.atlas.domain.news.NewsRepository;
 import org.collapseloader.atlas.domain.news.NewsRequest;
 import org.collapseloader.atlas.domain.news.NewsService;
+import org.collapseloader.atlas.domain.reports.repository.UserReportRepository;
 import org.collapseloader.atlas.domain.users.dto.request.AdminUserUpdateRequest;
 import org.collapseloader.atlas.domain.users.dto.response.AdminUserDetailResponse;
 import org.collapseloader.atlas.domain.users.dto.response.UserAdminResponse;
@@ -18,8 +19,9 @@ import org.collapseloader.atlas.domain.users.entity.*;
 import org.collapseloader.atlas.domain.users.repository.UserPreferenceRepository;
 import org.collapseloader.atlas.domain.users.repository.UserRepository;
 import org.collapseloader.atlas.domain.users.service.UserService;
-import org.collapseloader.atlas.domain.users.service.UserStatusService;
 import org.collapseloader.atlas.domain.users.service.UsernameValidator;
+import org.collapseloader.atlas.service.WebSocketSessionService;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -47,12 +49,11 @@ public class AdminController {
     private final NewsService newsService;
     private final AuditLogService auditLogService;
     private final ClientRepository clientRepository;
-    private final org.collapseloader.atlas.domain.reports.repository.UserReportRepository reportRepository;
+    private final UserReportRepository reportRepository;
     private final UserPreferenceRepository userPreferenceRepository;
     private final AchievementService achievementService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final UserStatusService userStatusService;
-    private final org.collapseloader.atlas.service.WebSocketSessionService webSocketSessionService;
+    private final WebSocketSessionService webSocketSessionService;
     private final PasswordEncoder passwordEncoder;
     private final UserService userService;
 
@@ -317,7 +318,7 @@ public class AdminController {
     @PutMapping("/news/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<News> updateNews(@PathVariable Long id,
-                                           @RequestBody NewsRequest request) {
+                                           @RequestBody NewsRequest request) throws NotFoundException {
         var news = newsService.updateNews(id, request);
         auditLogService.log("UPDATE_NEWS", "NEWS", news.getId().toString(),
                 Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())
@@ -328,7 +329,7 @@ public class AdminController {
 
     @DeleteMapping("/news/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteNews(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteNews(@PathVariable Long id) throws NotFoundException {
         var news = newsRepository.findById(id).orElse(null);
         String title = news != null ? news.getTitle() : "Unknown";
         newsService.deleteNews(id);

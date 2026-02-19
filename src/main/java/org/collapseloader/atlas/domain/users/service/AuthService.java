@@ -1,6 +1,7 @@
 package org.collapseloader.atlas.domain.users.service;
 
 import jakarta.transaction.Transactional;
+import org.apache.coyote.BadRequestException;
 import org.collapseloader.atlas.domain.achievements.service.AchievementService;
 import org.collapseloader.atlas.domain.users.dto.request.AuthRequest;
 import org.collapseloader.atlas.domain.users.dto.request.AuthSetPasswordRequest;
@@ -145,7 +146,7 @@ public class AuthService {
         emailService.sendVerificationEmail(user.getEmail(), token);
     }
 
-    public AuthResponse login(AuthRequest request) {
+    public AuthResponse login(AuthRequest request) throws BadRequestException {
         String trimmedUsername = request.username().trim();
         var user = userRepository.findByUsernameIgnoreCase(trimmedUsername)
                 .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
@@ -191,11 +192,15 @@ public class AuthService {
         return new AuthResponse(access);
     }
 
-    public void logout(String token) {
+    public void logout(String token) throws BadRequestException {
         String username = jwtService.extractUsername(token);
         if (username != null) {
             userRepository.findByUsernameIgnoreCase(username).ifPresent(user -> {
-                userStatusService.setStatus(user.getId(), UserStatus.OFFLINE, null);
+                try {
+                    userStatusService.setStatus(user.getId(), UserStatus.OFFLINE, null);
+                } catch (BadRequestException ignored) {
+
+                }
 
                 try {
                     Date expiration = jwtService.extractClaim(token, io.jsonwebtoken.Claims::getExpiration);

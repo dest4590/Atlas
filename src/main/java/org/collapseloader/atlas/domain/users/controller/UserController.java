@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.users.controller;
 
+import org.apache.coyote.BadRequestException;
 import org.collapseloader.atlas.domain.achievements.dto.UserAchievementResponse;
 import org.collapseloader.atlas.domain.achievements.service.AchievementService;
 import org.collapseloader.atlas.domain.friends.dto.response.FriendRequestsBatchResponse;
@@ -132,7 +133,7 @@ public class UserController {
     @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<UserProfileResponse>> uploadAvatar(
             Authentication authentication,
-            @RequestParam("avatar") MultipartFile avatar) {
+            @RequestParam("avatar") MultipartFile avatar) throws BadRequestException {
         var user = requireUser(authentication);
         return ResponseEntity.ok(ApiResponse.success(userProfileService.uploadAvatar(user, avatar)));
     }

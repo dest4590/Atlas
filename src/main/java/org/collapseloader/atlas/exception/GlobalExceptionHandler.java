@@ -101,6 +101,14 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("Request method not supported"));
     }
 
+    @ExceptionHandler(TitanException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTitanException(TitanException e) {
+        log.error("Titan error: ", e);
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error(e.getMessage()));
+    }
+
     @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})
     public ResponseEntity<ApiResponse<Void>> handleValidationExceptions(Exception ex) {
         var messages = new StringBuilder();

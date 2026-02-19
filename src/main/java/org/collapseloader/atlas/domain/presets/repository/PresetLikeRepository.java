@@ -8,6 +8,8 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface PresetLikeRepository extends JpaRepository<PresetLike, Long> {
+    void deleteAllByUserId(Long userId);
+
     boolean existsByPresetIdAndUserId(Long presetId, Long userId);
 
     Optional<PresetLike> findByPresetIdAndUserId(Long presetId, Long userId);

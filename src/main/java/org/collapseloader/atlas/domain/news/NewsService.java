@@ -2,6 +2,7 @@ package org.collapseloader.atlas.domain.news;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -43,9 +44,9 @@ public class NewsService {
     }
 
     @CacheEvict(value = "news_list", allEntries = true)
-    public News updateNews(Long id, NewsRequest request) {
+    public News updateNews(Long id, NewsRequest request) throws NotFoundException {
         News news = newsRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("News not found"));
+                .orElseThrow(() -> new NotFoundException());
         if (request.getTitle() != null)
             news.setTitle(request.getTitle());
         if (request.getContent() != null)
@@ -56,9 +57,9 @@ public class NewsService {
     }
 
     @CacheEvict(value = "news_list", allEntries = true)
-    public void deleteNews(Long id) {
+    public void deleteNews(Long id) throws NotFoundException {
         if (!newsRepository.existsById(id)) {
-            throw new RuntimeException("News not found");
+            throw new NotFoundException();
         }
         newsRepository.deleteById(id);
     }

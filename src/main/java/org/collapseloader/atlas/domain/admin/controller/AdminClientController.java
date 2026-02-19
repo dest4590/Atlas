@@ -15,7 +15,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -129,7 +128,7 @@ public class AdminClientController {
 
     @GetMapping("/versions")
     public ResponseEntity<List<String>> getAllVersions() {
-        return ResponseEntity.ok(Arrays.stream(Version.values())
+        return ResponseEntity.ok(Version.KNOWN_VERSIONS.stream()
                 .map(Version::getApiValue)
                 .toList());
     }

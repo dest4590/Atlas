@@ -2,17 +2,18 @@ package org.collapseloader.atlas.domain.users.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.coyote.BadRequestException;
 import org.collapseloader.atlas.domain.users.dto.request.UserExternalAccountRequest;
 import org.collapseloader.atlas.domain.users.dto.response.UserExternalAccountResponse;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.domain.users.entity.UserExternalAccount;
 import org.collapseloader.atlas.domain.users.repository.UserExternalAccountRepository;
 import org.collapseloader.atlas.domain.users.repository.UserRepository;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Locale;
 
 @Service
 public class UserExternalAccountsService {
@@ -23,8 +24,7 @@ public class UserExternalAccountsService {
     public UserExternalAccountsService(
             UserRepository userRepository,
             UserExternalAccountRepository userExternalAccountRepository,
-            ObjectMapper objectMapper
-    ) {
+            ObjectMapper objectMapper) {
         this.userRepository = userRepository;
         this.userExternalAccountRepository = userExternalAccountRepository;
         this.objectMapper = objectMapper;
@@ -38,22 +38,16 @@ public class UserExternalAccountsService {
     }
 
     @Transactional
-    public UserExternalAccountResponse addExternalAccount(User principal, UserExternalAccountRequest request) {
+    public UserExternalAccountResponse addExternalAccount(User principal, UserExternalAccountRequest request)
+            throws NotFoundException, BadRequestException {
         var user = userRepository.findById(principal.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NotFoundException());
         if (request == null) {
-            throw new RuntimeException("External account payload is required");
-        }
-        String provider = normalizeProvider(request.provider());
-        String externalId = normalizeExternalId(request.externalId());
-        if (provider == null || externalId == null) {
-            throw new RuntimeException("Provider and external id are required");
+            throw new BadRequestException("External account payload is required");
         }
 
         var account = UserExternalAccount.builder()
                 .user(user)
-                .provider(provider)
-                .externalId(externalId)
                 .displayName(normalizeDisplayName(request.displayName()))
                 .metadata(request.metadata())
                 .build();
@@ -61,22 +55,19 @@ public class UserExternalAccountsService {
     }
 
     @Transactional
-    public void deleteExternalAccount(User principal, Long accountId) {
+    public void deleteExternalAccount(User principal, Long accountId) throws NotFoundException, BadRequestException {
         var account = userExternalAccountRepository.findByIdAndUserId(accountId, principal.getId())
-                .orElseThrow(() -> new RuntimeException("External account not found"));
+                .orElseThrow(() -> new NotFoundException());
         userExternalAccountRepository.delete(account);
     }
 
     private UserExternalAccountResponse mapExternalAccount(UserExternalAccount account) {
         return new UserExternalAccountResponse(
                 account.getId(),
-                account.getProvider(),
-                account.getExternalId(),
                 account.getDisplayName(),
                 normalizeMetadata(account.getMetadata()),
                 account.getCreatedAt(),
-                account.getUpdatedAt()
-        );
+                account.getUpdatedAt());
     }
 
     private Object normalizeMetadata(JsonNode metadata) {
@@ -84,22 +75,6 @@ public class UserExternalAccountsService {
             return null;
         }
         return objectMapper.convertValue(metadata, Object.class);
-    }
-
-    private String normalizeProvider(String value) {
-        if (value == null) {
-            return null;
-        }
-        String trimmed = value.trim();
-        return trimmed.isEmpty() ? null : trimmed.toLowerCase(Locale.ROOT);
-    }
-
-    private String normalizeExternalId(String value) {
-        if (value == null) {
-            return null;
-        }
-        String trimmed = value.trim();
-        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private String normalizeDisplayName(String value) {

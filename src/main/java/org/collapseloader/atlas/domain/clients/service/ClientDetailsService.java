@@ -7,6 +7,7 @@ import org.collapseloader.atlas.domain.clients.repository.ClientCommentRepositor
 import org.collapseloader.atlas.domain.clients.repository.ClientRatingRepository;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
 import org.collapseloader.atlas.domain.clients.repository.ClientScreenshotRepository;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,9 +24,9 @@ public class ClientDetailsService {
     private final ClientScreenshotRepository screenshotRepository;
 
     @Transactional(readOnly = true)
-    public ClientDetailedResponse getDetailedInfo(Long clientId) {
+    public ClientDetailedResponse getDetailedInfo(Long clientId) throws NotFoundException {
         var client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new RuntimeException("Client not found"));
+                .orElseThrow(() -> new NotFoundException());
 
         Double avgRating = ratingRepository.getAverageRating(clientId);
         Integer ratingCount = ratingRepository.getRatingCount(clientId);
@@ -47,7 +48,6 @@ public class ClientDetailsService {
                 commentsCount,
                 client.getCreatedAt() != null
                         ? LocalDateTime.ofInstant(client.getCreatedAt(), ZoneId.systemDefault())
-                        : null
-        );
+                        : null);
     }
 }
