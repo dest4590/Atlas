@@ -97,7 +97,7 @@ public class UserController {
 
         List<PresetResponse> presets = null;
         if (includes.contains("presets")) {
-            presets = presetService.listPresets(user, null, userId, false, "newest", 100);
+            presets = presetService.listPresets(user, null, userId, "newest", 100);
         }
 
         var response = new PublicUserResponse(

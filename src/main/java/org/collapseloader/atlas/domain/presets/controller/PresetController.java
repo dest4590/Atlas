@@ -28,11 +28,10 @@ public class PresetController {
             Authentication authentication,
             @RequestParam(value = "q", required = false) String query,
             @RequestParam(value = "owner", required = false) Long ownerId,
-            @RequestParam(value = "mine", required = false, defaultValue = "false") boolean mine,
             @RequestParam(value = "sort", required = false) String sort,
             @RequestParam(value = "limit", required = false, defaultValue = "50") int limit) {
         var user = optionalUser(authentication);
-        var data = presetService.listPresets(user, query, ownerId, mine, sort, limit);
+        var data = presetService.listPresets(user, query, ownerId, sort, limit);
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 

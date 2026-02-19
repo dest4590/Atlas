@@ -1,6 +1,7 @@
 package org.collapseloader.atlas.domain.presets.service;
 
 import lombok.RequiredArgsConstructor;
+import org.collapseloader.atlas.domain.achievements.service.AchievementService;
 import org.collapseloader.atlas.domain.presets.dto.request.PresetCommentRequest;
 import org.collapseloader.atlas.domain.presets.dto.request.PresetUpsertRequest;
 import org.collapseloader.atlas.domain.presets.dto.response.PresetAuthorResponse;
@@ -18,6 +19,7 @@ import org.collapseloader.atlas.exception.EntityNotFoundException;
 import org.collapseloader.atlas.exception.ForbiddenException;
 import org.collapseloader.atlas.exception.UnauthorizedException;
 import org.collapseloader.atlas.exception.ValidationException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -38,37 +40,37 @@ public class PresetService {
     private final PresetLikeRepository likeRepository;
     private final PresetCommentRepository commentRepository;
     private final PresetDownloadRepository downloadRepository;
-    private final org.collapseloader.atlas.domain.achievements.service.AchievementService achievementService;
+    private final AchievementService achievementService;
 
     @Transactional(readOnly = true)
-    public List<PresetResponse> listPresets(User principal, String query, Long ownerId, boolean mine, String sort,
+    public List<PresetResponse> listPresets(User principal, String query, Long ownerId, String sort,
                                             int limit) {
         int size = Math.min(Math.max(limit, 1), 100);
-        boolean includePrivate = false;
-        Long targetOwner = ownerId;
-
-        if (mine) {
-            if (principal == null) {
-                throw new UnauthorizedException("Authentication required");
-            }
-            targetOwner = principal.getId();
-            includePrivate = true;
-        }
-        if (targetOwner != null && principal != null) {
-            if (targetOwner.equals(principal.getId()) || principal.getRole() == Role.ADMIN) {
-                includePrivate = true;
-            }
-        }
-
         var sortOrder = resolveSort(sort);
         var pageable = PageRequest.of(0, size, sortOrder);
-        var page = switch (resolveQueryMode(query, targetOwner, includePrivate)) {
-            case OWNER_PRIVATE -> presetRepository.findByOwnerId(targetOwner, pageable);
-            case OWNER_PUBLIC -> presetRepository.findByOwnerIdAndIsPublicTrue(targetOwner, pageable);
-            case SEARCH_PUBLIC ->
-                    presetRepository.findByIsPublicTrueAndNameContainingIgnoreCase(query.trim(), pageable);
-            default -> presetRepository.findByIsPublicTrue(pageable);
-        };
+
+        Page<Preset> page;
+        if (ownerId != null) {
+            if (principal != null && ownerId.equals(principal.getId())) {
+                page = presetRepository.findByOwnerId(ownerId, pageable);
+            } else {
+                page = presetRepository.findByOwnerIdAndIsPublicTrue(ownerId, pageable);
+            }
+        } else {
+            if (StringUtils.hasText(query)) {
+                if (principal != null) {
+                    page = presetRepository.findVisibleToUserByName(principal.getId(), query.trim(), pageable);
+                } else {
+                    page = presetRepository.findByIsPublicTrueAndNameContainingIgnoreCase(query.trim(), pageable);
+                }
+            } else {
+                if (principal != null) {
+                    page = presetRepository.findAllVisibleToUser(principal.getId(), pageable);
+                } else {
+                    page = presetRepository.findByIsPublicTrue(pageable);
+                }
+            }
+        }
 
         Set<Long> liked = principal != null ? likeRepository.findPresetIdsLikedByUser(principal.getId()) : Set.of();
         return page.stream()
@@ -256,16 +258,6 @@ public class PresetService {
         if (preset != null && preset.getCommentsCount() > 0) {
             preset.setCommentsCount(preset.getCommentsCount() - 1);
         }
-    }
-
-    private QueryMode resolveQueryMode(String query, Long ownerId, boolean includePrivate) {
-        if (ownerId != null) {
-            return includePrivate ? QueryMode.OWNER_PRIVATE : QueryMode.OWNER_PUBLIC;
-        }
-        if (StringUtils.hasText(query)) {
-            return QueryMode.SEARCH_PUBLIC;
-        }
-        return QueryMode.PUBLIC;
     }
 
     private void requireViewPermission(Preset preset, User principal) {
@@ -470,12 +462,5 @@ public class PresetService {
             case "oldest" -> Sort.by(Sort.Direction.ASC, "createdAt");
             default -> Sort.by(Sort.Direction.DESC, "createdAt");
         };
-    }
-
-    private enum QueryMode {
-        PUBLIC,
-        SEARCH_PUBLIC,
-        OWNER_PUBLIC,
-        OWNER_PRIVATE
     }
 }
