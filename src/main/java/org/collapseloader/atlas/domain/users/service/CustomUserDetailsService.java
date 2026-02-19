@@ -23,7 +23,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Cacheable(value = "users", key = "#username")
     @NonNull
     public UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsernameIgnoreCase(username)
+        User user = userRepository.findByUsernameIgnoreCase(username.trim())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         return CachedUser.builder()

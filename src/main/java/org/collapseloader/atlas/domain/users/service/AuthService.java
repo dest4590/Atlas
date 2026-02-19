@@ -156,7 +156,7 @@ public class AuthService {
 
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.username(), request.password()));
+                    new UsernamePasswordAuthenticationToken(trimmedUsername, request.password()));
         } catch (DisabledException e) {
             throw new UnauthorizedException("Email not verified: " + user.getEmail());
         }
