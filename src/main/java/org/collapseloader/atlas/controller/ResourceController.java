@@ -14,6 +14,7 @@ import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
@@ -46,7 +47,7 @@ public class ResourceController {
             long contentLength = resource.contentLength();
 
             StreamingResponseBody responseBody = outputStream -> {
-                try (java.io.InputStream inputStream = resource.getInputStream()) {
+                try (InputStream inputStream = resource.getInputStream()) {
                     byte[] buffer = new byte[64 * 1024];
                     int bytesRead;
                     while ((bytesRead = inputStream.read(buffer)) != -1) {

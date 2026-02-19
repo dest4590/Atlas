@@ -1,8 +1,8 @@
-package org.collapseloader.atlas.domain.status.dto;
+package org.collapseloader.atlas.domain.admin.dto;
 
 import java.util.Map;
 
-public record SubsystemStatusResponse(
+public record AdminSubsystemStatusResponse(
         String status,
         String detail,
         Map<String, Object> info

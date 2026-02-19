@@ -1,8 +1,12 @@
 package org.collapseloader.atlas.domain.users.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.io.IOException;
+
 import org.apache.coyote.BadRequestException;
 import org.collapseloader.atlas.domain.users.dto.request.AuthRequest;
 import org.collapseloader.atlas.domain.users.dto.request.AuthSetPasswordRequest;
@@ -36,7 +40,7 @@ public class AuthController {
 
     @GetMapping("/verify-redirect")
     public void verifyRedirect(@RequestParam String code, @RequestParam String email,
-                               HttpServletResponse response) throws java.io.IOException {
+            HttpServletResponse response) throws IOException {
         response.sendRedirect("collapseloader://verify?code=" + code + "&email=" + email);
     }
 
@@ -61,7 +65,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(jakarta.servlet.http.HttpServletRequest request)
+    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request)
             throws BadRequestException {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {

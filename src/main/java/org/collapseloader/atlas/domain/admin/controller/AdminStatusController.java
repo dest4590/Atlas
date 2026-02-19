@@ -1,60 +1,65 @@
-package org.collapseloader.atlas.domain.status.controller;
+package org.collapseloader.atlas.domain.admin.controller;
 
 import org.collapseloader.atlas.AtlasApplication;
-import org.collapseloader.atlas.domain.status.dto.ServerStatusResponse;
-import org.collapseloader.atlas.domain.status.dto.SubsystemStatusResponse;
+import org.collapseloader.atlas.domain.admin.dto.AdminServerStatusResponse;
+import org.collapseloader.atlas.domain.admin.dto.AdminSubsystemStatusResponse;
 import org.collapseloader.atlas.dto.ApiResponse;
+import org.collapseloader.atlas.service.WebSocketSessionService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.OperatingSystemMXBean;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/admin")
-public class StatusController {
+public class AdminStatusController {
     private final JdbcTemplate jdbcTemplate;
     private final StringRedisTemplate redisTemplate;
     private final Environment environment;
+    private final WebSocketSessionService webSocketSessionService;
     private final Path uploadRoot;
 
-    public StatusController(
+    public AdminStatusController(
             JdbcTemplate jdbcTemplate,
             StringRedisTemplate redisTemplate,
             Environment environment,
-            @Value("${app.upload-dir:uploads}") String uploadDir
-    ) {
+            WebSocketSessionService webSocketSessionService,
+            @Value("${app.upload-dir:uploads}") String uploadDir) {
         this.jdbcTemplate = jdbcTemplate;
         this.redisTemplate = redisTemplate;
         this.environment = environment;
+        this.webSocketSessionService = webSocketSessionService;
         this.uploadRoot = Path.of(uploadDir).toAbsolutePath().normalize();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/status")
-    public ResponseEntity<ApiResponse<ServerStatusResponse>> getStatus() {
+    public ResponseEntity<ApiResponse<AdminServerStatusResponse>> getStatus() {
         Instant now = Instant.now();
-        Instant startedAt = Instant.ofEpochMilli(java.lang.management.ManagementFactory.getRuntimeMXBean().getStartTime());
+        Instant startedAt = Instant
+                .ofEpochMilli(java.lang.management.ManagementFactory.getRuntimeMXBean().getStartTime());
         long uptimeSeconds = Duration.between(startedAt, now).getSeconds();
-        Map<String, SubsystemStatusResponse> checks = new LinkedHashMap<>();
+        Map<String, AdminSubsystemStatusResponse> checks = new LinkedHashMap<>();
         checks.put("database", checkDatabase());
         checks.put("redis", checkRedis());
         checks.put("storage", checkStorage());
+        checks.put("jvm", checkJvm());
+        checks.put("system", checkSystem());
+        checks.put("users", checkUsers());
 
-        ServerStatusResponse payload = new ServerStatusResponse(
+        AdminServerStatusResponse payload = new AdminServerStatusResponse(
                 environment.getProperty("spring.application.name", "Atlas"),
                 "Operational",
                 resolveVersion(),
@@ -62,8 +67,7 @@ public class StatusController {
                 now,
                 startedAt,
                 uptimeSeconds,
-                checks
-        );
+                checks);
         return ResponseEntity.ok(ApiResponse.success(payload));
     }
 
@@ -78,7 +82,7 @@ public class StatusController {
                 .orElseGet(() -> environment.getProperty("atlas.version", "0.0.1-SNAPSHOT"));
     }
 
-    private SubsystemStatusResponse checkDatabase() {
+    private AdminSubsystemStatusResponse checkDatabase() {
         Map<String, Object> info = new LinkedHashMap<>();
         try {
             String url = environment.getProperty("spring.datasource.url", "unknown");
@@ -94,20 +98,20 @@ public class StatusController {
                 }
             } catch (Exception ignored) {
             }
-            return new SubsystemStatusResponse("UP", "Database reachable", info);
+            return new AdminSubsystemStatusResponse("UP", "Database reachable", info);
         } catch (Exception e) {
-            return new SubsystemStatusResponse("DOWN", describeError(e), info);
+            return new AdminSubsystemStatusResponse("DOWN", describeError(e), info);
         }
     }
 
-    private SubsystemStatusResponse checkRedis() {
+    private AdminSubsystemStatusResponse checkRedis() {
         Map<String, Object> info = new HashMap<>();
         info.put("host", environment.getProperty("spring.data.redis.host", "unknown"));
         info.put("port", environment.getProperty("spring.data.redis.port", "unknown"));
         try {
             var connectionFactory = redisTemplate.getConnectionFactory();
             if (connectionFactory == null) {
-                return new SubsystemStatusResponse("DOWN", "Redis connection factory not configured", info);
+                return new AdminSubsystemStatusResponse("DOWN", "Redis connection factory not configured", info);
             }
             try (var connection = connectionFactory.getConnection()) {
                 long start = System.nanoTime();
@@ -116,14 +120,15 @@ public class StatusController {
                 info.put("latency_ms", latencyMs);
                 info.put("ping_response", response);
                 boolean pong = response != null && !response.isBlank();
-                return new SubsystemStatusResponse(pong ? "UP" : "DEGRADED", pong ? "Ping " + response : "Ping returned empty", info);
+                return new AdminSubsystemStatusResponse(pong ? "UP" : "DEGRADED",
+                        pong ? "Ping " + response : "Ping returned empty", info);
             }
         } catch (Exception e) {
-            return new SubsystemStatusResponse("DOWN", describeError(e), info);
+            return new AdminSubsystemStatusResponse("DOWN", describeError(e), info);
         }
     }
 
-    private SubsystemStatusResponse checkStorage() {
+    private AdminSubsystemStatusResponse checkStorage() {
         Map<String, Object> info = new HashMap<>();
         try {
             Files.createDirectories(uploadRoot);
@@ -138,12 +143,49 @@ public class StatusController {
             } catch (Exception ignored) {
             }
             if (readable && writable) {
-                return new SubsystemStatusResponse("UP", "Upload root ready at " + uploadRoot, info);
+                return new AdminSubsystemStatusResponse("UP", "Upload root ready at " + uploadRoot, info);
             }
-            return new SubsystemStatusResponse("DEGRADED", "Upload root not fully accessible at " + uploadRoot, info);
+            return new AdminSubsystemStatusResponse("DEGRADED", "Upload root not fully accessible at " + uploadRoot,
+                    info);
         } catch (Exception e) {
-            return new SubsystemStatusResponse("DOWN", describeError(e), info);
+            return new AdminSubsystemStatusResponse("DOWN", describeError(e), info);
         }
+    }
+
+    private AdminSubsystemStatusResponse checkJvm() {
+        Map<String, Object> info = new LinkedHashMap<>();
+        Runtime runtime = Runtime.getRuntime();
+        MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+        info.put("max_memory", runtime.maxMemory());
+        info.put("total_memory", runtime.totalMemory());
+        info.put("free_memory", runtime.freeMemory());
+        info.put("used_memory", runtime.totalMemory() - runtime.freeMemory());
+        info.put("heap_usage", memoryMXBean.getHeapMemoryUsage().toString());
+        info.put("non_heap_usage", memoryMXBean.getNonHeapMemoryUsage().toString());
+        info.put("thread_count", ManagementFactory.getThreadMXBean().getThreadCount());
+        info.put("peak_thread_count", ManagementFactory.getThreadMXBean().getPeakThreadCount());
+        info.put("java_version", System.getProperty("java.version"));
+        info.put("java_vendor", System.getProperty("java.vendor"));
+        return new AdminSubsystemStatusResponse("UP", "JVM Healthy", info);
+    }
+
+    private AdminSubsystemStatusResponse checkSystem() {
+        Map<String, Object> info = new LinkedHashMap<>();
+        OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
+        info.put("os_name", osBean.getName());
+        info.put("os_version", osBean.getVersion());
+        info.put("os_arch", osBean.getArch());
+        info.put("available_processors", osBean.getAvailableProcessors());
+        info.put("system_load_average", osBean.getSystemLoadAverage());
+        return new AdminSubsystemStatusResponse("UP", "System Healthy", info);
+    }
+
+    private AdminSubsystemStatusResponse checkUsers() {
+        Map<String, Object> info = new LinkedHashMap<>();
+        info.put("online_users", webSocketSessionService.getUserCount());
+        info.put("online_guests", webSocketSessionService.getGuestCount());
+        info.put("total_online", webSocketSessionService.getTotalCount());
+        return new AdminSubsystemStatusResponse("UP", webSocketSessionService.getTotalCount() + " users online", info);
     }
 
     private String describeError(Exception e) {
