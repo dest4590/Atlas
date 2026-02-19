@@ -6,6 +6,7 @@ public record SearchUserResponse(
         Long id,
         String username,
         String nickname,
+        @JsonProperty("avatar_url") String avatarUrl,
         @JsonProperty("friendship_status") String friendshipStatus
 ) {
 }

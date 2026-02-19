@@ -240,6 +240,7 @@ public class FriendshipService {
                         user.getId(),
                         user.getUsername(),
                         user.getProfile() == null ? null : user.getProfile().getNickname(),
+                        user.getProfile() == null ? null : user.getProfile().getAvatarUrl(),
                         statusByUserId.get(user.getId())))
                 .toList();
     }
