@@ -3,6 +3,7 @@ package org.collapseloader.atlas.domain.friends.repository;
 import org.collapseloader.atlas.domain.friends.entity.FriendRequest;
 import org.collapseloader.atlas.domain.friends.entity.FriendRequestStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -10,6 +11,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface FriendRequestRepository extends JpaRepository<FriendRequest, Long> {
+    @Modifying
+    @Query("delete from FriendRequest fr where fr.requester.id = :userId or fr.addressee.id = :userId or fr.blockedBy.id = :userId")
+    void deleteAllByUserId(@Param("userId") Long userId);
+
     @Query("""
             select fr from FriendRequest fr
             where (fr.requester.id = :userId or fr.addressee.id = :userId)

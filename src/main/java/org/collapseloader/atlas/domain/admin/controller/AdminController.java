@@ -17,6 +17,7 @@ import org.collapseloader.atlas.domain.users.dto.response.UserAdminResponse;
 import org.collapseloader.atlas.domain.users.entity.*;
 import org.collapseloader.atlas.domain.users.repository.UserPreferenceRepository;
 import org.collapseloader.atlas.domain.users.repository.UserRepository;
+import org.collapseloader.atlas.domain.users.service.UserService;
 import org.collapseloader.atlas.domain.users.service.UserStatusService;
 import org.collapseloader.atlas.domain.users.service.UsernameValidator;
 import org.springframework.data.domain.Page;
@@ -53,6 +54,7 @@ public class AdminController {
     private final UserStatusService userStatusService;
     private final org.collapseloader.atlas.service.WebSocketSessionService webSocketSessionService;
     private final PasswordEncoder passwordEncoder;
+    private final UserService userService;
 
     @GetMapping("/stats")
     @PreAuthorize("hasRole('ADMIN')")
@@ -262,7 +264,7 @@ public class AdminController {
                         "User not found"));
 
         String username = user.getUsername();
-        userRepository.delete(user);
+        userService.deleteUser(user);
 
         auditLogService.log("DELETE_USER", "USER", id.toString(),
                 Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())
