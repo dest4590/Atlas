@@ -1,104 +1,115 @@
 spring:
-  config:
-    import: "optional:file:.env[.properties]"
+    config:
+        import: 'optional:file:.env[.properties]'
 
-  application:
-    name: Atlas
+    application:
+        name: Atlas
 
-  datasource:
-    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/${POSTGRES_DB:atlas}
-    username: ${POSTGRES_USER:atlas_user}
-    password: ${POSTGRES_PASSWORD:atlas_password}
-    driver-class-name: org.postgresql.Driver
+    datasource:
+        url: jdbc:postgresql://localhost:${POSTGRES_PORT:5432}/${POSTGRES_DB:atlas}
+        username: ${POSTGRES_USER:atlas_user}
+        password: ${POSTGRES_PASSWORD:atlas_password}
+        driver-class-name: org.postgresql.Driver
 
-    hikari:
-      maximum-pool-size: 20
-      minimum-idle: 5
+        hikari:
+            maximum-pool-size: 20
+            minimum-idle: 5
 
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        format_sql: true
+    jpa:
+        open-in-view: false
+        hibernate:
+            ddl-auto: update
+        properties:
+            hibernate:
+                format_sql: true
 
-  jackson:
-    serialization:
-      fail-on-empty-beans: false
+    jackson:
+        serialization:
+            fail-on-empty-beans: false
 
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      repositories:
-        enabled: false
+    data:
+        redis:
+            host: ${REDIS_HOST:localhost}
+            port: ${REDIS_PORT:6379}
+            repositories:
+                enabled: false
 
-  servlet:
-    multipart:
-      max-file-size: 500MB
-      max-request-size: 500MB
+    servlet:
+        multipart:
+            max-file-size: 500MB
+            max-request-size: 500MB
 
-  web:
-    error:
-      whitelabel:
-        enabled: true
+    web:
+        error:
+            whitelabel:
+                enabled: true
 
-      include-stacktrace: never
+            include-stacktrace: never
 
-  thymeleaf:
-    check-template-location: false
+    thymeleaf:
+        check-template-location: false
 
-  mail:
-    host: ${MAIL_HOST:}
-    port: ${MAIL_PORT:465}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: false
-          ssl:
-            enable: true
-        transport:
-          protocol: smtps
-    default-encoding: UTF-8
+    mail:
+        host: ${MAIL_HOST:}
+        port: ${MAIL_PORT:465}
+        username: ${MAIL_USERNAME:}
+        password: ${MAIL_PASSWORD:}
+        properties:
+            mail:
+                smtp:
+                    auth: true
+                    starttls:
+                        enable: false
+                    ssl:
+                        enable: true
+                transport:
+                    protocol: smtps
+        default-encoding: UTF-8
 
 logging:
-  level:
-    root: INFO
-    org.springframework.web: WARN
-    org.hibernate: WARN
+    level:
+        root: INFO
+        org.springframework.web: WARN
+        org.hibernate: WARN
 
 server:
-  compression:
-    enabled: true
-    mime-types: application/json,application/xml,text/html,text/plain
-    min-response-size: 1024
+    compression:
+        enabled: true
+        mime-types: application/json,application/xml,text/html,text/plain
+        min-response-size: 1024
 
-  tomcat:
-    connection-timeout: 60000
-    keep-alive-timeout: 60000
-    max-keep-alive-requests: 1000
+    tomcat:
+        connection-timeout: 60000
+        keep-alive-timeout: 60000
+        max-keep-alive-requests: 1000
 
 management:
-  health:
-    mail:
-      enabled: false
-  endpoints:
-    web:
-      exposure:
-        include: "health, info, metrics"
+    health:
+        mail:
+            enabled: false
+    endpoints:
+        web:
+            exposure:
+                include: 'health, info, metrics'
 
 jwt:
-  secret: ${JWT_SECRET:default_jwt_secret_key_32bytes!x}
+    secret: ${JWT_SECRET:default_jwt_secret_key_32bytes!x}
 
 atlas:
-  app-url: ${APP_URL:http://localhost:8080}
-  storage:
-    upload-dir: uploads
-    temp-dir: temp
-    trash-dir: .trash
-    trash-retention-days: 30
+    app-url: ${APP_URL:http://localhost:8080}
+    storage:
+        upload-dir: uploads
+        temp-dir: temp
+        trash-dir: .trash
+        trash-retention-days: 30
+    backup:
+        s3:
+            enabled: ${S3_BACKUP_ENABLED:false}
+            region: ${S3_REGION:us-east-1}
+            endpoint: ${S3_ENDPOINT:}
+            bucket: ${S3_BUCKET:}
+            access-key: ${S3_ACCESS_KEY:}
+            secret-key: ${S3_SECRET_KEY:}
+            cron: ${S3_BACKUP_CRON:0 0 3 * * *} # every day at 3:00
+            retention-days: ${S3_BACKUP_RETENTION_DAYS:7}
+            pg-dump-path: ${PG_DUMP_PATH:pg_dump}

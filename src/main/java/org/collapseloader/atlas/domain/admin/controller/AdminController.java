@@ -20,6 +20,7 @@ import org.collapseloader.atlas.domain.users.repository.UserPreferenceRepository
 import org.collapseloader.atlas.domain.users.repository.UserRepository;
 import org.collapseloader.atlas.domain.users.service.UserService;
 import org.collapseloader.atlas.domain.users.service.UsernameValidator;
+import org.collapseloader.atlas.service.BackupService;
 import org.collapseloader.atlas.service.WebSocketSessionService;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.data.domain.Page;
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/admin")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     private final UserRepository userRepository;
@@ -56,9 +58,9 @@ public class AdminController {
     private final WebSocketSessionService webSocketSessionService;
     private final PasswordEncoder passwordEncoder;
     private final UserService userService;
+    private final BackupService backupService;
 
     @GetMapping("/stats")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Long>> getStats() {
         Map<String, Long> stats = new HashMap<>();
         stats.put("users", userRepository.count());
@@ -72,7 +74,6 @@ public class AdminController {
     }
 
     @GetMapping("/users")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<UserAdminResponse>> getUsers(
             @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable,
             @RequestParam(required = false) String search,
@@ -124,7 +125,6 @@ public class AdminController {
     }
 
     @GetMapping("/users/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     @Transactional(readOnly = true)
     public ResponseEntity<AdminUserDetailResponse> getUserDetails(@PathVariable Long id) {
         User user = userRepository.findById(id)
@@ -160,7 +160,6 @@ public class AdminController {
     }
 
     @PutMapping("/users/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public ResponseEntity<Void> updateUser(@PathVariable Long id, @RequestBody AdminUserUpdateRequest request) {
         User user = userRepository.findById(id)
@@ -173,7 +172,8 @@ public class AdminController {
             user.setEmail(request.email());
         if (request.role() != null)
             user.setRole(Role.valueOf(request.role()));
-        if (request.password() != null && !request.password().isBlank()) {
+        boolean isPasswordValid = request.password() != null && !request.password().isBlank();
+        if (isPasswordValid) {
             user.setPassword(passwordEncoder.encode(request.password()));
         }
         user.setEnabled(request.enabled());
@@ -248,7 +248,7 @@ public class AdminController {
 
         userRepository.save(user);
         String logMessage = "Updated user details for " + user.getUsername();
-        if (request.password() != null && !request.password().isBlank()) {
+        if (isPasswordValid) {
             logMessage += " (including password reset)";
         }
         auditLogService.log("UPDATE_USER", "USER", user.getId().toString(),
@@ -259,7 +259,6 @@ public class AdminController {
     }
 
     @DeleteMapping("/users/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         User user = userRepository.findById(id)
@@ -278,7 +277,6 @@ public class AdminController {
     }
 
     @PostMapping("/users/{id}/reset-password")
-    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public ResponseEntity<Void> resetPassword(@PathVariable Long id, @RequestBody Map<String, String> request) {
         String newPassword = request.get("password");
@@ -300,13 +298,11 @@ public class AdminController {
     }
 
     @GetMapping("/news")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<News>> getNews() {
         return ResponseEntity.ok(newsRepository.findAll());
     }
 
     @PostMapping("/news")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<News> createNews(
             @RequestBody NewsRequest request) {
         var news = newsService.createNews(request);
@@ -318,7 +314,6 @@ public class AdminController {
     }
 
     @PutMapping("/news/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<News> updateNews(@PathVariable Long id,
                                            @RequestBody NewsRequest request) throws NotFoundException {
         var news = newsService.updateNews(id, request);
@@ -330,7 +325,6 @@ public class AdminController {
     }
 
     @DeleteMapping("/news/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteNews(@PathVariable Long id) throws NotFoundException {
         var news = newsRepository.findById(id).orElse(null);
         String title = news != null ? news.getTitle() : "Unknown";
@@ -343,14 +337,12 @@ public class AdminController {
     }
 
     @GetMapping("/audit-logs")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<AuditLog>> getAuditLogs(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(auditLogService.getLogs(pageable));
     }
 
     @PostMapping("/users/{userId}/achievements/{achievementKey}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> grantAchievement(@PathVariable Long userId, @PathVariable String achievementKey) {
         achievementService.unlockAchievement(userId, achievementKey);
         auditLogService.log("GRANT_ACHIEVEMENT", "USER", userId.toString(),
@@ -360,7 +352,6 @@ public class AdminController {
     }
 
     @DeleteMapping("/users/{userId}/achievements/{achievementKey}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> revokeAchievement(@PathVariable Long userId, @PathVariable String achievementKey) {
         achievementService.revokeAchievement(userId, achievementKey);
         auditLogService.log("REVOKE_ACHIEVEMENT", "USER", userId.toString(),
@@ -370,7 +361,6 @@ public class AdminController {
     }
 
     @PostMapping("/clients/trigger-update")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> triggerUpdate() {
         Map<String, String> payload = new HashMap<>();
         payload.put("command", "CHECK_FOR_UPDATES");
