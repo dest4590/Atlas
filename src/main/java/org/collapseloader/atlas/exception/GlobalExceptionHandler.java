@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.sql.SQLException;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -36,12 +37,20 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("Internal Server Error"));
     }
 
-    @ExceptionHandler({DataAccessException.class, SQLException.class})
+    @ExceptionHandler({ DataAccessException.class, SQLException.class })
     public ResponseEntity<ApiResponse<Void>> handleDatabaseException(Exception e) {
         log.error("Database error: ", e);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("Database error"));
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleChangeSetNotFound(NotFoundException e) {
+        log.debug("Resource not found: {}", e.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(e.getMessage() != null ? e.getMessage() : "Not found"));
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
@@ -109,7 +118,7 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(e.getMessage()));
     }
 
-    @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})
+    @ExceptionHandler({ MethodArgumentNotValidException.class, BindException.class })
     public ResponseEntity<ApiResponse<Void>> handleValidationExceptions(Exception ex) {
         var messages = new StringBuilder();
         if (ex instanceof MethodArgumentNotValidException manv) {
