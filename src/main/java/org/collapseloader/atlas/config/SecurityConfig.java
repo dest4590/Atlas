@@ -36,6 +36,7 @@ public class SecurityConfig {
                             "https://tauri.localhost",
                             "http://tauri.localhost",
                             "http://localhost:5173",
+                            "https://collapseloader.org",
                             "https://calypso.collapseloader.org",
                             "http://atlas.collapseloader.org",
                             "https://atlas.collapseloader.org"));
