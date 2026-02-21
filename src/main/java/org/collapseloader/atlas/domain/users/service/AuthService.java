@@ -100,7 +100,7 @@ public class AuthService {
                 .build();
         verificationTokenRepository.save(verificationToken);
 
-        emailService.sendVerificationEmail(savedUser.getEmail(), token);
+        emailService.sendVerificationEmail(savedUser.getEmail(), user.getUsername(), token);
 
         return new AuthResponse(null);
     }
@@ -143,7 +143,7 @@ public class AuthService {
                 .build();
         verificationTokenRepository.save(verificationToken);
 
-        emailService.sendVerificationEmail(user.getEmail(), token);
+        emailService.sendVerificationEmail(user.getEmail(), user.getUsername(), token);
     }
 
     public AuthResponse login(AuthRequest request) throws BadRequestException {
@@ -192,7 +192,7 @@ public class AuthService {
         return new AuthResponse(access);
     }
 
-    public void logout(String token) throws BadRequestException {
+    public void logout(String token) {
         String username = jwtService.extractUsername(token);
         if (username != null) {
             userRepository.findByUsernameIgnoreCase(username).ifPresent(user -> {

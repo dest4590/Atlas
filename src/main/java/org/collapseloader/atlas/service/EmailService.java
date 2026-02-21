@@ -29,7 +29,7 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
-    public void sendVerificationEmail(String to, String token) {
+    public void sendVerificationEmail(String to, String username, String token) {
         if (mailSender == null || mailHost == null || mailHost.isEmpty() || "example.com".equals(mailHost)) {
             log.warn(
                     "Mail sending is disabled because host is '{}' or mail sender is not configured. Skipping sending verification email to {}",
@@ -74,7 +74,7 @@ public class EmailService {
                                 <div style="margin-top:8px;font-size:12px;opacity:0.8;text-transform:uppercase;">Verification</div>
                             </div>
                             <div class="body">
-                                <p>Hello,</p>
+                                <p>Hello, %s</p>
                                 <p>Your verification code is below. Enter it to confirm your email and start using CollapseLoader.</p>
                                 <div class="code-box">
                                     <div class="code">%s</div>
@@ -91,7 +91,7 @@ public class EmailService {
                     </div>
                 </body>
                 </html>
-                """.formatted(token, redirectUrl);
+                """.formatted(username, token, redirectUrl);
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
