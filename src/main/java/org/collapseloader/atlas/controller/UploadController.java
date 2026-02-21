@@ -6,7 +6,7 @@ import org.collapseloader.atlas.domain.clients.entity.ClientType;
 import org.collapseloader.atlas.domain.clients.entity.fabric.FabricDependence;
 import org.collapseloader.atlas.domain.clients.repository.FabricClientRepository;
 import org.collapseloader.atlas.exception.EntityNotFoundException;
-import org.collapseloader.atlas.titan.service.FileStorageService;
+import org.collapseloader.atlas.titan.service.TitanFileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -23,22 +23,22 @@ import org.springframework.web.multipart.MultipartFile;
 @PreAuthorize("hasRole('ADMIN')")
 public class UploadController {
     private static final Logger log = LoggerFactory.getLogger(UploadController.class);
-    private final FileStorageService storageService;
+    private final TitanFileStorageService storageService;
     private final FabricClientRepository fabricClientRepository;
 
     @PostMapping
-    public ResponseEntity<FileStorageService.StoredFile> handleFileUpload(
+    public ResponseEntity<TitanFileStorageService.StoredFile> handleFileUpload(
             @RequestParam("file") MultipartFile file,
             @RequestParam(required = false) String target,
             @RequestParam(required = false, defaultValue = "") String path,
             @RequestParam(required = false) Long clientId) throws BadRequestException {
 
-        FileStorageService.UploadTarget uploadTarget = parseTarget(target);
-        FileStorageService.StoredFile storedFile = uploadTarget != null
+        TitanFileStorageService.UploadTarget uploadTarget = parseTarget(target);
+        TitanFileStorageService.StoredFile storedFile = uploadTarget != null
                 ? storageService.store(file, uploadTarget)
                 : storageService.store(file, path);
 
-        if (uploadTarget == FileStorageService.UploadTarget.FABRIC_DEPS && clientId != null) {
+        if (uploadTarget == TitanFileStorageService.UploadTarget.FABRIC_DEPS && clientId != null) {
             registerFabricDep(storedFile, clientId);
         }
 
@@ -55,7 +55,7 @@ public class UploadController {
     }
 
     @PostMapping("/merge")
-    public ResponseEntity<FileStorageService.StoredFile> mergeChunks(
+    public ResponseEntity<TitanFileStorageService.StoredFile> mergeChunks(
             @RequestParam("uploadId") String uploadId,
             @RequestParam("filename") String filename,
             @RequestParam(required = false) String target,
@@ -63,19 +63,19 @@ public class UploadController {
             @RequestParam("totalChunks") int totalChunks,
             @RequestParam(required = false) Long clientId) throws BadRequestException {
 
-        FileStorageService.UploadTarget uploadTarget = parseTarget(target);
-        FileStorageService.StoredFile storedFile = uploadTarget != null
+        TitanFileStorageService.UploadTarget uploadTarget = parseTarget(target);
+        TitanFileStorageService.StoredFile storedFile = uploadTarget != null
                 ? storageService.mergeChunks(uploadId, filename, uploadTarget, totalChunks)
                 : storageService.mergeChunks(uploadId, filename, path, totalChunks);
 
-        if (uploadTarget == FileStorageService.UploadTarget.FABRIC_DEPS && clientId != null) {
+        if (uploadTarget == TitanFileStorageService.UploadTarget.FABRIC_DEPS && clientId != null) {
             registerFabricDep(storedFile, clientId);
         }
 
         return ResponseEntity.ok(storedFile);
     }
 
-    private void registerFabricDep(FileStorageService.StoredFile storedFile, Long clientId) {
+    private void registerFabricDep(TitanFileStorageService.StoredFile storedFile, Long clientId) {
         try {
             var client = fabricClientRepository.findByIdAndType(clientId, ClientType.FABRIC)
                     .orElseThrow(() -> new EntityNotFoundException("Fabric client not found with ID: " + clientId));
@@ -102,11 +102,11 @@ public class UploadController {
         }
     }
 
-    private FileStorageService.UploadTarget parseTarget(String raw) throws BadRequestException {
+    private TitanFileStorageService.UploadTarget parseTarget(String raw) throws BadRequestException {
         if (raw == null || raw.isBlank()) {
             return null;
         }
-        FileStorageService.UploadTarget target = FileStorageService.UploadTarget.fromString(raw);
+        TitanFileStorageService.UploadTarget target = TitanFileStorageService.UploadTarget.fromString(raw);
         if (target == null) {
             throw new BadRequestException("Unknown upload target: " + raw);
         }

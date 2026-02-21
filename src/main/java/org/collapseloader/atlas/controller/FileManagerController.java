@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.collapseloader.atlas.domain.clients.repository.FabricDependenceRepository;
 import org.collapseloader.atlas.titan.model.FileMetadata;
 import org.collapseloader.atlas.titan.service.FileMetadataService;
-import org.collapseloader.atlas.titan.service.FileStorageService;
+import org.collapseloader.atlas.titan.service.TitanFileStorageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @PreAuthorize("hasRole('ADMIN')")
 public class FileManagerController {
 
-    private final FileStorageService storageService;
+    private final TitanFileStorageService storageService;
     private final FileMetadataService metadataService;
     private final FabricDependenceRepository fabricDependenceRepository;
 
@@ -60,7 +60,7 @@ public class FileManagerController {
                                 .map(FileMetadata::getMd5)
                                 .findFirst().orElse("");
 
-                        if (md5 != null && !md5.isEmpty()) {
+                        if (!md5.isEmpty()) {
                             var deps = fabricDependenceRepository.findAllByMd5Hash(md5);
                             if (!deps.isEmpty()) {
                                 isFabricDep = true;

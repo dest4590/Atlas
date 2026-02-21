@@ -22,9 +22,11 @@ public class UploadResourceConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         Path root = Paths.get(uploadDir, "public").toAbsolutePath().normalize();
         String location = root.toUri().toString();
+
         if (!location.endsWith("/")) {
             location = location + "/";
         }
+
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations(location);
     }

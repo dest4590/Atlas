@@ -59,10 +59,10 @@ public class EmailService {
                         .cta { text-align: center; margin: 30px 0; }
                         .btn { background: #000000; color: #ffffff !important; text-decoration: none; padding: 14px 40px; font-weight: 700; display: inline-block; text-transform: uppercase; font-size: 14px; }
                         .footer { padding: 20px; text-align: center; background: #ffffff; border-top: 1px solid #eeeeee; font-size: 11px; color: #999999; }
-                        @media (max-width:420px) { 
-                            .body { padding: 20px; } 
-                            .code { font-size: 28px; letter-spacing: 4px; } 
-                            .btn { width: 100%%; box-sizing: border-box; } 
+                        @media (max-width:420px) {
+                            .body { padding: 20px; }
+                            .code { font-size: 28px; letter-spacing: 4px; }
+                            .btn { width: 100%; box-sizing: border-box; }
                         }
                     </style>
                 </head>
@@ -79,12 +79,14 @@ public class EmailService {
                                 <div class="code-box">
                                     <div class="code">%s</div>
                                 </div>
+                
+                                <p style="text-align: center;">Or press the button below to verify your email:</p>
+                
                                 <div class="cta">
                                     <a href="%s" class="btn">Verify Email</a>
                                 </div>
-                                <p style="color:#999999;font-size:13px;">If you didn't create this account, you can safely ignore this message.</p>
+                                <p style="color:#999999;font-size:13px;text-align: center;">If you didn't create this account, you can safely ignore this message.</p>
                             </div>
-                            <div class="footer">© 2026 COLLAPSELOADER — ALL RIGHTS RESERVED</div>
                         </div>
                     </div>
                 </body>

@@ -1,7 +1,8 @@
 package org.collapseloader.atlas.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.collapseloader.atlas.titan.service.FileStorageService;
+import lombok.extern.slf4j.Slf4j;
+import org.collapseloader.atlas.titan.service.TitanFileStorageService;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
@@ -18,12 +19,13 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @RestController
 public class ResourceController {
 
-    private final FileStorageService storageService;
+    private final TitanFileStorageService storageService;
 
-    public ResourceController(FileStorageService storageService) {
+    public ResourceController(TitanFileStorageService storageService) {
         this.storageService = storageService;
     }
 
@@ -34,6 +36,15 @@ public class ResourceController {
         String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
         String bestMatchPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
         String filename = new AntPathMatcher().extractPathWithinPattern(bestMatchPattern, path);
+
+        if (filename.isBlank()) {
+            StreamingResponseBody responseBody = outputStream -> outputStream.write("english or spanish?".getBytes());
+
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.noCache())
+                    .contentLength(19)
+                    .body(responseBody);
+        }
 
         Path file = storageService.load(filename);
 

@@ -7,7 +7,7 @@ import org.collapseloader.atlas.domain.clients.entity.ClientType;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
 import org.collapseloader.atlas.domain.clients.repository.ClientScreenshotRepository;
 import org.collapseloader.atlas.dto.ApiResponse;
-import org.collapseloader.atlas.titan.service.FileStorageService;
+import org.collapseloader.atlas.titan.service.TitanFileStorageService;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/v1/admin")
 public class AdminClientScreenshotController {
 
-    private final FileStorageService storageService;
+    private final TitanFileStorageService storageService;
     private final ClientRepository clientRepository;
     private final ClientScreenshotRepository screenshotRepository;
 
@@ -47,7 +47,7 @@ public class AdminClientScreenshotController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> uploadScreenshot(
             @PathVariable Long clientId,
             @RequestParam("file") List<MultipartFile> files) throws NotFoundException, BadRequestException {
-        var client = clientRepository.findById(clientId).orElseThrow(() -> new NotFoundException());
+        var client = clientRepository.findById(clientId).orElseThrow(NotFoundException::new);
         if (files == null || files.isEmpty()) {
             throw new BadRequestException("No files provided");
         }
@@ -84,7 +84,7 @@ public class AdminClientScreenshotController {
             @PathVariable Long clientId,
             @PathVariable Long screenshotId) throws NotFoundException, BadRequestException {
         var screenshot = screenshotRepository.findById(screenshotId)
-                .orElseThrow(() -> new NotFoundException());
+                .orElseThrow(NotFoundException::new);
         if (screenshot.getClient() == null || !screenshot.getClient().getId().equals(clientId)) {
             throw new BadRequestException("Mismatched client id");
         }

@@ -2,7 +2,7 @@ package org.collapseloader.atlas.controller;
 
 import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.titan.service.FileMetadataService;
-import org.collapseloader.atlas.titan.service.FileStorageService;
+import org.collapseloader.atlas.titan.service.TitanFileStorageService;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -34,10 +34,10 @@ public class AgentOverlayController {
             MediaType.APPLICATION_OCTET_STREAM, ".so");
     private static final MediaType JAR_MEDIA_TYPE = MediaType.parseMediaType("application/java-archive");
 
-    private final FileStorageService storageService;
+    private final TitanFileStorageService storageService;
     private final FileMetadataService metadataService;
 
-    public AgentOverlayController(FileStorageService storageService, FileMetadataService metadataService) {
+    public AgentOverlayController(TitanFileStorageService storageService, FileMetadataService metadataService) {
         this.storageService = storageService;
         this.metadataService = metadataService;
     }
@@ -105,7 +105,7 @@ public class AgentOverlayController {
 
     private Map<String, String> storeAgent(MultipartFile file) {
         validateFile(file, ".jar");
-        FileStorageService.StoredFile stored = storageService.store(file, "agent", "CollapseAgent.jar");
+        TitanFileStorageService.StoredFile stored = storageService.store(file, "agent", "CollapseAgent.jar");
         return Map.of(
                 "path", "/uploads/" + stored.storedPath(),
                 "agent_hash", stored.md5());
@@ -113,7 +113,7 @@ public class AgentOverlayController {
 
     private Map<String, String> storeOverlay(MultipartFile file, OverlayAsset overlay) {
         validateFile(file, overlay.expectedExtension());
-        FileStorageService.StoredFile stored = storageService.store(file, "agent", overlay.fileName());
+        TitanFileStorageService.StoredFile stored = storageService.store(file, "agent", overlay.fileName());
         return Map.of(
                 "path", "/uploads/" + stored.storedPath(),
                 "overlay_hash", stored.md5());
