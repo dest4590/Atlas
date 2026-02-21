@@ -58,7 +58,7 @@ public class AdminController {
     private final WebSocketSessionService webSocketSessionService;
     private final PasswordEncoder passwordEncoder;
     private final UserService userService;
-    private final BackupService backupService;
+    private final Optional<BackupService> backupService;
 
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Long>> getStats() {
