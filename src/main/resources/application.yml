@@ -113,3 +113,7 @@ atlas:
             cron: ${S3_BACKUP_CRON:0 0 3 * * *} # every day at 3:00
             retention-days: ${S3_BACKUP_RETENTION_DAYS:7}
             pg-dump-path: ${PG_DUMP_PATH:pg_dump}
+    crash-logs:
+        retention-days: ${CRASH_LOG_RETENTION_DAYS:30}
+        max-log-chars: ${CRASH_LOG_MAX_CHARS:40000}
+        cleanup-cron: ${CRASH_LOG_CLEANUP_CRON:0 0 */6 * * *}

@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.admin.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.collapseloader.atlas.domain.admin.dto.request.BroadcastRequest;
@@ -11,8 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/admin/broadcast")
@@ -26,13 +25,13 @@ public class AdminBroadcastController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> broadcastMessage(@Valid @RequestBody BroadcastRequest request) {
         log.info("Admin broadcasting message: {}", request);
-        
+
         if ("users".equalsIgnoreCase(request.getTarget())) {
-             messagingTemplate.convertAndSend("/topic/broadcast/users", request);
+            messagingTemplate.convertAndSend("/topic/broadcast/users", request);
         } else if ("guests".equalsIgnoreCase(request.getTarget())) {
-             messagingTemplate.convertAndSend("/topic/broadcast/guests", request);
+            messagingTemplate.convertAndSend("/topic/broadcast/guests", request);
         } else {
-             messagingTemplate.convertAndSend("/topic/broadcast", request);
+            messagingTemplate.convertAndSend("/topic/broadcast", request);
         }
 
         return ResponseEntity.ok(ApiResponse.success(null));

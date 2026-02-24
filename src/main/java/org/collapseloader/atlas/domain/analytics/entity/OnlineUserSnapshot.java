@@ -2,6 +2,7 @@ package org.collapseloader.atlas.domain.analytics.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.time.Instant;
 
 @Entity

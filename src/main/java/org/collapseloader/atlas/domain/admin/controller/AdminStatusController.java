@@ -1,8 +1,8 @@
 package org.collapseloader.atlas.domain.admin.controller;
 
 import org.collapseloader.atlas.AtlasApplication;
-import org.collapseloader.atlas.domain.admin.dto.AdminServerStatusResponse;
-import org.collapseloader.atlas.domain.admin.dto.AdminSubsystemStatusResponse;
+import org.collapseloader.atlas.domain.admin.dto.response.AdminServerStatusResponse;
+import org.collapseloader.atlas.domain.admin.dto.response.AdminSubsystemStatusResponse;
 import org.collapseloader.atlas.dto.ApiResponse;
 import org.collapseloader.atlas.service.WebSocketSessionService;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +21,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/admin")

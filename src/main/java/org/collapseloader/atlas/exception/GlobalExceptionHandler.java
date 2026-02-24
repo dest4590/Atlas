@@ -4,6 +4,7 @@ import org.collapseloader.atlas.dto.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.sql.SQLException;
-import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("Internal Server Error"));
     }
 
-    @ExceptionHandler({ DataAccessException.class, SQLException.class })
+    @ExceptionHandler({DataAccessException.class, SQLException.class})
     public ResponseEntity<ApiResponse<Void>> handleDatabaseException(Exception e) {
         log.error("Database error: ", e);
         return ResponseEntity
@@ -118,7 +118,7 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(e.getMessage()));
     }
 
-    @ExceptionHandler({ MethodArgumentNotValidException.class, BindException.class })
+    @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})
     public ResponseEntity<ApiResponse<Void>> handleValidationExceptions(Exception ex) {
         var messages = new StringBuilder();
         if (ex instanceof MethodArgumentNotValidException manv) {

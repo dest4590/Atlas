@@ -69,6 +69,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/v1/news/**").permitAll()
                         .requestMatchers("/api/v1/presets/**").permitAll()
+                        .requestMatchers("/api/v1/crash-logs").permitAll()
 
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")

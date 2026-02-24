@@ -4,9 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
-import java.io.IOException;
-
 import org.apache.coyote.BadRequestException;
 import org.collapseloader.atlas.domain.users.dto.request.AuthRequest;
 import org.collapseloader.atlas.domain.users.dto.request.AuthSetPasswordRequest;
@@ -19,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -40,7 +39,7 @@ public class AuthController {
 
     @GetMapping("/verify-redirect")
     public void verifyRedirect(@RequestParam String code, @RequestParam String email,
-            HttpServletResponse response) throws IOException {
+                               HttpServletResponse response) throws IOException {
         response.sendRedirect("collapseloader://verify?code=" + code + "&email=" + email);
     }
 
