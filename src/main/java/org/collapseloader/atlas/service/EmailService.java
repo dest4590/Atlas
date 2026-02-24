@@ -74,16 +74,16 @@ public class EmailService {
                                 <div style="margin-top:8px;font-size:12px;opacity:0.8;text-transform:uppercase;">Verification</div>
                             </div>
                             <div class="body">
-                                <p>Hello, %s</p>
+                                <p>Hello, {{username}}</p>
                                 <p>Your verification code is below. Enter it to confirm your email and start using CollapseLoader.</p>
                                 <div class="code-box">
-                                    <div class="code">%s</div>
+                                    <div class="code">{{token}}</div>
                                 </div>
                 
                                 <p style="text-align: center;">Or press the button below to verify your email:</p>
                 
                                 <div class="cta">
-                                    <a href="%s" class="btn">Verify Email</a>
+                                    <a href="{{redirectUrl}}" class="btn">Verify Email</a>
                                 </div>
                                 <p style="color:#999999;font-size:13px;text-align: center;">If you didn't create this account, you can safely ignore this message.</p>
                             </div>
@@ -91,7 +91,10 @@ public class EmailService {
                     </div>
                 </body>
                 </html>
-                """.formatted(username, token, redirectUrl);
+                """
+                .replace("{{username}}", username)
+                .replace("{{token}}", token)
+                .replace("{{redirectUrl}}", redirectUrl);
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
