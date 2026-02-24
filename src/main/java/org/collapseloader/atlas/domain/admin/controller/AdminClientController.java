@@ -91,7 +91,7 @@ public class AdminClientController {
 
             if (client != null && client.getFilename() != null) {
                 try {
-                    storageService.delete(client.getFilename());
+                    storageService.delete(resolveStoragePath(client));
                 } catch (Exception e) {
                     log.error("Failed to delete client file from storage: {}", client.getFilename(), e);
                 }
@@ -107,6 +107,26 @@ public class AdminClientController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    private String resolveStoragePath(Client client) {
+        String filename = client.getFilename();
+        if (filename == null || filename.isBlank()) {
+            return filename;
+        }
+
+        String normalized = filename.replace("\\", "/");
+        if (normalized.contains("/")) {
+            return normalized;
+        }
+
+        String baseDir = switch (client.getType()) {
+            case FABRIC -> "clients/fabric/jars/";
+            case FORGE -> "clients/forge/jars/";
+            case Vanilla -> "clients/vanilla/jars/";
+        };
+
+        return baseDir + normalized;
     }
 
     private void mapRequestToClient(AdminClientRequest request, Client client) {
