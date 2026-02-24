@@ -2,6 +2,7 @@ package org.collapseloader.atlas.domain.admin.controller;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.collapseloader.atlas.domain.audit.AuditLogService;
 import org.collapseloader.atlas.domain.clients.dto.request.AdminClientRequest;
 import org.collapseloader.atlas.domain.clients.dto.response.ClientResponse;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/admin/clients")
 @RequiredArgsConstructor
@@ -27,6 +29,7 @@ public class AdminClientController {
     private final AuditLogService auditLogService;
     private final EntityManager entityManager;
     private final ClientService clientService;
+    private final org.collapseloader.atlas.titan.service.TitanFileStorageService storageService;
 
     @GetMapping
     public ResponseEntity<List<ClientResponse>> getAllClients() {
@@ -86,6 +89,14 @@ public class AdminClientController {
             var client = clientRepository.findById(id).orElse(null);
             String clientName = client != null ? client.getName() : "Unknown";
 
+            if (client != null && client.getFilename() != null) {
+                try {
+                    storageService.delete(client.getFilename());
+                } catch (Exception e) {
+                    log.error("Failed to delete client file from storage: {}", client.getFilename(), e);
+                }
+            }
+
             clientRepository.deleteById(id);
 
             auditLogService.log("DELETE_CLIENT", "CLIENT", id.toString(),
@@ -128,7 +139,7 @@ public class AdminClientController {
     @GetMapping("/versions")
     public ResponseEntity<List<String>> getAllVersions() {
         return ResponseEntity.ok(List.of(
-            "1.21.11", "1.21.8", "1.21.1", "1.21.4", "1.16.5", "1.12.2", "1.8.9"
+                "1.21.11", "1.21.8", "1.21.1", "1.21.4", "1.16.5", "1.12.2", "1.8.9"
         ));
     }
 
