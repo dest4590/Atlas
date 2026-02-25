@@ -16,8 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -30,14 +28,6 @@ public class CrashLogService {
 
     @Value("${atlas.crash-logs.retention-days:30}")
     private int retentionDays;
-
-    private static final List<PatternWithReplacement> MASK_PATTERNS = List.of(
-            new PatternWithReplacement(Pattern.compile("C:\\\\\\\\Users\\\\([^\\\\]+)\\\\"), "C:\\\\Users\\\\********\\\\"),
-            new PatternWithReplacement(Pattern.compile("C:/Users/([^/]+)/"), "C:/Users/********/"),
-            new PatternWithReplacement(Pattern.compile("(?<!\\\\w)/home/[^/]+/"), "/home/********/"),
-            new PatternWithReplacement(Pattern.compile("(?<!\\\\w)/Users/[^/]+/"), "/Users/********/"),
-            new PatternWithReplacement(Pattern.compile("USERNAME=\\\\w+"), "USERNAME=********")
-    );
 
     @Transactional
     public CrashLogResponse createCrashLog(User user, CreateCrashLogRequest request) {
@@ -95,9 +85,6 @@ public class CrashLogService {
 
     private String maskAndTrim(String input) {
         String safe = input == null ? "" : input.replace("\u0000", "");
-        for (PatternWithReplacement pattern : MASK_PATTERNS) {
-            safe = pattern.pattern.matcher(safe).replaceAll(pattern.replacement);
-        }
 
         if (safe.length() <= maxLogChars) {
             return safe;
@@ -121,6 +108,4 @@ public class CrashLogService {
         return cleaned.substring(0, maxLength);
     }
 
-    private record PatternWithReplacement(Pattern pattern, String replacement) {
-    }
 }

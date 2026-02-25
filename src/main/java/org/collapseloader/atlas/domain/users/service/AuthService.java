@@ -148,8 +148,11 @@ public class AuthService {
 
     public AuthResponse login(AuthRequest request) throws BadRequestException {
         String trimmedUsername = request.username().trim();
-        var user = userRepository.findByUsernameIgnoreCase(trimmedUsername)
-                .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
+        var users = userRepository.findAllByUsernameIgnoreCase(trimmedUsername);
+        if (users.size() != 1) {
+            throw new UnauthorizedException("Invalid credentials");
+        }
+        var user = users.getFirst();
 
         if (!user.isEnabled()) {
             throw new UnauthorizedException("Email not verified: " + user.getEmail());
@@ -195,7 +198,9 @@ public class AuthService {
     public void logout(String token) {
         String username = jwtService.extractUsername(token);
         if (username != null) {
-            userRepository.findByUsernameIgnoreCase(username).ifPresent(user -> {
+            var users = userRepository.findAllByUsernameIgnoreCase(username);
+            if (users.size() == 1) {
+                var user = users.getFirst();
                 try {
                     userStatusService.setStatus(user.getId(), UserStatus.OFFLINE, null);
                 } catch (BadRequestException ignored) {
@@ -213,7 +218,7 @@ public class AuthService {
                 } catch (Exception ignored) {
 
                 }
-            });
+            }
         }
     }
 }
