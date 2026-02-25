@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,8 +25,14 @@ public class CustomUserDetailsService implements UserDetailsService {
     @NonNull
     public UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
         String trimmedUsername = username.trim();
-        User user = userRepository.findByUsernameIgnoreCase(trimmedUsername)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        List<User> users = userRepository.findAllByUsernameIgnoreCase(trimmedUsername);
+        if (users.isEmpty()) {
+            throw new UsernameNotFoundException("User not found");
+        }
+        if (users.size() > 1) {
+            throw new UsernameNotFoundException("Ambiguous username");
+        }
+        User user = users.getFirst();
 
         return CachedUser.builder()
                 .username(user.getUsername())
