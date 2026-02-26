@@ -9,6 +9,7 @@ import org.collapseloader.atlas.domain.clients.dto.response.ClientResponse;
 import org.collapseloader.atlas.domain.clients.entity.Client;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
 import org.collapseloader.atlas.domain.clients.service.ClientService;
+import org.collapseloader.atlas.titan.service.TitanFileStorageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,7 +30,7 @@ public class AdminClientController {
     private final AuditLogService auditLogService;
     private final EntityManager entityManager;
     private final ClientService clientService;
-    private final org.collapseloader.atlas.titan.service.TitanFileStorageService storageService;
+    private final TitanFileStorageService storageService;
 
     @GetMapping
     public ResponseEntity<List<ClientResponse>> getAllClients() {
