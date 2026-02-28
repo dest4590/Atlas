@@ -117,3 +117,9 @@ atlas:
         retention-days: ${CRASH_LOG_RETENTION_DAYS:30}
         max-log-chars: ${CRASH_LOG_MAX_CHARS:40000}
         cleanup-cron: ${CRASH_LOG_CLEANUP_CRON:0 0 */6 * * *}
+
+security:
+    rate-limit:
+        auth:
+            max-requests: ${AUTH_RATE_LIMIT_MAX_REQUESTS:10}
+            window-seconds: ${AUTH_RATE_LIMIT_WINDOW_SECONDS:60}

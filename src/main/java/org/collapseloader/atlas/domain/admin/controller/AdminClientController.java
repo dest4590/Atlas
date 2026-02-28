@@ -11,6 +11,7 @@ import org.collapseloader.atlas.domain.clients.entity.Client;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
 import org.collapseloader.atlas.domain.clients.service.ClientService;
 import org.collapseloader.atlas.titan.service.TitanFileStorageService;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -64,6 +65,7 @@ public class AdminClientController {
 
     @Transactional
     @PutMapping("/{id}")
+    @CacheEvict(value = "clients_list", allEntries = true)
     public ResponseEntity<ClientResponse> updateClient(@PathVariable Long id, @Valid @RequestBody AdminClientRequest request) {
         return clientRepository.findById(id)
                 .map(client -> {
@@ -86,6 +88,7 @@ public class AdminClientController {
     }
 
     @DeleteMapping("/{id}")
+    @CacheEvict(value = "clients_list", allEntries = true)
     public ResponseEntity<Void> deleteClient(@PathVariable Long id) {
         if (clientRepository.existsById(id)) {
             var client = clientRepository.findById(id).orElse(null);
