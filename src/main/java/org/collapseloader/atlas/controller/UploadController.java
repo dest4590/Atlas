@@ -9,6 +9,7 @@ import org.collapseloader.atlas.exception.EntityNotFoundException;
 import org.collapseloader.atlas.titan.service.TitanFileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +28,7 @@ public class UploadController {
     private final FabricClientRepository fabricClientRepository;
 
     @PostMapping
+    @CacheEvict(value = {"fabric_clients_list", "forge_clients_list", "clients_list"}, allEntries = true)
     public ResponseEntity<TitanFileStorageService.StoredFile> handleFileUpload(
             @RequestParam("file") MultipartFile file,
             @RequestParam(required = false) String target,
@@ -55,6 +57,7 @@ public class UploadController {
     }
 
     @PostMapping("/merge")
+    @CacheEvict(value = {"fabric_clients_list", "forge_clients_list", "clients_list"}, allEntries = true)
     public ResponseEntity<TitanFileStorageService.StoredFile> mergeChunks(
             @RequestParam("uploadId") String uploadId,
             @RequestParam("filename") String filename,

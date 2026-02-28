@@ -5,6 +5,7 @@ import org.collapseloader.atlas.domain.clients.dto.response.FabricDependenceResp
 import org.collapseloader.atlas.domain.clients.entity.ClientType;
 import org.collapseloader.atlas.domain.clients.entity.fabric.FabricClient;
 import org.collapseloader.atlas.domain.clients.repository.FabricClientRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class FabricClientService {
         this.fabricClientRepository = fabricClientRepository;
     }
 
+    @Cacheable("fabric_clients_list")
     @Transactional(readOnly = true)
     public List<FabricClientResponse> getAll() {
         return fabricClientRepository.findAllByType(ClientType.FABRIC).stream()

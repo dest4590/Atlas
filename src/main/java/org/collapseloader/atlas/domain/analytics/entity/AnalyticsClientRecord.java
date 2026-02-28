@@ -5,7 +5,9 @@ import lombok.Data;
 import org.collapseloader.atlas.domain.clients.entity.Client;
 
 @Entity
-@Table(name = "analytics_clients")
+@Table(name = "analytics_clients", indexes = {
+    @Index(name = "idx_analytics_clients_launch_ts", columnList = "launch_timestamp")
+})
 @Data
 public class AnalyticsClientRecord {
     @Id
@@ -16,6 +18,6 @@ public class AnalyticsClientRecord {
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
-    @Column(nullable = false)
+    @Column(name = "launch_timestamp", nullable = false)
     private Long launchTimestamp;
 }

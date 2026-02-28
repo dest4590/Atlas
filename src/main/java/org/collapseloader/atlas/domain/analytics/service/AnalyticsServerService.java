@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.collapseloader.atlas.domain.analytics.dto.response.AdminAnalyticsServerRecordResponse;
 import org.collapseloader.atlas.domain.analytics.entity.AnalyticsServerRecord;
 import org.collapseloader.atlas.domain.analytics.repository.AnalyticsServerRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,21 +29,19 @@ public class AnalyticsServerService {
         InternetDomainName internetDomainName = InternetDomainName.from(trimmedDomain).topPrivateDomain();
         String domainName = internetDomainName.toString();
 
-        if (serverRepository.existsByDomain(domainName).orElse(false)) {
-            AnalyticsServerRecord server = serverRepository.findByDomain(domainName);
-
-            if (server != null) {
-                server.setJoinCount(server.getJoinCount() + 1L);
-            }
-
+        int updated = serverRepository.incrementJoinCountByDomain(domainName);
+        if (updated > 0) {
             return;
         }
 
-        AnalyticsServerRecord server = new AnalyticsServerRecord();
-        server.setDomain(domainName);
-        server.setJoinCount(1L);
-
-        serverRepository.save(server);
+        try {
+            AnalyticsServerRecord server = new AnalyticsServerRecord();
+            server.setDomain(domainName);
+            server.setJoinCount(1L);
+            serverRepository.save(server);
+        } catch (DataIntegrityViolationException ex) {
+            serverRepository.incrementJoinCountByDomain(domainName);
+        }
     }
 
     @Scheduled(fixedRate = 12, timeUnit = TimeUnit.HOURS)

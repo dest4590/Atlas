@@ -77,17 +77,21 @@ public class ClientService {
 
     @Transactional
     public ClientResponse incrementDownloads(Long id) {
+        int updated = clientRepository.incrementDownloads(id);
+        if (updated == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found: " + id);
+        }
         var client = clientRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found: " + id));
-        client.setDownloads(client.getDownloads() + 1);
         return toResponse(client);
     }
 
     @Transactional
     public ClientResponse incrementLaunches(Long id, User user) {
-        var client = clientRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found: " + id));
-        client.setLaunches(client.getLaunches() + 1);
+        int updated = clientRepository.incrementLaunches(id);
+        if (updated == 0) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found: " + id);
+        }
 
         if (user != null) {
             var profile = userProfileRepository.findByUserId(user.getId()).orElse(null);
@@ -102,6 +106,8 @@ public class ClientService {
             }
         }
 
+        var client = clientRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found: " + id));
         return toResponse(client);
     }
 

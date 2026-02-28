@@ -18,6 +18,7 @@ import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -69,6 +70,7 @@ public class ClientController {
     }
 
     @GetMapping("/{id}/detailed")
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<ClientDetailedResponse>> getDetailed(@PathVariable Long id)
             throws NotFoundException {
         var data = detailsService.getDetailedInfo(id);

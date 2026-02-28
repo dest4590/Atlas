@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
-@Table(name = "analytics_servers")
+@Table(name = "analytics_servers", indexes = {
+    @Index(name = "idx_analytics_servers_join_count", columnList = "join_count")
+})
 @Data
 public class AnalyticsServerRecord {
     @Id
@@ -14,6 +16,6 @@ public class AnalyticsServerRecord {
     @Column(nullable = false, unique = true)
     private String domain;
 
-    @Column(nullable = false)
+    @Column(name = "join_count", nullable = false)
     private Long joinCount = 0L;
 }

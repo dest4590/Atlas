@@ -5,6 +5,7 @@ import org.collapseloader.atlas.domain.clients.dto.response.ForgeDependenceRespo
 import org.collapseloader.atlas.domain.clients.entity.ClientType;
 import org.collapseloader.atlas.domain.clients.entity.forge.ForgeClient;
 import org.collapseloader.atlas.domain.clients.repository.ForgeClientRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class ForgeClientService {
         this.forgeClientRepository = forgeClientRepository;
     }
 
+    @Cacheable("forge_clients_list")
     @Transactional(readOnly = true)
     public List<ForgeClientResponse> getAll() {
         return forgeClientRepository.findAllByType(ClientType.FORGE).stream()

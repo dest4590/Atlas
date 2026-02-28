@@ -7,6 +7,7 @@ import org.collapseloader.atlas.domain.analytics.repository.AnalyticsCounterRepo
 import org.collapseloader.atlas.domain.analytics.repository.OnlineUserSnapshotRepository;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
 import org.collapseloader.atlas.service.WebSocketSessionService;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,15 +56,21 @@ public class AnalyticsService {
 
     @Transactional
     public long incrementLoaderLaunches() {
-        AnalyticsCounter counter = counterRepository.findByKey(LOADER_LAUNCHES_KEY)
-                .orElseGet(() -> {
-                    AnalyticsCounter created = new AnalyticsCounter();
-                    created.setKey(LOADER_LAUNCHES_KEY);
-                    created.setValue(0);
-                    return created;
-                });
-        counter.setValue(counter.getValue() + 1);
-        return counterRepository.save(counter).getValue();
+        int updated = counterRepository.incrementValueByKey(LOADER_LAUNCHES_KEY);
+        if (updated == 0) {
+            try {
+                AnalyticsCounter created = new AnalyticsCounter();
+                created.setKey(LOADER_LAUNCHES_KEY);
+                created.setValue(0);
+                counterRepository.save(created);
+            } catch (DataIntegrityViolationException ignored) {
+            }
+            counterRepository.incrementValueByKey(LOADER_LAUNCHES_KEY);
+        }
+
+        return counterRepository.findByKey(LOADER_LAUNCHES_KEY)
+                .map(AnalyticsCounter::getValue)
+                .orElse(0L);
     }
 
     @Transactional(readOnly = true)
