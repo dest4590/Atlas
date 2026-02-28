@@ -3,7 +3,6 @@ package org.collapseloader.atlas.domain.analytics.service;
 import com.google.common.net.InternetDomainName;
 import lombok.extern.slf4j.Slf4j;
 import org.collapseloader.atlas.domain.analytics.dto.response.AdminAnalyticsServerRecordResponse;
-import org.collapseloader.atlas.domain.analytics.dto.response.GrafanaServerJoinPointResponse;
 import org.collapseloader.atlas.domain.analytics.entity.AnalyticsServerRecord;
 import org.collapseloader.atlas.domain.analytics.repository.AnalyticsServerRepository;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -63,18 +62,6 @@ public class AnalyticsServerService {
                         record.getId(),
                         record.getDomain(),
                         record.getJoinCount()))
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<GrafanaServerJoinPointResponse> getGrafanaServerSeries() {
-        long now = System.currentTimeMillis();
-        return serverRepository.findAllByOrderByJoinCountDesc()
-                .stream()
-                .map(record -> new GrafanaServerJoinPointResponse(
-                        now,
-                        record.getDomain(),
-                        record.getJoinCount() != null ? record.getJoinCount() : 0L))
                 .toList();
     }
 }
