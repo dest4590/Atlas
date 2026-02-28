@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.friends.controller;
 
+import jakarta.validation.Valid;
 import org.collapseloader.atlas.domain.friends.dto.request.FriendRequestCreateRequest;
 import org.collapseloader.atlas.domain.friends.dto.response.FriendRequestResponse;
 import org.collapseloader.atlas.domain.friends.dto.response.FriendRequestsBatchResponse;
@@ -55,7 +56,7 @@ public class FriendsController {
     @PostMapping({"/requests"})
     public ResponseEntity<ApiResponse<FriendRequestResponse>> sendRequest(
             Authentication authentication,
-            @RequestBody FriendRequestCreateRequest request) {
+            @Valid @RequestBody FriendRequestCreateRequest request) {
         var user = requireUser(authentication);
         return ResponseEntity.ok(ApiResponse.success(friendshipService.sendRequest(user, request.userId())));
     }
@@ -80,7 +81,7 @@ public class FriendsController {
     @PostMapping("/block")
     public ResponseEntity<ApiResponse<FriendRequestResponse>> blockUser(
             Authentication authentication,
-            @RequestBody FriendRequestCreateRequest request) {
+            @Valid @RequestBody FriendRequestCreateRequest request) {
         var user = requireUser(authentication);
         return ResponseEntity.ok(ApiResponse.success(friendshipService.blockUser(user, request.userId())));
     }
@@ -88,7 +89,7 @@ public class FriendsController {
     @PostMapping("/unblock")
     public ResponseEntity<ApiResponse<FriendRequestResponse>> unblockUser(
             Authentication authentication,
-            @RequestBody FriendRequestCreateRequest request) {
+            @Valid @RequestBody FriendRequestCreateRequest request) {
         var user = requireUser(authentication);
         return ResponseEntity.ok(ApiResponse.success(friendshipService.unblockUser(user, request.userId())));
     }

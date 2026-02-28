@@ -2,13 +2,22 @@ package org.collapseloader.atlas.domain.presets.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 
 public record PresetUpsertRequest(
-        @JsonProperty("name") @JsonAlias("title") String name,
+        @JsonProperty("name") @JsonAlias("title")
+        @Size(max = 120, message = "name must be at most 120 characters")
+        String name,
+        @Size(max = 2048, message = "description must be at most 2048 characters")
         String description,
         @JsonProperty("is_public") @JsonAlias("isPublic") Boolean isPublic,
 
-        @JsonProperty("customCSS") @JsonAlias("custom_css") String customCSS,
+        @JsonProperty("customCSS") @JsonAlias("custom_css")
+        @Size(max = 20000, message = "customCSS must be at most 20000 characters")
+        String customCSS,
         @JsonProperty("enableCustomCSS") @JsonAlias("enable_custom_css") Boolean enableCustomCSS,
 
         @JsonAlias({
@@ -50,8 +59,13 @@ public record PresetUpsertRequest(
                 "background_image"}) String backgroundImage,
 
         @JsonProperty("backgroundBlur") @JsonAlias({"backgroundBlur",
-                "background_blur"}) Double backgroundBlur,
+                "background_blur"})
+        @PositiveOrZero(message = "backgroundBlur must be greater than or equal to 0")
+        Double backgroundBlur,
 
         @JsonProperty("backgroundOpacity") @JsonAlias({"backgroundOpacity",
-                "background_opacity"}) Double backgroundOpacity) {
+                "background_opacity"})
+        @DecimalMin(value = "0.0", message = "backgroundOpacity must be between 0 and 1")
+        @DecimalMax(value = "1.0", message = "backgroundOpacity must be between 0 and 1")
+        Double backgroundOpacity) {
 }

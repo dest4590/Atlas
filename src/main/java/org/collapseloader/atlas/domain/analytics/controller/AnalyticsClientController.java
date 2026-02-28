@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.analytics.controller;
 
+import jakarta.validation.Valid;
 import org.collapseloader.atlas.domain.analytics.dto.request.AnalyticsClientRecordRequest;
 import org.collapseloader.atlas.domain.analytics.service.AnalyticsClientService;
 import org.collapseloader.atlas.dto.ApiResponse;
@@ -19,7 +20,7 @@ public class AnalyticsClientController {
     }
 
     @PostMapping("/start")
-    public ResponseEntity<ApiResponse<String>> recordClientLaunch(@RequestBody AnalyticsClientRecordRequest request) {
+    public ResponseEntity<ApiResponse<String>> recordClientLaunch(@Valid @RequestBody AnalyticsClientRecordRequest request) {
         try {
             analyticsClientService.recordClientLaunch(request.clientName());
             return ResponseEntity.ok(ApiResponse.success("Client launch recorded successfully"));

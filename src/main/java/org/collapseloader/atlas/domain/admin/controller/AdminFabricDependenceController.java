@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.admin.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.collapseloader.atlas.domain.clients.dto.request.FabricDependenceRequest;
 import org.collapseloader.atlas.domain.clients.entity.ClientType;
@@ -42,7 +43,7 @@ public class AdminFabricDependenceController {
     @PostMapping("/{clientId}/fabric-deps")
     public ResponseEntity<ApiResponse<Map<String, Object>>> addDependency(
             @PathVariable Long clientId,
-            @RequestBody FabricDependenceRequest request) {
+            @Valid @RequestBody FabricDependenceRequest request) {
         var client = fabricClientRepository.findByIdAndType(clientId, ClientType.FABRIC)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Fabric client not found"));
@@ -82,7 +83,7 @@ public class AdminFabricDependenceController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> updateDependency(
             @PathVariable Long clientId,
             @PathVariable Long depId,
-            @RequestBody FabricDependenceRequest request) {
+            @Valid @RequestBody FabricDependenceRequest request) {
         var client = fabricClientRepository.findByIdAndType(clientId, ClientType.FABRIC)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Fabric client not found"));

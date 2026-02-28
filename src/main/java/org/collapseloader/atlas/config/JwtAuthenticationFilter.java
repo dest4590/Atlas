@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.collapseloader.atlas.domain.users.repository.UserRepository;
 import org.collapseloader.atlas.domain.users.service.JwtService;
+import org.collapseloader.atlas.domain.users.service.TokenBlacklistService;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,11 +23,11 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
-    private final org.collapseloader.atlas.domain.users.service.TokenBlacklistService tokenBlacklistService;
+    private final TokenBlacklistService tokenBlacklistService;
     private final UserRepository userRepository;
 
     public JwtAuthenticationFilter(JwtService jwtService, @Lazy UserDetailsService userDetailsService,
-                                   org.collapseloader.atlas.domain.users.service.TokenBlacklistService tokenBlacklistService,
+                                   TokenBlacklistService tokenBlacklistService,
                                    UserRepository userRepository) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;

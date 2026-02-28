@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.clients.controller;
 
+import jakarta.validation.Valid;
 import org.apache.coyote.BadRequestException;
 import org.collapseloader.atlas.domain.clients.dto.request.ClientCommentRequest;
 import org.collapseloader.atlas.domain.clients.dto.request.ClientCreateRequest;
@@ -42,7 +43,7 @@ public class ClientController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<ClientResponse>> createClient(@RequestBody ClientCreateRequest request) {
+    public ResponseEntity<ApiResponse<ClientResponse>> createClient(@Valid @RequestBody ClientCreateRequest request) {
         var data = clientService.create(request);
         return ResponseEntity.ok(ApiResponse.success(data));
     }
@@ -85,7 +86,7 @@ public class ClientController {
     public ResponseEntity<ApiResponse<ClientCommentResponse>> addComment(
             Authentication authentication,
             @PathVariable Long id,
-            @RequestBody ClientCommentRequest request) throws BadRequestException, NotFoundException {
+            @Valid @RequestBody ClientCommentRequest request) throws BadRequestException, NotFoundException {
         var user = requireUser(authentication);
         var data = commentService.addComment(id, user, request != null ? request.content() : null);
         return ResponseEntity.ok(ApiResponse.success(data));
@@ -107,7 +108,7 @@ public class ClientController {
     public ResponseEntity<ApiResponse<ClientRatingResponse>> submitRating(
             Authentication authentication,
             @PathVariable Long id,
-            @RequestBody ClientRatingRequest request) throws NotFoundException {
+            @Valid @RequestBody ClientRatingRequest request) throws NotFoundException {
         var user = requireUser(authentication);
         var data = ratingService.submitRating(id, user, request.rating());
         return ResponseEntity.ok(ApiResponse.success(data));

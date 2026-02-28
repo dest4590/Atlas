@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.presets.controller;
 
+import jakarta.validation.Valid;
 import org.collapseloader.atlas.domain.presets.dto.request.PresetCommentRequest;
 import org.collapseloader.atlas.domain.presets.dto.request.PresetUpsertRequest;
 import org.collapseloader.atlas.domain.presets.dto.response.PresetCommentResponse;
@@ -49,7 +50,7 @@ public class PresetController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<PresetResponse>> createPreset(
             Authentication authentication,
-            @RequestBody PresetUpsertRequest request) {
+            @Valid @RequestBody PresetUpsertRequest request) {
         var user = requireUser(authentication);
         var data = presetService.createPreset(user, request);
         return ResponseEntity.ok(ApiResponse.success(data));
@@ -60,7 +61,7 @@ public class PresetController {
     public ResponseEntity<ApiResponse<PresetResponse>> updatePreset(
             Authentication authentication,
             @PathVariable Long id,
-            @RequestBody PresetUpsertRequest request) {
+            @Valid @RequestBody PresetUpsertRequest request) {
         var user = requireUser(authentication);
         var data = presetService.updatePreset(id, user, request);
         return ResponseEntity.ok(ApiResponse.success(data));
@@ -119,7 +120,7 @@ public class PresetController {
     public ResponseEntity<ApiResponse<PresetCommentResponse>> addComment(
             Authentication authentication,
             @PathVariable Long id,
-            @RequestBody PresetCommentRequest request) {
+            @Valid @RequestBody PresetCommentRequest request) {
         var user = requireUser(authentication);
         var data = presetService.addComment(id, user, request);
         return ResponseEntity.ok(ApiResponse.success(data));

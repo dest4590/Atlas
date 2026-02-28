@@ -2,6 +2,7 @@ package org.collapseloader.atlas.domain.admin.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.collapseloader.atlas.domain.achievements.service.AchievementService;
 import org.collapseloader.atlas.domain.audit.AuditLog;
@@ -161,7 +162,7 @@ public class AdminController {
 
     @PutMapping("/users/{id}")
     @Transactional
-    public ResponseEntity<Void> updateUser(@PathVariable Long id, @RequestBody AdminUserUpdateRequest request) {
+    public ResponseEntity<Void> updateUser(@PathVariable Long id, @Valid @RequestBody AdminUserUpdateRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "User not found"));
@@ -304,7 +305,7 @@ public class AdminController {
 
     @PostMapping("/news")
     public ResponseEntity<News> createNews(
-            @RequestBody NewsRequest request) {
+            @Valid @RequestBody NewsRequest request) {
         var news = newsService.createNews(request);
         auditLogService.log("CREATE_NEWS", "NEWS", news.getId().toString(),
                 Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())
@@ -315,7 +316,7 @@ public class AdminController {
 
     @PutMapping("/news/{id}")
     public ResponseEntity<News> updateNews(@PathVariable Long id,
-                                           @RequestBody NewsRequest request) throws NotFoundException {
+                                           @Valid @RequestBody NewsRequest request) throws NotFoundException {
         var news = newsService.updateNews(id, request);
         auditLogService.log("UPDATE_NEWS", "NEWS", news.getId().toString(),
                 Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())

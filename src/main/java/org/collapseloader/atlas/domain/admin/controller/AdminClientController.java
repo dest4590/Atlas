@@ -1,6 +1,7 @@
 package org.collapseloader.atlas.domain.admin.controller;
 
 import jakarta.persistence.EntityManager;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.collapseloader.atlas.domain.audit.AuditLogService;
@@ -50,7 +51,7 @@ public class AdminClientController {
     }
 
     @PostMapping
-    public ResponseEntity<ClientResponse> createClient(@RequestBody AdminClientRequest request) {
+    public ResponseEntity<ClientResponse> createClient(@Valid @RequestBody AdminClientRequest request) {
         var saved = clientService.createFromAdmin(request);
 
         auditLogService.log("CREATE_CLIENT", "CLIENT", saved.id().toString(),
@@ -63,7 +64,7 @@ public class AdminClientController {
 
     @Transactional
     @PutMapping("/{id}")
-    public ResponseEntity<ClientResponse> updateClient(@PathVariable Long id, @RequestBody AdminClientRequest request) {
+    public ResponseEntity<ClientResponse> updateClient(@PathVariable Long id, @Valid @RequestBody AdminClientRequest request) {
         return clientRepository.findById(id)
                 .map(client -> {
                     if (request.type() != null && client.getType() != request.type()) {

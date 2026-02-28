@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.users.controller;
 
+import jakarta.validation.Valid;
 import org.apache.coyote.BadRequestException;
 import org.collapseloader.atlas.domain.users.dto.request.UserStatusUpdateRequest;
 import org.collapseloader.atlas.domain.users.dto.response.UserStatusResponse;
@@ -29,11 +30,8 @@ public class UserStatusController {
     @PutMapping("/me/status")
     public ResponseEntity<ApiResponse<UserStatusResponse>> updateMyStatus(
             Authentication authentication,
-            @RequestBody UserStatusUpdateRequest request) throws BadRequestException {
+            @Valid @RequestBody UserStatusUpdateRequest request) throws BadRequestException {
         var user = requireUser(authentication);
-        if (request == null || request.status() == null) {
-            throw new BadRequestException("Status is required");
-        }
         return ResponseEntity.ok(ApiResponse.success(
                 userStatusService.setStatus(user.getId(), request.status(), request.clientName())));
     }

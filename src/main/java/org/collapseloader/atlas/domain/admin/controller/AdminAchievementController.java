@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.admin.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.collapseloader.atlas.domain.achievements.dto.AchievementResponse;
 import org.collapseloader.atlas.domain.achievements.dto.request.AdminAchievementRequest;
@@ -26,7 +27,7 @@ public class AdminAchievementController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> create(@RequestBody AdminAchievementRequest request) {
+    public ResponseEntity<Void> create(@Valid @RequestBody AdminAchievementRequest request) {
         achievementService.createAchievement(request.key(), request.icon(),
                 request.hidden() != null && request.hidden());
         return ResponseEntity.created(URI.create("/api/v1/admin/achievements/" + request.key())).build();
@@ -34,7 +35,7 @@ public class AdminAchievementController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> update(@PathVariable Long id, @RequestBody AdminAchievementRequest request) {
+    public ResponseEntity<Void> update(@PathVariable Long id, @Valid @RequestBody AdminAchievementRequest request) {
         achievementService.updateAchievement(id, request.key(), request.icon(), request.hidden());
         return ResponseEntity.ok().build();
     }

@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.users.controller;
 
+import jakarta.validation.Valid;
 import org.collapseloader.atlas.domain.users.dto.request.UpdateSocialLinksRequest;
 import org.collapseloader.atlas.domain.users.dto.response.SocialLinkResponse;
 import org.collapseloader.atlas.domain.users.entity.User;
@@ -24,7 +25,7 @@ public class UserSocialLinksController {
     @PutMapping("/me/social-links")
     public ResponseEntity<ApiResponse<List<SocialLinkResponse>>> replaceSocialLinks(
             Authentication authentication,
-            @RequestBody UpdateSocialLinksRequest request) {
+            @Valid @RequestBody UpdateSocialLinksRequest request) {
         var user = requireUser(authentication);
         return ResponseEntity.ok(ApiResponse.success(userSocialLinksService.replaceSocialLinks(user, request)));
     }

@@ -2,8 +2,8 @@ package org.collapseloader.atlas.domain.crashlogs.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.collapseloader.atlas.domain.crashlogs.dto.CreateCrashLogRequest;
 import org.collapseloader.atlas.domain.crashlogs.dto.CrashLogResponse;
+import org.collapseloader.atlas.domain.crashlogs.dto.CreateCrashLogRequest;
 import org.collapseloader.atlas.domain.crashlogs.service.CrashLogService;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.dto.ApiResponse;

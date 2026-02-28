@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.analytics.controller;
 
+import jakarta.validation.Valid;
 import org.collapseloader.atlas.domain.analytics.dto.request.AnalyticsServerRecordRequest;
 import org.collapseloader.atlas.domain.analytics.service.AnalyticsServerService;
 import org.collapseloader.atlas.dto.ApiResponse;
@@ -19,7 +20,7 @@ public class AnalyticsServerController {
     }
 
     @PostMapping("/join")
-    public ResponseEntity<ApiResponse<String>> joinAnalyticsServer(@RequestBody AnalyticsServerRecordRequest request) {
+    public ResponseEntity<ApiResponse<String>> joinAnalyticsServer(@Valid @RequestBody AnalyticsServerRecordRequest request) {
         try {
             serverService.recordServerJoin(request.server());
             return ResponseEntity.ok(ApiResponse.success("Server join recorded successfully"));

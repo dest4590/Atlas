@@ -1,4 +1,4 @@
-package org.collapseloader.atlas.domain.analytics.controller;
+package org.collapseloader.atlas.domain.admin.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.collapseloader.atlas.domain.analytics.dto.response.AdminAnalyticsClientRecordResponse;

@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.admin.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.collapseloader.atlas.domain.clients.dto.request.ForgeDependenceRequest;
 import org.collapseloader.atlas.domain.clients.entity.ClientType;
@@ -42,7 +43,7 @@ public class AdminForgeDependenceController {
     @PostMapping("/{clientId}/forge-deps")
     public ResponseEntity<ApiResponse<Map<String, Object>>> addDependency(
             @PathVariable Long clientId,
-            @RequestBody ForgeDependenceRequest request) {
+            @Valid @RequestBody ForgeDependenceRequest request) {
         var client = forgeClientRepository.findByIdAndType(clientId, ClientType.FORGE)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Forge client not found"));
@@ -82,7 +83,7 @@ public class AdminForgeDependenceController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> updateDependency(
             @PathVariable Long clientId,
             @PathVariable Long depId,
-            @RequestBody ForgeDependenceRequest request) {
+            @Valid @RequestBody ForgeDependenceRequest request) {
         var client = forgeClientRepository.findByIdAndType(clientId, ClientType.FORGE)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Forge client not found"));
