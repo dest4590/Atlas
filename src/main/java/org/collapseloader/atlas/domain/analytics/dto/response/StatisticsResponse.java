@@ -1,4 +1,4 @@
-package org.collapseloader.atlas.domain.analytics.dto;
+package org.collapseloader.atlas.domain.analytics.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

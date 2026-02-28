@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface OnlineUserSnapshotRepository extends JpaRepository<OnlineUserSnapshot, Long> {
     List<OnlineUserSnapshot> findAllByTimestampAfterOrderByTimestampAsc(Instant timestamp);
+
+    void deleteAllByTimestampBefore(Instant timestamp);
 }

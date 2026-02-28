@@ -1,6 +1,6 @@
 package org.collapseloader.atlas.domain.analytics.service;
 
-import org.collapseloader.atlas.domain.analytics.dto.StatisticsResponse;
+import org.collapseloader.atlas.domain.analytics.dto.response.StatisticsResponse;
 import org.collapseloader.atlas.domain.analytics.entity.AnalyticsCounter;
 import org.collapseloader.atlas.domain.analytics.entity.OnlineUserSnapshot;
 import org.collapseloader.atlas.domain.analytics.repository.AnalyticsCounterRepository;
@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class AnalyticsService {
@@ -73,5 +74,13 @@ public class AnalyticsService {
                 .map(AnalyticsCounter::getValue)
                 .orElse(0L);
         return new StatisticsResponse(totalClientLaunches, totalClientDownloads, totalLoaderLaunches);
+    }
+
+    @Scheduled(fixedRate = 24, timeUnit = TimeUnit.HOURS) // Every 24 hours
+    @Transactional
+    public void cleanupOldSnapshots() {
+        // clean snapshots older than 7 days
+        Instant cutoff = Instant.now().minus(7, ChronoUnit.DAYS);
+        snapshotRepository.deleteAllByTimestampBefore(cutoff);
     }
 }

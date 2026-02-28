@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ClientRepository extends JpaRepository<Client, Long> {
 
@@ -23,4 +24,6 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     @Transactional
     @Query(value = "UPDATE clients SET type = :type WHERE id = :id", nativeQuery = true)
     void updateClientType(Long id, String type);
+
+    Optional<Client> findByName(String name);
 }

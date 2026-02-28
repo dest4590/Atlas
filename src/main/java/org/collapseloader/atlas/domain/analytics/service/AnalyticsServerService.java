@@ -1,0 +1,54 @@
+package org.collapseloader.atlas.domain.analytics.service;
+
+import com.google.common.net.InternetDomainName;
+import lombok.extern.slf4j.Slf4j;
+import org.collapseloader.atlas.domain.analytics.entity.AnalyticsServerRecord;
+import org.collapseloader.atlas.domain.analytics.repository.AnalyticsServerRepository;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.concurrent.TimeUnit;
+
+@Slf4j
+@Service
+public class AnalyticsServerService {
+    private final AnalyticsServerRepository serverRepository;
+
+    public AnalyticsServerService(AnalyticsServerRepository serverRepository) {
+        this.serverRepository = serverRepository;
+    }
+
+    @Transactional
+    public void recordServerJoin(String domain) {
+        String trimmedDomain = domain.trim().toLowerCase();
+
+        InternetDomainName internetDomainName = InternetDomainName.from(trimmedDomain).topPrivateDomain();
+        String domainName = internetDomainName.toString();
+
+        if (serverRepository.existsByDomain(domainName).orElse(false)) {
+            AnalyticsServerRecord server = serverRepository.findByDomain(domainName);
+
+            if (server != null) {
+                server.setJoinCount(server.getJoinCount() + 1L);
+            }
+
+            return;
+        }
+
+        AnalyticsServerRecord server = new AnalyticsServerRecord();
+        server.setDomain(domainName);
+        server.setJoinCount(1L);
+
+        serverRepository.save(server);
+    }
+
+    @Scheduled(fixedRate = 12, timeUnit = TimeUnit.HOURS)
+    @Transactional
+    public void deleteOldServers() {
+        log.info("Deleting old servers with joinCount < 5");
+
+        // remove servers with joinCount < 5 every 24 hours
+        serverRepository.deleteAllByJoinCountLessThan(5L);
+    }
+}

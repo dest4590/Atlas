@@ -61,6 +61,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/v1/loader/**").permitAll()
                         .requestMatchers("/api/v1/statistics").permitAll()
+                        .requestMatchers("/api/v1/analytics/**").permitAll()
 
                         .requestMatchers("/api/v1/clients/**").permitAll()
                         .requestMatchers("/api/v1/fabric-clients/**").permitAll()
