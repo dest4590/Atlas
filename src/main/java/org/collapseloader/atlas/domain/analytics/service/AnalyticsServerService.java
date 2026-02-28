@@ -2,12 +2,15 @@ package org.collapseloader.atlas.domain.analytics.service;
 
 import com.google.common.net.InternetDomainName;
 import lombok.extern.slf4j.Slf4j;
+import org.collapseloader.atlas.domain.analytics.dto.response.AdminAnalyticsServerRecordResponse;
+import org.collapseloader.atlas.domain.analytics.dto.response.GrafanaServerJoinPointResponse;
 import org.collapseloader.atlas.domain.analytics.entity.AnalyticsServerRecord;
 import org.collapseloader.atlas.domain.analytics.repository.AnalyticsServerRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -50,5 +53,28 @@ public class AnalyticsServerService {
 
         // remove servers with joinCount < 5 every 24 hours
         serverRepository.deleteAllByJoinCountLessThan(5L);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminAnalyticsServerRecordResponse> getServerRecords() {
+        return serverRepository.findAllByOrderByJoinCountDesc()
+                .stream()
+                .map(record -> new AdminAnalyticsServerRecordResponse(
+                        record.getId(),
+                        record.getDomain(),
+                        record.getJoinCount()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<GrafanaServerJoinPointResponse> getGrafanaServerSeries() {
+        long now = System.currentTimeMillis();
+        return serverRepository.findAllByOrderByJoinCountDesc()
+                .stream()
+                .map(record -> new GrafanaServerJoinPointResponse(
+                        now,
+                        record.getDomain(),
+                        record.getJoinCount() != null ? record.getJoinCount() : 0L))
+                .toList();
     }
 }

@@ -131,12 +131,16 @@
 
 ### Dashboard & System
 
-| Endpoint                               | Method | Auth           | Payload / Notes                                          |
-| -------------------------------------- | ------ | -------------- | -------------------------------------------------------- |
-| `/api/v1/admin/stats`                  | GET    | Bearer (ADMIN) | Dashboard counters (users, news, reports, online users). |
-| `/api/v1/admin/audit-logs`             | GET    | Bearer (ADMIN) | paged audit logs.                                        |
-| `/api/v1/admin/status`                 | GET    | Bearer (ADMIN) | Subsystem health (DB, Redis, Storage).                   |
-| `/api/v1/admin/clients/trigger-update` | POST   | Bearer (ADMIN) | Sends update command via WebSocket.                      |
+| Endpoint                                  | Method | Auth           | Payload / Notes                                          |
+| ----------------------------------------- | ------ | -------------- | -------------------------------------------------------- |
+| `/api/v1/admin/stats`                     | GET    | Bearer (ADMIN) | Dashboard counters (users, news, reports, online users). |
+| `/api/v1/admin/audit-logs`                | GET    | Bearer (ADMIN) | paged audit logs.                                        |
+| `/api/v1/admin/status`                    | GET    | Bearer (ADMIN) | Subsystem health (DB, Redis, Storage).                   |
+| `/api/v1/admin/analytics/servers`         | GET    | Bearer (ADMIN) | List server launch records.                              |
+| `/api/v1/admin/analytics/clients`         | GET    | Bearer (ADMIN) | List client launch records.                              |
+| `/api/v1/admin/analytics/grafana/servers` | GET    | Bearer (ADMIN) | Grafana-compatible time-series for server launches.      |
+| `/api/v1/admin/analytics/grafana/clients` | GET    | Bearer (ADMIN) | Grafana-compatible time-series for client launches.      |
+| `/api/v1/admin/clients/trigger-update`    | POST   | Bearer (ADMIN) | Sends update command via WebSocket.                      |
 
 ### User Management
 
