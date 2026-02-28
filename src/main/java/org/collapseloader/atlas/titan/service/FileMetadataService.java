@@ -81,6 +81,19 @@ public class FileMetadataService {
     }
 
     @Transactional
+    public void saveCalculatedMd5(Path path, Path rootLocation, String md5, long size, long lastModified) {
+        String relativePath = rootLocation.relativize(path).toString().replace("\\", "/");
+        FileMetadata metadata = metadataRepository.findByFilePath(relativePath).orElse(new FileMetadata());
+        metadata.setFilePath(relativePath);
+        metadata.setMd5(md5);
+        metadata.setSize(size);
+        metadata.setLastModified(lastModified);
+        metadata.setDeleted(false);
+        metadata.setDeletedAt(null);
+        metadataRepository.save(metadata);
+    }
+
+    @Transactional
     public void deleteMetadata(String filePath) {
         metadataRepository.findByFilePath(filePath).ifPresent(metadata -> {
             metadata.setDeleted(true);

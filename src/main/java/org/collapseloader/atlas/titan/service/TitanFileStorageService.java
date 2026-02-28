@@ -14,11 +14,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -26,7 +33,6 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class TitanFileStorageService {
     private static final Logger log = LoggerFactory.getLogger(TitanFileStorageService.class);
-    private static final long ASYNC_MD5_THRESHOLD_BYTES = 512 * 1024 * 1024;
 
     private final StorageProperties properties;
     private final FileMetadataService metadataService;
@@ -129,24 +135,24 @@ public class TitanFileStorageService {
                 throw new TitanException("Cannot store file outside current directory.");
             }
 
-            try (var inputStream = file.getInputStream()) {
-                Files.copy(inputStream, destinationFile,
-                        StandardCopyOption.REPLACE_EXISTING);
+            MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+
+            try (var inputStream = new DigestInputStream(file.getInputStream(), messageDigest)) {
+                Files.copy(inputStream, destinationFile, StandardCopyOption.REPLACE_EXISTING);
             }
 
             long size = Files.size(destinationFile);
-            String md5 = null;
-
-            if (size <= ASYNC_MD5_THRESHOLD_BYTES) {
-                md5 = metadataService.getOrCalculateMD5(destinationFile, rootLocation);
-            } else {
-                metadataService.calculateMd5Async(destinationFile, rootLocation);
-            }
+            long lastModified = Files.getLastModifiedTime(destinationFile).toMillis();
+            String md5 = toHex(messageDigest.digest());
+            metadataService.saveCalculatedMd5(destinationFile, rootLocation, md5, size, lastModified);
 
             String relativePath = this.rootLocation.relativize(destinationFile).toString().replace("\\", "/");
             log.info("[TITAN] File stored successfully: {}", relativePath);
 
             return new StoredFile(customFilename, relativePath, md5, size / (1024 * 1024));
+        } catch (NoSuchAlgorithmException e) {
+            log.error("[TITAN] MD5 algorithm not available while storing file: {}", file.getOriginalFilename(), e);
+            throw new TitanException("Failed to initialize MD5 algorithm.");
         } catch (IOException e) {
             log.error("[TITAN] Failed to store file: {}", file.getOriginalFilename(), e);
             throw new TitanException("Failed to store file: '" + file.getOriginalFilename() + "', " + e);
@@ -340,24 +346,40 @@ public class TitanFileStorageService {
                 throw new TitanException("Cannot store file outside root.");
             }
 
+            List<Integer> missingChunks = new ArrayList<>();
+            for (int i = 0; i < totalChunks; i++) {
+                Path chunkFile = uploadTempDir.resolve(String.valueOf(i));
+                if (!Files.exists(chunkFile)) {
+                    missingChunks.add(i);
+                }
+            }
+            if (!missingChunks.isEmpty()) {
+                log.warn("[TITAN] Missing chunks for uploadId {}: {}", uploadId, missingChunks);
+                throw new TitanException("Missing chunks for uploadId '" + uploadId + "': " + missingChunks);
+            }
+
+            MessageDigest messageDigest = MessageDigest.getInstance("MD5");
             try (var outputStream = Files.newOutputStream(destinationFile, java.nio.file.StandardOpenOption.CREATE,
                     java.nio.file.StandardOpenOption.TRUNCATE_EXISTING)) {
                 for (int i = 0; i < totalChunks; i++) {
                     Path chunkFile = uploadTempDir.resolve(String.valueOf(i));
-                    Files.copy(chunkFile, outputStream);
+                    try (InputStream chunkStream = Files.newInputStream(chunkFile)) {
+                        copyWithDigest(chunkStream, outputStream, messageDigest);
+                    }
                 }
             }
 
             deleteRecursively(uploadTempDir);
             long size = Files.size(destinationFile);
-            String md5 = size <= ASYNC_MD5_THRESHOLD_BYTES
-                    ? metadataService.getOrCalculateMD5(destinationFile, rootLocation)
-                    : null;
-            if (md5 == null)
-                metadataService.calculateMd5Async(destinationFile, rootLocation);
+            long lastModified = Files.getLastModifiedTime(destinationFile).toMillis();
+            String md5 = toHex(messageDigest.digest());
+            metadataService.saveCalculatedMd5(destinationFile, rootLocation, md5, size, lastModified);
 
             String relativePath = this.rootLocation.relativize(destinationFile).toString().replace("\\", "/");
             return new StoredFile(filename, relativePath, md5, size / (1024 * 1024));
+        } catch (NoSuchAlgorithmException e) {
+            log.error("[TITAN] MD5 algorithm not available while merging chunks for: {}", filename, e);
+            throw new TitanException("Failed to initialize MD5 algorithm.");
         } catch (IOException e) {
             log.error("[TITAN] Failed to merge chunks for: {}", filename, e);
             throw new TitanException("Failed to merge chunks for file: '" + filename + "'" + ", " + e);
@@ -424,6 +446,24 @@ public class TitanFileStorageService {
                         }
                     });
         }
+    }
+
+    private static void copyWithDigest(InputStream inputStream, OutputStream outputStream, MessageDigest digest)
+            throws IOException {
+        byte[] buffer = new byte[64 * 1024];
+        int bytesRead;
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            outputStream.write(buffer, 0, bytesRead);
+            digest.update(buffer, 0, bytesRead);
+        }
+    }
+
+    private static String toHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 
     @Getter
