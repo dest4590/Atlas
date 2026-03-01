@@ -1,4 +1,4 @@
-package org.collapseloader.atlas.service;
+package org.collapseloader.atlas.domain.users.service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

@@ -1,4 +1,4 @@
-package org.collapseloader.atlas.util.passwords;
+package org.collapseloader.atlas.domain.users.passwords;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;

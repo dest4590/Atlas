@@ -34,7 +34,6 @@ public class BackupService {
     private final String dbPassword;
     private final String datasourceUrl;
     private final String pgDumpPath;
-    private final boolean useDumpall;
     private final int retentionDays;
     private final S3Client s3Client;
 
@@ -46,7 +45,6 @@ public class BackupService {
             @Value("${atlas.backup.s3.secret-key}") String secretKey,
             @Value("${atlas.backup.s3.retention-days:7}") int retentionDays,
             @Value("${atlas.backup.s3.pg-dump-path:pg_dump}") String pgDumpPath,
-            @Value("${atlas.backup.s3.use-dumpall:false}") boolean useDumpall,
             @Value("${spring.datasource.username}") String dbUser,
             @Value("${spring.datasource.password}") String dbPassword,
             @Value("${spring.datasource.url}") String datasourceUrl) {
@@ -57,7 +55,6 @@ public class BackupService {
         this.datasourceUrl = datasourceUrl;
         this.retentionDays = retentionDays;
         this.pgDumpPath = pgDumpPath;
-        this.useDumpall = useDumpall;
 
         var credentials = AwsBasicCredentials.create(accessKey, secretKey);
         var builder = S3Client.builder()

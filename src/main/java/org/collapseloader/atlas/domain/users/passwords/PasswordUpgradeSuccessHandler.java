@@ -1,4 +1,4 @@
-package org.collapseloader.atlas.util.passwords;
+package org.collapseloader.atlas.domain.users.passwords;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,7 +1,7 @@
 package org.collapseloader.atlas.config;
 
 import lombok.RequiredArgsConstructor;
-import org.collapseloader.atlas.util.passwords.HybridPasswordEncoder;
+import org.collapseloader.atlas.domain.users.passwords.HybridPasswordEncoder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

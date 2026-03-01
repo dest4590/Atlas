@@ -1,4 +1,4 @@
-package org.collapseloader.atlas.util.passwords;
+package org.collapseloader.atlas.domain.users.passwords;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
