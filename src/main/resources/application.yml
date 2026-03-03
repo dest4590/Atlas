@@ -118,6 +118,10 @@ atlas:
         max-log-chars: ${CRASH_LOG_MAX_CHARS:40000}
         cleanup-cron: ${CRASH_LOG_CLEANUP_CRON:0 0 */6 * * *}
 
+irc:
+    enabled: ${IRC_ENABLED:true}
+    port: ${IRC_PORT:1338}
+
 security:
     rate-limit:
         auth:

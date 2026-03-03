@@ -2,6 +2,8 @@ package org.collapseloader.atlas.domain.users.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.collapseloader.atlas.domain.irc.entity.IrcBan;
+import org.collapseloader.atlas.domain.irc.entity.IrcMute;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.jspecify.annotations.NullMarked;
@@ -44,6 +46,14 @@ public class User implements UserDetails {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     private UserProfile profile;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private IrcBan ircBan;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private IrcMute ircMute;
 
     @Enumerated(EnumType.STRING)
     private Role role;
