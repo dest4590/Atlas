@@ -66,6 +66,6 @@ public record PresetUpsertRequest(
         @JsonProperty("backgroundOpacity") @JsonAlias({"backgroundOpacity",
                 "background_opacity"})
         @DecimalMin(value = "0.0", message = "backgroundOpacity must be between 0 and 1")
-        @DecimalMax(value = "1.0", message = "backgroundOpacity must be between 0 and 1")
+        @DecimalMax(value = "100.0", message = "backgroundOpacity must be between 0 and 100")
         Double backgroundOpacity) {
 }
