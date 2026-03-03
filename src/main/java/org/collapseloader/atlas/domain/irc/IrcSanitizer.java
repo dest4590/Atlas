@@ -5,17 +5,17 @@ import java.util.regex.Pattern;
 
 final class IrcSanitizer {
     private static final int MAX_USERNAME_CHARS = 32;
-    private static final int MAX_MESSAGE_CHARS = 256;
+    private static final int MAX_MESSAGE_CHARS = 512;
 
     private static final Pattern USERNAME_PATTERN = Pattern
-            .compile("^[\\p{L}\\p{N}\\p{P}\\p{Z}§<>?{}\\[\\]\"';]{1,256}$");
+            .compile("^[\\p{L}\\p{N}\\p{P}\\p{Z}§<>?{}\\[\\]\"';]{1,32}$");
     private static final Pattern MESSAGE_PATTERN = Pattern
-            .compile("^[\\p{L}\\p{N}\\p{P}\\p{Z}§<>?{}\\[\\]\"';]{1,256}$");
+            .compile("^[\\p{L}\\p{N}\\p{P}\\p{Z}\\x{1F600}-\\x{1F64F}\\x{1F300}-\\x{1F5FF}\\x{1F680}-\\x{1F6FF}\\x{1F700}-\\x{1F77F}\\x{1F780}-\\x{1F7FF}\\x{1F800}-\\x{1F8FF}\\x{1F900}-\\x{1F9FF}\\x{1FA00}-\\x{1FA6F}\\x{1FA70}-\\x{1FAFF}\\x{2600}-\\x{26FF}\\x{2700}-\\x{27BF}§<>?{}\\[\\]\"';]{1,512}$");
     private static final Pattern INVALID_MC_COLOR = Pattern.compile("§[^0-9a-fklmnor]", Pattern.CASE_INSENSITIVE);
     private static final Pattern MULTI_SPACE = Pattern.compile("\\s+");
 
     private static final List<Pattern> DANGEROUS_PATTERNS = List.of(
-            Pattern.compile("[\\x00\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\x0E\\x0F]"),
+            Pattern.compile("[\\x00\\x01\\x02\\x03\\x04\\x05\\x06\\x07\\x08\\x0A\\x0D\\x0E\\x0F]"),
             Pattern.compile("\\\\x[0-9a-fA-F]{2}"));
 
     private IrcSanitizer() {
@@ -27,7 +27,7 @@ final class IrcSanitizer {
             throw new IllegalArgumentException("username cannot be empty");
         }
         if (!USERNAME_PATTERN.matcher(value).matches()) {
-            throw new IllegalArgumentException("username contains invalid characters");
+            throw new IllegalArgumentException("username contains invalid characters or is too long (max 32)");
         }
         for (Pattern pattern : DANGEROUS_PATTERNS) {
             if (pattern.matcher(value).find()) {
@@ -43,7 +43,7 @@ final class IrcSanitizer {
             throw new IllegalArgumentException("message cannot be empty");
         }
         if (!MESSAGE_PATTERN.matcher(value).matches()) {
-            throw new IllegalArgumentException("message contains invalid characters");
+            throw new IllegalArgumentException("message contains invalid characters or is too long (max 512)");
         }
         for (Pattern pattern : DANGEROUS_PATTERNS) {
             if (pattern.matcher(value).find()) {
@@ -77,7 +77,7 @@ final class IrcSanitizer {
         StringBuilder builder = new StringBuilder(value.length());
         for (int i = 0; i < value.length(); i++) {
             char c = value.charAt(i);
-            if (Character.isISOControl(c) && c != '\n' && c != '\t') {
+            if (Character.isISOControl(c)) {
                 continue;
             }
             builder.append(c);

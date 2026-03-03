@@ -28,6 +28,9 @@ public class IrcServerState {
     private final AtomicLong guestCounter = new AtomicLong(1);
     private final AtomicLong packetCounter = new AtomicLong(1);
 
+    private int lastOnlineUsers = -1;
+    private int lastOnlineGuests = -1;
+
     public long nextGuestId() {
         return guestCounter.getAndIncrement();
     }
@@ -159,7 +162,7 @@ public class IrcServerState {
         int guestsCount = 0;
         List<IrcSession> loaderTargets = new ArrayList<>();
 
-        for (IrcSession session : snapshotUsers()) {
+        for (IrcSession session : sessions.values()) {
             if ("guest".equalsIgnoreCase(session.getRole())) {
                 guestsCount++;
             } else {
@@ -169,6 +172,13 @@ public class IrcServerState {
                 loaderTargets.add(session);
             }
         }
+
+        if (usersCount == lastOnlineUsers && guestsCount == lastOnlineGuests) {
+            return;
+        }
+
+        lastOnlineUsers = usersCount;
+        lastOnlineGuests = guestsCount;
 
         IrcPackets.OutgoingPacket packet = IrcPackets.OutgoingPacket.builder()
                 .type("room_state")
