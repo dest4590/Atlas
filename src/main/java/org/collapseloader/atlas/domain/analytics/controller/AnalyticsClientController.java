@@ -22,7 +22,7 @@ public class AnalyticsClientController {
     @PostMapping("/start")
     public ResponseEntity<ApiResponse<String>> recordClientLaunch(@Valid @RequestBody AnalyticsClientRecordRequest request) {
         try {
-            analyticsClientService.recordClientLaunch(request.clientName());
+            analyticsClientService.recordClientLaunch(request.clientName(), request.platform());
             return ResponseEntity.ok(ApiResponse.success("Client launch recorded successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(400).body(ApiResponse.error("Failed to record client launch"));

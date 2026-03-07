@@ -3,6 +3,7 @@ package org.collapseloader.atlas.domain.analytics.service;
 import lombok.extern.slf4j.Slf4j;
 import org.collapseloader.atlas.domain.analytics.dto.response.AdminAnalyticsClientRecordResponse;
 import org.collapseloader.atlas.domain.analytics.entity.AnalyticsClientRecord;
+import org.collapseloader.atlas.domain.analytics.entity.Platform;
 import org.collapseloader.atlas.domain.analytics.repository.AnalyticsClientRepostiory;
 import org.collapseloader.atlas.domain.clients.entity.Client;
 import org.collapseloader.atlas.domain.clients.repository.ClientRepository;
@@ -26,7 +27,7 @@ public class AnalyticsClientService {
     }
 
     @Transactional
-    public void recordClientLaunch(String clientName) {
+    public void recordClientLaunch(String clientName, Platform platform) {
         Client client = clientRepository.findByName(clientName)
                 .orElseThrow(() -> new EntityNotFoundException("Client not found: " + clientName));
 
@@ -35,6 +36,7 @@ public class AnalyticsClientService {
 
             record.setClient(client);
             record.setLaunchTimestamp(System.currentTimeMillis());
+            record.setPlatform(platform);
 
             analyticsClientRepostiory.save(record);
         }
