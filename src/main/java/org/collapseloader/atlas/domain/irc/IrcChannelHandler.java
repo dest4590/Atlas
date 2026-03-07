@@ -94,9 +94,9 @@ public class IrcChannelHandler extends SimpleChannelInboundHandler<String> {
 
         if (session != null) {
             state.unregister(ctx.channel());
-            log.info("[UNREGISTER] User '{}' (ID: {}, role: {}, client: {}, type: {}) disconnected from {}",
-                    session.getName(), session.getUserId(), session.getRole(), session.getClientName(),
-                    session.getClientType(), session.getIp());
+            //log.info("[UNREGISTER] User '{}' (ID: {}, role: {}, client: {}, type: {}) disconnected from {}",
+            //        session.getName(), session.getUserId(), session.getRole(), session.getClientName(),
+            //        session.getClientType(), session.getIp());
         }
     }
 
@@ -299,9 +299,9 @@ public class IrcChannelHandler extends SimpleChannelInboundHandler<String> {
 
         replayHistoryIfNeeded(clientType, session);
 
-        log.info("[REGISTER] User '{}' (ID: {}, role: {}, client: {}, type: {}) connected from {}",
-                session.getName(), session.getUserId(), session.getRole(), session.getClientName(),
-                session.getClientType(), session.getIp());
+        //log.info("[REGISTER] User '{}' (ID: {}, role: {}, client: {}, type: {}) connected from {}",
+        //        session.getName(), session.getUserId(), session.getRole(), session.getClientName(),
+        //        session.getClientType(), session.getIp());
     }
 
     private void replayHistoryIfNeeded(String clientType, IrcSession session) {
