@@ -9,8 +9,8 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "file_metadata", indexes = {
-    @Index(name = "file_path_idx", columnList = "file_path"),
-    @Index(name = "file_deleted_idx", columnList = "is_deleted")
+        @Index(name = "file_path_idx", columnList = "file_path"),
+        @Index(name = "file_deleted_idx", columnList = "is_deleted")
 })
 @Getter
 @Setter

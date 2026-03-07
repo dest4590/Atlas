@@ -21,12 +21,11 @@ import org.collapseloader.atlas.domain.users.repository.UserPreferenceRepository
 import org.collapseloader.atlas.domain.users.repository.UserRepository;
 import org.collapseloader.atlas.domain.users.service.UserService;
 import org.collapseloader.atlas.domain.users.service.UsernameValidator;
-import org.collapseloader.atlas.service.BackupService;
-import org.collapseloader.atlas.service.WebSocketSessionService;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -56,10 +55,8 @@ public class AdminController {
     private final UserPreferenceRepository userPreferenceRepository;
     private final AchievementService achievementService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final WebSocketSessionService webSocketSessionService;
     private final PasswordEncoder passwordEncoder;
     private final UserService userService;
-    private final Optional<BackupService> backupService;
 
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Long>> getStats() {
@@ -68,9 +65,6 @@ public class AdminController {
         stats.put("news", newsRepository.count());
         stats.put("clients", clientRepository.count());
         stats.put("reports", reportRepository.count());
-        stats.put("online", (long) webSocketSessionService.getTotalCount());
-        stats.put("onlineUsers", (long) webSocketSessionService.getUserCount());
-        stats.put("onlineGuests", (long) webSocketSessionService.getGuestCount());
         return ResponseEntity.ok(stats);
     }
 
@@ -82,7 +76,7 @@ public class AdminController {
             @RequestParam(required = false) String profileRole,
             @RequestParam(required = false) Boolean enabled) {
 
-        org.springframework.data.jpa.domain.Specification<User> spec = (root, query, cb) -> {
+        Specification<User> spec = (root, query, cb) -> {
             var predicates = new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
 
             if (search != null && !search.isBlank()) {

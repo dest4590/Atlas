@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Entity
 @Table(name = "analytics_servers", indexes = {
-    @Index(name = "idx_analytics_servers_join_count", columnList = "join_count")
+        @Index(name = "idx_analytics_servers_join_count", columnList = "join_count")
 })
 @Data
 public class AnalyticsServerRecord {

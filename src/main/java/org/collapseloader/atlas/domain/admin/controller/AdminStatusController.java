@@ -4,7 +4,6 @@ import org.collapseloader.atlas.AtlasApplication;
 import org.collapseloader.atlas.domain.admin.dto.response.AdminServerStatusResponse;
 import org.collapseloader.atlas.domain.admin.dto.response.AdminSubsystemStatusResponse;
 import org.collapseloader.atlas.dto.ApiResponse;
-import org.collapseloader.atlas.service.WebSocketSessionService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -32,19 +31,16 @@ public class AdminStatusController {
     private final JdbcTemplate jdbcTemplate;
     private final StringRedisTemplate redisTemplate;
     private final Environment environment;
-    private final WebSocketSessionService webSocketSessionService;
     private final Path uploadRoot;
 
     public AdminStatusController(
             JdbcTemplate jdbcTemplate,
             StringRedisTemplate redisTemplate,
             Environment environment,
-            WebSocketSessionService webSocketSessionService,
             @Value("${app.upload-dir:uploads}") String uploadDir) {
         this.jdbcTemplate = jdbcTemplate;
         this.redisTemplate = redisTemplate;
         this.environment = environment;
-        this.webSocketSessionService = webSocketSessionService;
         this.uploadRoot = Path.of(uploadDir).toAbsolutePath().normalize();
     }
 
@@ -60,7 +56,6 @@ public class AdminStatusController {
         checks.put("storage", checkStorage());
         checks.put("jvm", checkJvm());
         checks.put("system", checkSystem());
-        checks.put("users", checkUsers());
 
         AdminServerStatusResponse payload = new AdminServerStatusResponse(
                 environment.getProperty("spring.application.name", "Atlas"),
@@ -181,14 +176,6 @@ public class AdminStatusController {
         info.put("available_processors", osBean.getAvailableProcessors());
         info.put("system_load_average", osBean.getSystemLoadAverage());
         return new AdminSubsystemStatusResponse("UP", "System Healthy", info);
-    }
-
-    private AdminSubsystemStatusResponse checkUsers() {
-        Map<String, Object> info = new LinkedHashMap<>();
-        info.put("online_users", webSocketSessionService.getUserCount());
-        info.put("online_guests", webSocketSessionService.getGuestCount());
-        info.put("total_online", webSocketSessionService.getTotalCount());
-        return new AdminSubsystemStatusResponse("UP", webSocketSessionService.getTotalCount() + " users online", info);
     }
 
     private String describeError(Exception e) {

@@ -42,6 +42,24 @@ public class TitanFileStorageService {
     private Path tempLocation;
     private Path trashLocation;
 
+    private static void copyWithDigest(InputStream inputStream, OutputStream outputStream, MessageDigest digest)
+            throws IOException {
+        byte[] buffer = new byte[64 * 1024];
+        int bytesRead;
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            outputStream.write(buffer, 0, bytesRead);
+            digest.update(buffer, 0, bytesRead);
+        }
+    }
+
+    private static String toHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    }
+
     @EventListener({ContextRefreshedEvent.class})
     public void init() {
         this.rootLocation = Paths.get(properties.getUploadDir()).toAbsolutePath().normalize();
@@ -446,24 +464,6 @@ public class TitanFileStorageService {
                         }
                     });
         }
-    }
-
-    private static void copyWithDigest(InputStream inputStream, OutputStream outputStream, MessageDigest digest)
-            throws IOException {
-        byte[] buffer = new byte[64 * 1024];
-        int bytesRead;
-        while ((bytesRead = inputStream.read(buffer)) != -1) {
-            outputStream.write(buffer, 0, bytesRead);
-            digest.update(buffer, 0, bytesRead);
-        }
-    }
-
-    private static String toHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder(bytes.length * 2);
-        for (byte b : bytes) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
     }
 
     @Getter

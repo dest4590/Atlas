@@ -6,7 +6,7 @@ import org.collapseloader.atlas.domain.clients.entity.Client;
 
 @Entity
 @Table(name = "analytics_clients", indexes = {
-    @Index(name = "idx_analytics_clients_launch_ts", columnList = "launch_timestamp")
+        @Index(name = "idx_analytics_clients_launch_ts", columnList = "launch_timestamp")
 })
 @Data
 public class AnalyticsClientRecord {
@@ -20,4 +20,8 @@ public class AnalyticsClientRecord {
 
     @Column(name = "launch_timestamp", nullable = false)
     private Long launchTimestamp;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "platform", nullable = false)
+    private Platform platform;
 }
