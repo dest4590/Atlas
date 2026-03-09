@@ -37,7 +37,7 @@ public class AdminStatusController {
             JdbcTemplate jdbcTemplate,
             StringRedisTemplate redisTemplate,
             Environment environment,
-            @Value("${app.upload-dir:uploads}") String uploadDir) {
+            @Value("${atlas.storage.upload-dir:uploads}") String uploadDir) {
         this.jdbcTemplate = jdbcTemplate;
         this.redisTemplate = redisTemplate;
         this.environment = environment;

@@ -1,21 +1,31 @@
 package org.collapseloader.atlas.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.collapseloader.atlas.domain.users.passwords.HybridPasswordEncoder;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -26,11 +36,28 @@ public class SecurityConfig {
     private final RateLimitFilter rateLimitFilter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+    @Order(1)
+    public SecurityFilterChain prometheusSecurityFilterChain(
+            HttpSecurity http,
+            @Qualifier("prometheusAuthenticationProvider") DaoAuthenticationProvider prometheusAuthenticationProvider)
+            throws Exception {
+        http
+                .securityMatcher("/actuator/prometheus")
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(prometheusAuthenticationProvider)
+                .authorizeHttpRequests(auth -> auth.anyRequest().hasRole("PROMETHEUS"))
+                .httpBasic(Customizer.withDefaults());
+
+        return http.build();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(request -> {
-                    var config = new org.springframework.web.cors.CorsConfiguration();
-                    config.setAllowedOriginPatterns(java.util.List.of(
+                    var config = new CorsConfiguration();
+                    config.setAllowedOriginPatterns(List.of(
                             "http://localhost:1420",
                             "http://127.0.0.1:1420",
                             "tauri://localhost",
@@ -41,9 +68,9 @@ public class SecurityConfig {
                             "https://calypso.collapseloader.org",
                             "http://atlas.collapseloader.org",
                             "https://atlas.collapseloader.org"));
-                    config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-                    config.setAllowedHeaders(java.util.List.of("*"));
-                    config.setExposedHeaders(java.util.List.of("Authorization"));
+                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+                    config.setAllowedHeaders(List.of("*"));
+                    config.setExposedHeaders(List.of("Authorization"));
                     config.setAllowCredentials(true);
                     return config;
                 }))
@@ -55,7 +82,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/ws", "/ws/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
-
 
                         .requestMatchers("/api/v1/agent/download/**", "/api/v1/overlay/download/**").permitAll()
                         .requestMatchers("/api/v1/agent-overlay/**").permitAll()
@@ -84,7 +110,7 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
                             if (request.getServletPath().startsWith("/api/")) {
-                                response.sendError(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED,
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
                                         "Unauthorized");
                             } else {
                                 response.sendRedirect("/login");
@@ -92,6 +118,26 @@ public class SecurityConfig {
                         }));
 
         return http.build();
+    }
+
+    @Bean("prometheusScrapeUserDetailsService")
+    public UserDetailsService prometheusScrapeUserDetailsService(
+            @Value("${atlas.monitoring.prometheus.username}") String username,
+            @Value("${atlas.monitoring.prometheus.password}") String password,
+            PasswordEncoder passwordEncoder) {
+        return new InMemoryUserDetailsManager(User.withUsername(username)
+                .password(passwordEncoder.encode(password))
+                .roles("PROMETHEUS")
+                .build());
+    }
+
+    @Bean("prometheusAuthenticationProvider")
+    public DaoAuthenticationProvider prometheusAuthenticationProvider(
+            @Qualifier("prometheusScrapeUserDetailsService") UserDetailsService prometheusScrapeUserDetailsService,
+            PasswordEncoder passwordEncoder) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(prometheusScrapeUserDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
     }
 
     @Bean

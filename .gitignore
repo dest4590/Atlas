@@ -44,5 +44,6 @@ migration/*
 .agent/
 
 !migration/
-!migration/migrate.py
 !migration/export.py
+
+.htpasswd

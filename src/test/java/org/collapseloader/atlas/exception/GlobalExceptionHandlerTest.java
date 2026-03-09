@@ -15,15 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class GlobalExceptionHandlerTest {
 
     private static class ValidationTarget {
-        private String email;
-
-        public String getEmail() {
-            return email;
-        }
-
-        public void setEmail(String email) {
-            this.email = email;
-        }
     }
 
     private GlobalExceptionHandler handler;
@@ -35,8 +26,8 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleUnauthorizedExceptionReturns401() {
-        ResponseEntity<ApiResponse<Void>> response =
-                handler.handleUnauthorizedException(new UnauthorizedException("Unauthorized"));
+        ResponseEntity<ApiResponse<Void>> response = handler
+                .handleUnauthorizedException(new UnauthorizedException("Unauthorized"));
 
         assertEquals(401, response.getStatusCode().value());
         assertNotNull(response.getBody());
@@ -46,8 +37,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleAccessDeniedExceptionReturns403() {
-        ResponseEntity<ApiResponse<Void>> response =
-                handler.handleAccessDeniedException();
+        ResponseEntity<ApiResponse<Void>> response = handler.handleAccessDeniedException();
 
         assertEquals(403, response.getStatusCode().value());
         assertNotNull(response.getBody());
@@ -56,8 +46,8 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleMethodNotSupportedReturns405() {
-        ResponseEntity<ApiResponse<Void>> response =
-                handler.handleMethodNotSupported(new HttpRequestMethodNotSupportedException("TRACE"));
+        ResponseEntity<ApiResponse<Void>> response = handler
+                .handleMethodNotSupported(new HttpRequestMethodNotSupportedException("TRACE"));
 
         assertEquals(405, response.getStatusCode().value());
         assertNotNull(response.getBody());
@@ -66,8 +56,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleGenericExceptionReturns500() {
-        ResponseEntity<ApiResponse<Void>> response =
-                handler.handleException(new RuntimeException("boom"));
+        ResponseEntity<ApiResponse<Void>> response = handler.handleException(new RuntimeException("boom"));
 
         assertEquals(500, response.getStatusCode().value());
         assertNotNull(response.getBody());
@@ -76,8 +65,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleRuntimeExceptionReturns500() {
-        ResponseEntity<ApiResponse<Void>> response =
-                handler.handleRuntimeException(new RuntimeException("boom"));
+        ResponseEntity<ApiResponse<Void>> response = handler.handleRuntimeException(new RuntimeException("boom"));
 
         assertEquals(500, response.getStatusCode().value());
         assertNotNull(response.getBody());
@@ -109,8 +97,8 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleEntityNotFoundReturns404() {
-        ResponseEntity<ApiResponse<Void>> response =
-                handler.handleEntityNotFoundException(new EntityNotFoundException("missing"));
+        ResponseEntity<ApiResponse<Void>> response = handler
+                .handleEntityNotFoundException(new EntityNotFoundException("missing"));
 
         assertEquals(404, response.getStatusCode().value());
         assertNotNull(response.getBody());
@@ -119,8 +107,8 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleValidationExceptionReturns400() {
-        ResponseEntity<ApiResponse<Void>> response =
-                handler.handleValidationException(new ValidationException("invalid"));
+        ResponseEntity<ApiResponse<Void>> response = handler
+                .handleValidationException(new ValidationException("invalid"));
 
         assertEquals(400, response.getStatusCode().value());
         assertNotNull(response.getBody());
@@ -129,8 +117,8 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleForbiddenExceptionReturns403() {
-        ResponseEntity<ApiResponse<Void>> response =
-                handler.handleForbiddenException(new ForbiddenException("forbidden"));
+        ResponseEntity<ApiResponse<Void>> response = handler
+                .handleForbiddenException(new ForbiddenException("forbidden"));
 
         assertEquals(403, response.getStatusCode().value());
         assertNotNull(response.getBody());
@@ -139,8 +127,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleConflictExceptionReturns409() {
-        ResponseEntity<ApiResponse<Void>> response =
-                handler.handleConflictException(new ConflictException("conflict"));
+        ResponseEntity<ApiResponse<Void>> response = handler.handleConflictException(new ConflictException("conflict"));
 
         assertEquals(409, response.getStatusCode().value());
         assertNotNull(response.getBody());
@@ -158,8 +145,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleTitanExceptionReturns500WithMessage() {
-        ResponseEntity<ApiResponse<Void>> response =
-                handler.handleTitanException(new TitanException("titan failed"));
+        ResponseEntity<ApiResponse<Void>> response = handler.handleTitanException(new TitanException("titan failed"));
 
         assertEquals(500, response.getStatusCode().value());
         assertNotNull(response.getBody());
