@@ -310,7 +310,7 @@ public class AdminController {
 
     @PutMapping("/news/{id}")
     public ResponseEntity<News> updateNews(@PathVariable Long id,
-            @Valid @RequestBody NewsRequest request) throws NotFoundException {
+                                           @Valid @RequestBody NewsRequest request) throws NotFoundException {
         var news = newsService.updateNews(id, request);
         auditLogService.log("UPDATE_NEWS", "NEWS", news.getId().toString(),
                 Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())

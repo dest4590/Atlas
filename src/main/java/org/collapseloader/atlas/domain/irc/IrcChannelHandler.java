@@ -21,8 +21,7 @@ public class IrcChannelHandler extends SimpleChannelInboundHandler<String> {
     private static final String AUTH_REQUIRED = "Authentication required";
     private static final Set<String> PUBLIC_BAN_ALLOWED = Set.of("@help", "@ping", "@online");
     private static final Set<String> ADMIN_COMMAND_PREFIXES = Set.of(
-            "@ban ", "@unban ", "@sysmsg ", "@mute ", "@unmute ", "@banip ", "@unbanip ", "@muteip ", "@unmuteip "
-    );
+            "@ban ", "@unban ", "@sysmsg ", "@mute ", "@unmute ", "@banip ", "@unbanip ", "@muteip ", "@unmuteip ");
 
     private static final AttributeKey<IrcSession> SESSION_KEY = AttributeKey.valueOf("irc.session");
     private static final AttributeKey<ScheduledFuture<?>> AUTH_TIMEOUT_KEY = AttributeKey.valueOf("irc.auth.timeout");
@@ -33,6 +32,7 @@ public class IrcChannelHandler extends SimpleChannelInboundHandler<String> {
     private final IrcAuthService authService;
     private final IrcCommandService commandService;
     private final IrcModerationService moderationService;
+    private final IrcMetrics metrics;
 
     public IrcChannelHandler(
             ObjectMapper objectMapper,
@@ -40,14 +40,15 @@ public class IrcChannelHandler extends SimpleChannelInboundHandler<String> {
             IrcServerState state,
             IrcAuthService authService,
             IrcCommandService commandService,
-            IrcModerationService moderationService
-    ) {
+            IrcModerationService moderationService,
+            IrcMetrics metrics) {
         this.objectMapper = objectMapper;
         this.settings = settings;
         this.state = state;
         this.authService = authService;
         this.commandService = commandService;
         this.moderationService = moderationService;
+        this.metrics = metrics;
     }
 
     @Override
@@ -94,9 +95,11 @@ public class IrcChannelHandler extends SimpleChannelInboundHandler<String> {
 
         if (session != null) {
             state.unregister(ctx.channel());
-            //log.info("[UNREGISTER] User '{}' (ID: {}, role: {}, client: {}, type: {}) disconnected from {}",
-            //        session.getName(), session.getUserId(), session.getRole(), session.getClientName(),
-            //        session.getClientType(), session.getIp());
+            // log.info("[UNREGISTER] User '{}' (ID: {}, role: {}, client: {}, type: {})
+            // disconnected from {}",
+            // session.getName(), session.getUserId(), session.getRole(),
+            // session.getClientName(),
+            // session.getClientType(), session.getIp());
         }
     }
 
@@ -152,6 +155,11 @@ public class IrcChannelHandler extends SimpleChannelInboundHandler<String> {
                         .userId(session.getUserId())
                         .build())
                 .build();
+
+        // record metrics && maybe in future add filter of system and user messages
+        if (metrics != null) {
+            metrics.recordChatMessage(session.getRole(), incoming.length());
+        }
 
         state.broadcast(out);
     }
@@ -284,8 +292,7 @@ public class IrcChannelHandler extends SimpleChannelInboundHandler<String> {
                 authenticated,
                 username,
                 banned,
-                muted
-        );
+                muted);
 
         ctx.channel().attr(SESSION_KEY).set(session);
         state.register(session);
@@ -299,9 +306,11 @@ public class IrcChannelHandler extends SimpleChannelInboundHandler<String> {
 
         replayHistoryIfNeeded(clientType, session);
 
-        //log.info("[REGISTER] User '{}' (ID: {}, role: {}, client: {}, type: {}) connected from {}",
-        //        session.getName(), session.getUserId(), session.getRole(), session.getClientName(),
-        //        session.getClientType(), session.getIp());
+        // log.info("[REGISTER] User '{}' (ID: {}, role: {}, client: {}, type: {})
+        // connected from {}",
+        // session.getName(), session.getUserId(), session.getRole(),
+        // session.getClientName(),
+        // session.getClientType(), session.getIp());
     }
 
     private void replayHistoryIfNeeded(String clientType, IrcSession session) {

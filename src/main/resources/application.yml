@@ -98,6 +98,7 @@ management:
             percentiles-histogram:
                 http.server.requests: true
                 atlas.http.server.request.duration: true
+                atlas.irc.message.length: true
             slo:
                 http.server.requests: 100ms, 250ms, 500ms, 1s, 2s, 5s
                 atlas.http.server.request.duration: 100ms, 250ms, 500ms, 1s, 2s, 5s

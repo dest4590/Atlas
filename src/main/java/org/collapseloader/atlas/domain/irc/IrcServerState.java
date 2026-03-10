@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 public class IrcServerState {
     private final IrcSettings settings;
+    private final IrcMetrics metrics;
 
     private final Map<Channel, IrcSession> sessions = new ConcurrentHashMap<>();
     private final Map<String, IrcSession> usernames = new ConcurrentHashMap<>();
@@ -110,13 +111,17 @@ public class IrcServerState {
     }
 
     public int setIpBanned(String ip, boolean banned) {
-        if (ip == null || ip.isBlank()) return 0;
-        if (banned) bannedIps.add(ip);
-        else bannedIps.remove(ip);
+        if (ip == null || ip.isBlank())
+            return 0;
+        if (banned)
+            bannedIps.add(ip);
+        else
+            bannedIps.remove(ip);
 
         int affected = 0;
         for (IrcSession session : snapshotUsers()) {
-            if (!ip.equals(session.getIp())) continue;
+            if (!ip.equals(session.getIp()))
+                continue;
             session.setBanned(banned);
             affected++;
             if (banned) {
@@ -128,13 +133,17 @@ public class IrcServerState {
     }
 
     public int setIpMuted(String ip, boolean muted) {
-        if (ip == null || ip.isBlank()) return 0;
-        if (muted) mutedIps.add(ip);
-        else mutedIps.remove(ip);
+        if (ip == null || ip.isBlank())
+            return 0;
+        if (muted)
+            mutedIps.add(ip);
+        else
+            mutedIps.remove(ip);
 
         int affected = 0;
         for (IrcSession session : snapshotUsers()) {
-            if (!ip.equals(session.getIp())) continue;
+            if (!ip.equals(session.getIp()))
+                continue;
             session.setMuted(muted);
             affected++;
             session.sendSystem(muted ? "Your IP has been muted." : "Your IP has been unmuted.");
@@ -144,9 +153,17 @@ public class IrcServerState {
 
     public void broadcast(IrcPackets.OutgoingPacket packet) {
         appendHistory(packet);
+        if (metricShouldCount(packet)) {
+            String role = packet.getSender() == null ? "system" : packet.getSender().getRole();
+            metrics.recordChatMessage(role, packet.getContent() == null ? 0 : packet.getContent().length());
+        }
         for (IrcSession session : snapshotUsers()) {
             session.sendPacket(packet);
         }
+    }
+
+    private boolean metricShouldCount(IrcPackets.OutgoingPacket packet) {
+        return packet != null && "chat".equals(packet.getType());
     }
 
     public void broadcastSystemChat(String message) {

@@ -63,18 +63,18 @@ public class BusinessMetricsCollector {
     private final Counter collectionFailures;
 
     public BusinessMetricsCollector(UserRepository userRepository,
-            ClientRepository clientRepository,
-            PresetRepository presetRepository,
-            FileMetadataRepository fileMetadataRepository,
-            UserReportRepository userReportRepository,
-            FriendRequestRepository friendRequestRepository,
-            CrashLogRepository crashLogRepository,
-            AnalyticsClientRepostiory analyticsClientRepository,
-            AnalyticsServerRepository analyticsServerRepository,
-            AnalyticsCounterRepository analyticsCounterRepository,
-            ClientCommentRepository clientCommentRepository,
-            ClientRatingRepository clientRatingRepository,
-            MeterRegistry meterRegistry) {
+                                    ClientRepository clientRepository,
+                                    PresetRepository presetRepository,
+                                    FileMetadataRepository fileMetadataRepository,
+                                    UserReportRepository userReportRepository,
+                                    FriendRequestRepository friendRequestRepository,
+                                    CrashLogRepository crashLogRepository,
+                                    AnalyticsClientRepostiory analyticsClientRepository,
+                                    AnalyticsServerRepository analyticsServerRepository,
+                                    AnalyticsCounterRepository analyticsCounterRepository,
+                                    ClientCommentRepository clientCommentRepository,
+                                    ClientRatingRepository clientRatingRepository,
+                                    MeterRegistry meterRegistry) {
         this.userRepository = userRepository;
         this.clientRepository = clientRepository;
         this.presetRepository = presetRepository;
@@ -154,9 +154,9 @@ public class BusinessMetricsCollector {
     }
 
     private void registerGauge(MeterRegistry meterRegistry,
-            String name,
-            AtomicLong value,
-            String description) {
+                               String name,
+                               AtomicLong value,
+                               String description) {
         Gauge.builder(name, value, this::asGaugeValue)
                 .description(description)
                 .register(meterRegistry);

@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface FriendRequestRepository extends JpaRepository<FriendRequest, Long> {
-        long countByStatus(FriendRequestStatus status);
+    long countByStatus(FriendRequestStatus status);
 
     @Modifying
     @Query("delete from FriendRequest fr where fr.requester.id = :userId or fr.addressee.id = :userId or fr.blockedBy.id = :userId")

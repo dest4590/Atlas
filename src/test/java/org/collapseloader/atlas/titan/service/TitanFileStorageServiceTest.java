@@ -17,16 +17,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class TitanFileStorageServiceTest {
 
@@ -35,6 +29,22 @@ class TitanFileStorageServiceTest {
 
     private TitanFileStorageService storageService;
     private FileMetadataService metadataService;
+
+    private static String md5(byte[] payload) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            return HexFormat.of().formatHex(digest.digest(payload));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static byte[] concat(byte[] first, byte[] second) throws IOException {
+        byte[] merged = new byte[first.length + second.length];
+        System.arraycopy(first, 0, merged, 0, first.length);
+        System.arraycopy(second, 0, merged, first.length, second.length);
+        return merged;
+    }
 
     @BeforeEach
     void setUp() {
@@ -128,21 +138,5 @@ class TitanFileStorageServiceTest {
                 () -> storageService.store(file, "../outside", "a.bin"));
 
         assertTrue(exception.getMessage().contains("outside current directory"));
-    }
-
-    private static String md5(byte[] payload) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("MD5");
-            return HexFormat.of().formatHex(digest.digest(payload));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    private static byte[] concat(byte[] first, byte[] second) throws IOException {
-        byte[] merged = new byte[first.length + second.length];
-        System.arraycopy(first, 0, merged, 0, first.length);
-        System.arraycopy(second, 0, merged, first.length, second.length);
-        return merged;
     }
 }

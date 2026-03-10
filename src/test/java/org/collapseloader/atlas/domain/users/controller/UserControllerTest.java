@@ -21,16 +21,9 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 class UserControllerTest {
 
@@ -91,7 +84,7 @@ class UserControllerTest {
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
         var envelope = (ApiResponse<?>) response.getBody();
-        assertEquals(true, envelope.success());
+        assertTrue(envelope.success());
         verify(userProfileService).getMe(user);
     }
 
@@ -114,7 +107,7 @@ class UserControllerTest {
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
         var envelope = (ApiResponse<?>) response.getBody();
-        assertEquals(true, envelope.success());
+        assertTrue(envelope.success());
         verify(userProfileService).getMe(user);
         verify(userPreferencesService).getPreferences(user);
         verify(userFavoritesService).getFavorites(user);

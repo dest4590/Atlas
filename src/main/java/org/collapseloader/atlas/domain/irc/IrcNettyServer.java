@@ -29,6 +29,7 @@ public class IrcNettyServer implements SmartLifecycle {
     private final IrcAuthService authService;
     private final IrcCommandService commandService;
     private final IrcModerationService moderationService;
+    private final IrcMetrics metrics;
 
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
@@ -42,13 +43,15 @@ public class IrcNettyServer implements SmartLifecycle {
             IrcServerState state,
             IrcAuthService authService,
             IrcCommandService commandService,
-            IrcModerationService moderationService) {
+            IrcModerationService moderationService,
+            IrcMetrics metrics) {
         this.objectMapper = objectMapper;
         this.settings = settings;
         this.state = state;
         this.authService = authService;
         this.commandService = commandService;
         this.moderationService = moderationService;
+        this.metrics = metrics;
     }
 
     @Override
@@ -76,7 +79,8 @@ public class IrcNettyServer implements SmartLifecycle {
                             ch.pipeline().addLast(new StringDecoder(StandardCharsets.UTF_8));
                             ch.pipeline().addLast(new StringEncoder(StandardCharsets.UTF_8));
                             ch.pipeline().addLast(
-                                    new IrcChannelHandler(objectMapper, settings, state, authService, commandService, moderationService));
+                                    new IrcChannelHandler(objectMapper, settings, state, authService, commandService,
+                                            moderationService, metrics));
                         }
                     });
 

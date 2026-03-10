@@ -8,25 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class GlobalExceptionHandlerTest {
-
-    private static class ValidationTarget {
-        private String email;
-
-        @SuppressWarnings("unused")
-        public String getEmail() {
-            return email;
-        }
-
-        @SuppressWarnings("unused")
-        public void setEmail(String email) {
-            this.email = email;
-        }
-    }
 
     private GlobalExceptionHandler handler;
 
@@ -43,7 +27,7 @@ class GlobalExceptionHandlerTest {
         assertEquals(401, response.getStatusCode().value());
         assertNotNull(response.getBody());
         assertEquals("Unauthorized", response.getBody().error());
-        assertEquals(false, response.getBody().success());
+        assertFalse(response.getBody().success());
     }
 
     @Test
@@ -173,5 +157,19 @@ class GlobalExceptionHandlerTest {
         assertEquals(400, response.getStatusCode().value());
         assertNotNull(response.getBody());
         assertTrue(response.getBody().error().contains("email: must not be blank"));
+    }
+
+    private static class ValidationTarget {
+        private String email;
+
+        @SuppressWarnings("unused")
+        public String getEmail() {
+            return email;
+        }
+
+        @SuppressWarnings("unused")
+        public void setEmail(String email) {
+            this.email = email;
+        }
     }
 }
