@@ -2,6 +2,8 @@ package org.collapseloader.atlas.domain.irc;
 
 import io.netty.channel.Channel;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +18,10 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 public class IrcServerState {
     private final IrcSettings settings;
-    private final IrcMetrics metrics;
+
+    @Autowired
+    @Lazy
+    private IrcMetrics metrics;
 
     private final Map<Channel, IrcSession> sessions = new ConcurrentHashMap<>();
     private final Map<String, IrcSession> usernames = new ConcurrentHashMap<>();
@@ -164,6 +169,10 @@ public class IrcServerState {
 
     private boolean metricShouldCount(IrcPackets.OutgoingPacket packet) {
         return packet != null && "chat".equals(packet.getType());
+    }
+
+    public void setMetrics(IrcMetrics metrics) {
+        this.metrics = metrics;
     }
 
     public void broadcastSystemChat(String message) {

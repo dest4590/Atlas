@@ -22,8 +22,7 @@ class IrcMetricsTest {
         registry = new SimpleMeterRegistry();
         IrcSettings settings = mock(IrcSettings.class);
         when(settings.getHistoryLimit()).thenReturn(50);
-        IrcMetrics stubMetrics = mock(IrcMetrics.class);
-        state = new IrcServerState(settings, stubMetrics);
+        state = new IrcServerState(settings);
         metrics = new IrcMetrics(registry, state);
     }
 
@@ -45,7 +44,8 @@ class IrcMetricsTest {
     void broadcastInvokesMetricsForChat() {
         MeterRegistry localRegistry = new SimpleMeterRegistry();
         IrcMetrics stubMetrics = mock(IrcMetrics.class);
-        IrcServerState localState = new IrcServerState(mock(IrcSettings.class), stubMetrics);
+        IrcServerState localState = new IrcServerState(mock(IrcSettings.class));
+        localState.setMetrics(stubMetrics);
         new IrcMetrics(localRegistry, localState);
 
         IrcPackets.OutgoingPacket packet = IrcPackets.OutgoingPacket.builder()
