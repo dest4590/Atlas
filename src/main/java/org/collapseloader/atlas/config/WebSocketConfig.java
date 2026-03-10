@@ -28,6 +28,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final JwtService jwtService;
+
     @Lazy
     private final UserDetailsService userDetailsService;
 

@@ -90,15 +90,38 @@ management:
     endpoints:
         web:
             exposure:
-                include: 'health, info, metrics'
+                include: 'health, info, metrics, prometheus'
+    metrics:
+        tags:
+            application: ${spring.application.name}
+        distribution:
+            percentiles-histogram:
+                http.server.requests: true
+                atlas.http.server.request.duration: true
+            slo:
+                http.server.requests: 100ms, 250ms, 500ms, 1s, 2s, 5s
+                atlas.http.server.request.duration: 100ms, 250ms, 500ms, 1s, 2s, 5s
+            maximum-expected-value:
+                http.server.requests: 10s
+                atlas.http.server.request.duration: 10s
 
 jwt:
     secret: ${JWT_SECRET:default_jwt_secret_key_32bytes!x}
 
 atlas:
     app-url: ${APP_URL:http://localhost:8080}
+    monitoring:
+        infrastructure-check-interval-ms: ${ATLAS_MONITORING_INFRASTRUCTURE_CHECK_INTERVAL_MS:15000}
+        request-slow-threshold-ms: ${ATLAS_MONITORING_REQUEST_SLOW_THRESHOLD_MS:1000}
+        prometheus:
+            username: ${ATLAS_PROMETHEUS_USERNAME:atlas-prometheus}
+            password: ${ATLAS_PROMETHEUS_PASSWORD:atlas-prometheus-change-me}
+        database:
+            latency-spike-threshold-ms: ${ATLAS_MONITORING_DATABASE_SPIKE_THRESHOLD_MS:250}
+        redis:
+            latency-spike-threshold-ms: ${ATLAS_MONITORING_REDIS_SPIKE_THRESHOLD_MS:100}
     storage:
-        upload-dir: uploads
+        upload-dir: ${APP_UPLOAD_DIR:uploads}
         temp-dir: temp
         trash-dir: .trash
         trash-retention-days: 30

@@ -6,6 +6,7 @@ import org.collapseloader.atlas.domain.users.repository.UserRepository;
 import org.collapseloader.atlas.domain.users.security.CachedUser;
 import org.jspecify.annotations.NonNull;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 
 @Service
+@Primary
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 

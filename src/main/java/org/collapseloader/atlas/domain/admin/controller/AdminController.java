@@ -107,7 +107,7 @@ public class AdminController {
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         };
 
-        org.springframework.data.domain.Page<User> userPage = userRepository.findAll(spec, pageable);
+        Page<User> userPage = userRepository.findAll(spec, pageable);
 
         return ResponseEntity.ok(userPage.map(u -> new UserAdminResponse(
                 u.getId(),
@@ -310,7 +310,7 @@ public class AdminController {
 
     @PutMapping("/news/{id}")
     public ResponseEntity<News> updateNews(@PathVariable Long id,
-                                           @Valid @RequestBody NewsRequest request) throws NotFoundException {
+            @Valid @RequestBody NewsRequest request) throws NotFoundException {
         var news = newsService.updateNews(id, request);
         auditLogService.log("UPDATE_NEWS", "NEWS", news.getId().toString(),
                 Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication())

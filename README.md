@@ -40,7 +40,7 @@ Titan is file system abstraction layer developed for Atlas. It provides a unifie
 
 ## API Documentation
 
-For complete details on all REST endpoints, request schemas, and response types, refer to the **[API_ENDPOINTS.md](API_ENDPOINTS.md)** file. This document serves as the authoritative reference for integrating with Atlas.
+For complete details on all REST endpoints, request schemas, and response types, refer to the **[API_ENDPOINTS.md](docs/API_ENDPOINTS.md)** file. This document serves as the authoritative reference for integrating with Atlas.
 
 ---
 
