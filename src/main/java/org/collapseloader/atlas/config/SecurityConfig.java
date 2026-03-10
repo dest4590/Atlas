@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
@@ -32,15 +33,16 @@ import java.util.List;
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+    @Lazy
     private final JwtAuthenticationFilter jwtAuthFilter;
+    @Lazy
     private final RateLimitFilter rateLimitFilter;
 
     @Bean
     @Order(1)
     public SecurityFilterChain prometheusSecurityFilterChain(
             HttpSecurity http,
-            @Qualifier("prometheusAuthenticationProvider") DaoAuthenticationProvider prometheusAuthenticationProvider)
-            throws Exception {
+            @Qualifier("prometheusAuthenticationProvider") DaoAuthenticationProvider prometheusAuthenticationProvider) {
         http
                 .securityMatcher("/actuator/prometheus")
                 .csrf(AbstractHttpConfigurer::disable)
@@ -53,7 +55,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new CorsConfiguration();
@@ -67,7 +69,8 @@ public class SecurityConfig {
                             "https://collapseloader.org",
                             "https://calypso.collapseloader.org",
                             "http://atlas.collapseloader.org",
-                            "https://atlas.collapseloader.org"));
+                            "https://atlas.collapseloader.org",
+                            "https://proxy.collapseloader.org"));
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setExposedHeaders(List.of("Authorization"));

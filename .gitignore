@@ -47,3 +47,5 @@ migration/*
 !migration/export.py
 
 .htpasswd
+
+prometheus-htpasswd.txt

@@ -69,12 +69,9 @@ services:
     container_name: atlas_prometheus_proxy
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./.htpasswd:/etc/nginx/.htpasswd:ro
+      - ./prometheus-htpasswd.txt:/etc/nginx/.htpasswd:ro
     ports:
       - "9090:80"
     depends_on:
       - prometheus
     restart: always
-
-volumes:
-  grafana-data:

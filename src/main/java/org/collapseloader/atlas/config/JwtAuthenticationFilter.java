@@ -28,7 +28,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     public JwtAuthenticationFilter(JwtService jwtService, @Lazy UserDetailsService userDetailsService,
                                    TokenBlacklistService tokenBlacklistService,
-                                   UserRepository userRepository) {
+                                   @Lazy UserRepository userRepository) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
         this.tokenBlacklistService = tokenBlacklistService;

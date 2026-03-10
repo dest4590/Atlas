@@ -13,8 +13,11 @@ sed \
     -e "s/__ATLAS_PROMETHEUS_PASSWORD__/$password/g" \
     /etc/prometheus/prometheus.yml.template > /tmp/prometheus.yml
 
-if [ "${PROMETHEUS_VALIDATE_ONLY:-0}" = "1" ]; then
-    exec promtool check config /tmp/prometheus.yml
-fi
+# validate
+promtool check config /tmp/prometheus.yml
 
-exec /bin/prometheus --config.file=/tmp/prometheus.yml
+# run prometheus with conf
+exec prometheus --config.file=/tmp/prometheus.yml \
+    --storage.tsdb.path=/prometheus \
+    --web.console.libraries=/usr/share/prometheus/console_libraries \
+    --web.console.templates=/usr/share/prometheus/consoles
