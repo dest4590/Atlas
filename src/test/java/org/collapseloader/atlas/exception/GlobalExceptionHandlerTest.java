@@ -15,8 +15,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class GlobalExceptionHandlerTest {
 
     private static class ValidationTarget {
-        @SuppressWarnings("unused")
         private String email;
+
+        @SuppressWarnings("unused")
+        public String getEmail() {
+            return email;
+        }
+
+        @SuppressWarnings("unused")
+        public void setEmail(String email) {
+            this.email = email;
+        }
     }
 
     private GlobalExceptionHandler handler;
