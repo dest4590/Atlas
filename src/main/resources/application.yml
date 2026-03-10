@@ -112,6 +112,7 @@ atlas:
     app-url: ${APP_URL:http://localhost:8080}
     monitoring:
         infrastructure-check-interval-ms: ${ATLAS_MONITORING_INFRASTRUCTURE_CHECK_INTERVAL_MS:15000}
+        business-check-interval-ms: ${ATLAS_MONITORING_BUSINESS_CHECK_INTERVAL_MS:60000}
         request-slow-threshold-ms: ${ATLAS_MONITORING_REQUEST_SLOW_THRESHOLD_MS:1000}
         prometheus:
             username: ${ATLAS_PROMETHEUS_USERNAME:atlas-prometheus}

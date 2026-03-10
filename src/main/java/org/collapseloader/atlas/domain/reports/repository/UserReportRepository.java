@@ -12,6 +12,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UserReportRepository extends JpaRepository<UserReport, Long> {
+    long countByStatus(ReportStatus status);
+
     @Modifying
     @Query("delete from UserReport ur where ur.reporter.id = :userId or ur.reportedUser.id = :userId or ur.resolvedBy.id = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);
