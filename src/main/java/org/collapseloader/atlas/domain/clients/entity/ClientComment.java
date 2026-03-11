@@ -9,6 +9,10 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
+/**
+ * Comment left by a user on a {@link Client}. Each entry stores the
+ * text plus a reference to the author and the time it was created.
+ */
 @Entity
 @Table(name = "client_comments")
 @Data

@@ -6,6 +6,10 @@ import org.collapseloader.atlas.domain.users.entity.User;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+/**
+ * Star rating given by a user to a {@link Client}. he
+ * {@code uniqueConstraints} ensure a user may only rate a client once.
+ */
 @Entity
 @Table(name = "client_ratings", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"client_id", "user_id"})
