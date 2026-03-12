@@ -21,7 +21,6 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
             select fr from FriendRequest fr
             where (fr.requester.id = :userId or fr.addressee.id = :userId)
             and fr.status = :status
-            order by fr.updatedAt desc
             """)
     List<FriendRequest> findByStatusForUser(@Param("userId") Long userId, @Param("status") FriendRequestStatus status);
 
@@ -49,7 +48,6 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
             join fetch fr.addressee a
             left join fetch a.profile
             where fr.status = :status and fr.addressee.id = :userId
-            order by fr.updatedAt desc
             """)
     List<FriendRequest> findIncomingRequests(
             @Param("userId") Long userId,
@@ -63,7 +61,6 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
             join fetch fr.addressee a
             left join fetch a.profile
             where fr.status = :status and fr.requester.id = :userId
-            order by fr.updatedAt desc
             """)
     List<FriendRequest> findOutgoingRequests(
             @Param("userId") Long userId,
