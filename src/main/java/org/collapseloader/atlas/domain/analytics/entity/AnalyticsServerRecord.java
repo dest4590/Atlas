@@ -2,7 +2,15 @@ package org.collapseloader.atlas.domain.analytics.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.collapseloader.atlas.domain.clients.entity.Client;
 
+/**
+ * Analytics Server Record.
+ * Contains information about a server join, domain and joinCount
+ * Fields:
+ * {@link #domain} - The domain of the server.
+ * {@link #joinCount} - The number of times clients have joined this server.
+ */
 @Entity
 @Table(name = "analytics_servers", indexes = {
         @Index(name = "idx_analytics_servers_join_count", columnList = "join_count")

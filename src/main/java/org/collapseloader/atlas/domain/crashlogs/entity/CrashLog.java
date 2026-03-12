@@ -9,6 +9,13 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 
+/**
+ * CrashLog entity representing a submitted Minecraft client crash report.
+ * <p>
+ * Stores basic metadata (username, client, crash type) and the full multiline
+ * crash log. Optionally linked to a {@link User}; {@code createdAt} is set
+ * automatically when persisted.
+ */
 @Entity
 @Table(name = "crash_logs")
 @Getter

@@ -9,6 +9,11 @@ import lombok.ToString;
 import java.io.Serializable;
 import java.time.Instant;
 
+/**
+ * News entity representing a news post published on Atlas.
+ *
+ * Stores title, content, language and creation/update timestamps.
+ */
 @Entity
 @Table(name = "news")
 @Getter

@@ -10,6 +10,12 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
+/**
+ * UserReport represents a user-submitted report about another user.
+ *
+ * Contains reporter, reportedUser, reason/description, status and optional
+ * resolution information (resolver, timestamp, admin notes).
+ */
 @Entity
 @Table(name = "user_reports")
 @Getter

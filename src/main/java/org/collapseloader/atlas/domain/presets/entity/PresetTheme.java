@@ -4,6 +4,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.Data;
 
+/**
+ * Embeddable PresetTheme storing visual/theme configuration for a Preset.
+ */
 @Embeddable
 @Data
 public class PresetTheme {

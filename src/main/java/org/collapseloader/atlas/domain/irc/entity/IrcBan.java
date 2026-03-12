@@ -7,6 +7,12 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 
+/**
+ * IrcBan entity representing a permanent or temporary ban applied to a user on IRC.
+ * <p>
+ * Stores the banned user, a reason, the actor who issued the ban, the timestamp
+ * when it was applied, and an optional expiry time.
+ */
 @Entity
 @Table(name = "irc_bans")
 @Getter

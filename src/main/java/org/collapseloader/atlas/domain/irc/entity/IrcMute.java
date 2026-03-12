@@ -7,6 +7,12 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 
+/**
+ * IrcMute entity representing a permanent or temporary mute applied to a user on IRC.
+ *
+ * Stores the muted user, a reason, the actor who issued the mute, the timestamp
+ * when it was applied and an optional expiry time.
+ */
 @Entity
 @Table(name = "irc_mutes")
 @Getter

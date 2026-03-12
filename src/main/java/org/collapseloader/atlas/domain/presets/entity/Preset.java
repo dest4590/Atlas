@@ -12,6 +12,12 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Preset entity representing a user-created UI/configuration preset.
+ *
+ * Contains metadata (owner, visibility), theme settings and counters for
+ * likes/downloads/comments with related child entities.
+ */
 @Entity
 @Table(name = "presets", indexes = {
         @Index(name = "presets_owner_idx", columnList = "owner_id"),

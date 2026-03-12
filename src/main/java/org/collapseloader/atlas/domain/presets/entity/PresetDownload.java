@@ -9,6 +9,9 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 
+/**
+ * PresetDownload records a user downloading a preset (unique per preset+user).
+ */
 @Entity
 @Table(name = "preset_downloads", uniqueConstraints = {
         @UniqueConstraint(name = "uk_preset_user_download", columnNames = {"preset_id", "user_id"})

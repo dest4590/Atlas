@@ -10,6 +10,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
+/**
+ * Friend request entity.
+ * Has {@link #requester} and {@link #addressee} fields, also contains dates when request was created and updated.
+ */
 @Entity
 @Table(
         name = "friend_requests",
@@ -59,8 +63,4 @@ public class FriendRequest {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private Instant updatedAt;
 }

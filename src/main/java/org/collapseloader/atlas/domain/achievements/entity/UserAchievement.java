@@ -11,6 +11,9 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 
+/**
+ * User achievemnt, just entity to wire the {@link Achievement} model to {@link User}
+ */
 @Entity
 @Table(name = "user_achievements", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"user_id", "achievement_id"})

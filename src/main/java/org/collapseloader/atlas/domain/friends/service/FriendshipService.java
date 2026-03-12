@@ -287,8 +287,7 @@ public class FriendshipService {
                                 : request.getAddressee().getProfile().getAvatarUrl(),
                         userStatusService.getStatus(request.getAddressee().getId())),
                 request.getStatus().name().toLowerCase(Locale.ROOT),
-                request.getCreatedAt(),
-                request.getUpdatedAt());
+                request.getCreatedAt());
     }
 
     private Map<Long, String> buildFriendshipStatusMap(User principal, List<FriendRequest> requests) {

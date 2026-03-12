@@ -9,6 +9,9 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 
+/**
+ * PresetLike represents a user liking a preset. Enforced unique per (preset,user).
+ */
 @Entity
 @Table(name = "preset_likes", uniqueConstraints = @UniqueConstraint(name = "preset_like_unique", columnNames = {
         "preset_id", "user_id"}), indexes = {

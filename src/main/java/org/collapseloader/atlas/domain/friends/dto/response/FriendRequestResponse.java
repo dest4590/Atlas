@@ -9,7 +9,6 @@ public record FriendRequestResponse(
         FriendResponse requester,
         FriendResponse addressee,
         String status,
-        @JsonProperty("created_at") Instant createdAt,
-        @JsonProperty("updated_at") Instant updatedAt
+        @JsonProperty("created_at") Instant createdAt
 ) {
 }

@@ -9,6 +9,9 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 
+/**
+ * PresetComment stores a user's comment on a preset with creation timestamp.
+ */
 @Entity
 @Table(name = "preset_comments", indexes = {
         @Index(name = "preset_comments_preset_idx", columnList = "preset_id"),
