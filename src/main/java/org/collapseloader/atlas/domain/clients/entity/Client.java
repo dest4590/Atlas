@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Base entity for a downloadable Minecraft client (Vanilla, Forge, Fabric).
  * Stored in the {@code clients} table using single-table inheritance
- * with discriminator column {@code type}.
+ * with discriminator column {@link #type}.
  *
  * <p>{@link #autoCalculateMetadata} generates {@link #filename} on persist.
  * Related {@link #comments}, {@link #ratings}, and {@link #screenshots}
@@ -57,7 +57,10 @@ public class Client {
 
     private long downloads;
 
-
+    /**
+     * The client type, used as a discriminator for single-table inheritance.
+     * Can be {@link ClientType#VANILLA}", {@link ClientType#FORGE}, or {@link ClientType#FABRIC}. Not updatable after creation.
+     */
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, insertable = false, updatable = false)
     private ClientType type;

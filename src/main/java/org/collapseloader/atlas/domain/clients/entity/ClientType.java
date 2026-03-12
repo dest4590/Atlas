@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
 
 public enum ClientType {
-    Vanilla("default"),
+    VANILLA("default"),
     FORGE("forge"),
     FABRIC("fabric");
 

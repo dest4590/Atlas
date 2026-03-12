@@ -56,7 +56,7 @@ public class AdminClientScreenshotController {
         int startOrder = existing.size();
         List<Map<String, Object>> items = new ArrayList<>();
 
-        String typeName = client.getType() == ClientType.Vanilla ? "vanilla" : client.getType().getApiValue();
+        String typeName = client.getType() == ClientType.VANILLA ? "vanilla" : client.getType().getApiValue();
 
         for (int i = 0; i < files.size(); i++) {
             MultipartFile file = files.get(i);

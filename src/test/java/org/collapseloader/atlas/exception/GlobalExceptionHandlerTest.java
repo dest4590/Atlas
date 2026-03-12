@@ -7,6 +7,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -157,6 +158,17 @@ class GlobalExceptionHandlerTest {
         assertEquals(400, response.getStatusCode().value());
         assertNotNull(response.getBody());
         assertTrue(response.getBody().error().contains("email: must not be blank"));
+    }
+
+    @Test
+    void handleNoResourceFoundReturns404WithoutBody() {
+        ResponseEntity<Void> response = handler.handleNoResourceFound(
+                new NoResourceFoundException(org.springframework.http.HttpMethod.GET,
+                        "/ws/ec/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php",
+                        "/ws/ec/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php"));
+
+        assertEquals(404, response.getStatusCode().value());
+        assertNull(response.getBody());
     }
 
     private static class ValidationTarget {

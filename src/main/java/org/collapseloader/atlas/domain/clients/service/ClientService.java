@@ -46,7 +46,7 @@ public class ClientService {
     }
 
     private ClientResponse createInternal(ClientCreateRequest request) {
-        ClientType type = request.clientType() == null ? ClientType.Vanilla : request.clientType();
+        ClientType type = request.clientType() == null ? ClientType.VANILLA : request.clientType();
         Client client = switch (type) {
             case FABRIC -> new FabricClient();
             case FORGE -> new ForgeClient();
@@ -70,7 +70,7 @@ public class ClientService {
 
     @Cacheable("clients_list")
     public List<ClientResponse> getAll() {
-        return clientRepository.findAllByType(ClientType.Vanilla).stream()
+        return clientRepository.findAllByType(ClientType.VANILLA).stream()
                 .map(this::toResponse)
                 .toList();
     }

@@ -128,7 +128,7 @@ public class AdminClientController {
         String baseDir = switch (client.getType()) {
             case FABRIC -> "clients/fabric/jars/";
             case FORGE -> "clients/forge/jars/";
-            case Vanilla -> "clients/vanilla/jars/";
+            case VANILLA -> "clients/vanilla/jars/";
         };
 
         return baseDir + normalized;
