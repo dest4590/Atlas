@@ -161,14 +161,15 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void handleNoResourceFoundReturns404WithoutBody() {
-        ResponseEntity<Void> response = handler.handleNoResourceFound(
+    void handleNoResourceFoundReturns404WithJsonBody() {
+        ResponseEntity<ApiResponse<Void>> response = handler.handleNoResourceFound(
                 new NoResourceFoundException(org.springframework.http.HttpMethod.GET,
                         "/ws/ec/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php",
                         "/ws/ec/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php"));
 
         assertEquals(404, response.getStatusCode().value());
-        assertNull(response.getBody());
+        assertNotNull(response.getBody());
+        assertEquals("Not found", response.getBody().error());
     }
 
     private static class ValidationTarget {
