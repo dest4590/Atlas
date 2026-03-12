@@ -3,7 +3,6 @@ package org.collapseloader.atlas.config;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.collapseloader.atlas.domain.users.passwords.HybridPasswordEncoder;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,7 +41,17 @@ public class SecurityConfig {
     @Order(1)
     public SecurityFilterChain prometheusSecurityFilterChain(
             HttpSecurity http,
-            @Qualifier("prometheusAuthenticationProvider") DaoAuthenticationProvider prometheusAuthenticationProvider) {
+            @Value("${atlas.monitoring.prometheus.username}") String prometheusUsername,
+            @Value("${atlas.monitoring.prometheus.password}") String prometheusPassword,
+            PasswordEncoder passwordEncoder) {
+        UserDetailsService prometheusScrapeUserDetailsService = new InMemoryUserDetailsManager(User.withUsername(prometheusUsername)
+                .password(passwordEncoder.encode(prometheusPassword))
+                .roles("PROMETHEUS")
+                .build());
+
+        DaoAuthenticationProvider prometheusAuthenticationProvider = new DaoAuthenticationProvider(prometheusScrapeUserDetailsService);
+        prometheusAuthenticationProvider.setPasswordEncoder(passwordEncoder);
+
         http
                 .securityMatcher("/actuator/prometheus")
                 .csrf(AbstractHttpConfigurer::disable)
@@ -123,25 +132,10 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Bean("prometheusScrapeUserDetailsService")
-    public UserDetailsService prometheusScrapeUserDetailsService(
-            @Value("${atlas.monitoring.prometheus.username}") String username,
-            @Value("${atlas.monitoring.prometheus.password}") String password,
-            PasswordEncoder passwordEncoder) {
-        return new InMemoryUserDetailsManager(User.withUsername(username)
-                .password(passwordEncoder.encode(password))
-                .roles("PROMETHEUS")
-                .build());
-    }
-
-    @Bean("prometheusAuthenticationProvider")
-    public DaoAuthenticationProvider prometheusAuthenticationProvider(
-            @Qualifier("prometheusScrapeUserDetailsService") UserDetailsService prometheusScrapeUserDetailsService,
-            PasswordEncoder passwordEncoder) {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(prometheusScrapeUserDetailsService);
-        provider.setPasswordEncoder(passwordEncoder);
-        return provider;
-    }
+    // Prometheus provider is created locally in the prometheusSecurityFilterChain to avoid
+    // registering a global AuthenticationProvider/UserDetailsService bean which causes Spring Boot
+    // to skip UserDetailsService auto-configuration and emit a warning about multiple
+    // UserDetailsService beans.
 
     @Bean
     public AuthenticationManager authenticationManager(
