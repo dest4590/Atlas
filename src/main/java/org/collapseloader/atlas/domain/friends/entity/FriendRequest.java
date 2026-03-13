@@ -21,7 +21,6 @@ import java.time.Instant;
                 @Index(name = "friend_requests_addressee_idx", columnList = "addressee_id"),
                 @Index(name = "friend_requests_status_idx", columnList = "status"),
                 @Index(name = "friend_requests_created_idx", columnList = "created_at"),
-                @Index(name = "friend_requests_updated_idx", columnList = "updated_at")
         },
         uniqueConstraints = {
                 @UniqueConstraint(name = "friend_requests_pair_uniq", columnNames = {"requester_id", "addressee_id"})

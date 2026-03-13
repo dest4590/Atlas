@@ -24,7 +24,7 @@ import java.util.List;
 @Table(name = "clients")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.STRING)
-@DiscriminatorValue("Vanilla")
+@DiscriminatorValue("VANILLA")
 @Getter
 @Setter
 @ToString
