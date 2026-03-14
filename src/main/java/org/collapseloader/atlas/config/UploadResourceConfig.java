@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 public class UploadResourceConfig implements WebMvcConfigurer {
     private final String uploadDir;
 
-    public UploadResourceConfig(@Value("${app.upload-dir:uploads}") String uploadDir) {
+    public UploadResourceConfig(@Value("${atlas.storage.upload-dir:uploads}") String uploadDir) {
         this.uploadDir = uploadDir;
     }
 

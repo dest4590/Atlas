@@ -2,7 +2,6 @@ package org.collapseloader.atlas.domain.analytics.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import org.collapseloader.atlas.domain.clients.entity.Client;
 
 /**
  * Analytics Server Record.

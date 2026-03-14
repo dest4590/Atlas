@@ -11,7 +11,7 @@ import java.time.Instant;
 
 /**
  * News entity representing a news post published on Atlas.
- *
+ * <p>
  * Stores title, content, language and creation/update timestamps.
  */
 @Entity

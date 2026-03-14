@@ -14,7 +14,7 @@ import java.util.List;
 
 /**
  * Preset entity representing a user-created UI/configuration preset.
- *
+ * <p>
  * Contains metadata (owner, visibility), theme settings and counters for
  * likes/downloads/comments with related child entities.
  */

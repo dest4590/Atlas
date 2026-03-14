@@ -2,9 +2,10 @@ package org.collapseloader.atlas.domain.irc;
 
 import io.netty.channel.Channel;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -18,22 +19,17 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 public class IrcServerState {
     private final IrcSettings settings;
-
+    private final Map<Channel, IrcSession> sessions = new ConcurrentHashMap<>();
+    private final Map<String, IrcSession> usernames = new ConcurrentHashMap<>();
+    private final Set<String> bannedIps = ConcurrentHashMap.newKeySet();
+    private final Set<String> mutedIps = ConcurrentHashMap.newKeySet();
+    private final Deque<IrcPackets.OutgoingPacket> history = new ConcurrentLinkedDeque<>();
+    private final AtomicLong guestCounter = new AtomicLong(1);
+    private final AtomicLong packetCounter = new AtomicLong(1);
+    @Setter
     @Autowired
     @Lazy
     private IrcMetrics metrics;
-
-    private final Map<Channel, IrcSession> sessions = new ConcurrentHashMap<>();
-    private final Map<String, IrcSession> usernames = new ConcurrentHashMap<>();
-
-    private final Set<String> bannedIps = ConcurrentHashMap.newKeySet();
-    private final Set<String> mutedIps = ConcurrentHashMap.newKeySet();
-
-    private final Deque<IrcPackets.OutgoingPacket> history = new ConcurrentLinkedDeque<>();
-
-    private final AtomicLong guestCounter = new AtomicLong(1);
-    private final AtomicLong packetCounter = new AtomicLong(1);
-
     private int lastOnlineUsers = -1;
     private int lastOnlineGuests = -1;
 
@@ -169,10 +165,6 @@ public class IrcServerState {
 
     private boolean metricShouldCount(IrcPackets.OutgoingPacket packet) {
         return packet != null && "chat".equals(packet.getType());
-    }
-
-    public void setMetrics(IrcMetrics metrics) {
-        this.metrics = metrics;
     }
 
     public void broadcastSystemChat(String message) {

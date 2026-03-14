@@ -24,7 +24,7 @@ public class ClientRatingService {
         }
 
         var client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new NotFoundException());
+                .orElseThrow(NotFoundException::new);
 
         var existing = ratingRepository.findByClientIdAndUserId(clientId, user.getId());
         ClientRating savedRating = existing.orElseGet(ClientRating::new);

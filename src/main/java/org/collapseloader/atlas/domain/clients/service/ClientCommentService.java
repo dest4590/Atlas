@@ -44,7 +44,7 @@ public class ClientCommentService {
         }
 
         var client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new NotFoundException());
+                .orElseThrow(NotFoundException::new);
 
         var comment = new ClientComment();
         comment.setClient(client);
@@ -58,7 +58,7 @@ public class ClientCommentService {
     @Transactional
     public void deleteComment(Long clientId, Long commentId, User user) throws NotFoundException, ForbiddenException {
         var comment = commentRepository.findByIdAndClientId(commentId, clientId)
-                .orElseThrow(() -> new NotFoundException());
+                .orElseThrow(NotFoundException::new);
 
         boolean isAuthor = comment.getUser() != null && comment.getUser().getId().equals(user.getId());
         boolean isAdmin = user.getRole() == Role.ADMIN;

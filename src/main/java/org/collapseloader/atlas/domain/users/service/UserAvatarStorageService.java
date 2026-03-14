@@ -37,7 +37,7 @@ public class UserAvatarStorageService {
     private final Path uploadRoot;
     private final Path avatarsRoot;
 
-    public UserAvatarStorageService(@Value("${app.upload-dir:uploads}") String uploadDir) {
+    public UserAvatarStorageService(@Value("${atlas.storage.upload-dir:uploads}") String uploadDir) {
         this.uploadRoot = Paths.get(uploadDir).toAbsolutePath().normalize();
         this.avatarsRoot = uploadRoot.resolve(AVATAR_SUBDIR).normalize();
         try {

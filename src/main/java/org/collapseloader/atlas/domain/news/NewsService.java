@@ -46,7 +46,7 @@ public class NewsService {
     @CacheEvict(value = "news_list", allEntries = true)
     public News updateNews(Long id, NewsRequest request) throws NotFoundException {
         News news = newsRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException());
+                .orElseThrow(NotFoundException::new);
         if (request.getTitle() != null)
             news.setTitle(request.getTitle());
         if (request.getContent() != null)

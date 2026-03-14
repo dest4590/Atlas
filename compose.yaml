@@ -57,6 +57,7 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml.template:ro
       - ./prometheus-entrypoint.sh:/etc/prometheus/entrypoint.sh:ro
+      - ./prometheus-rules:/etc/prometheus/rules:ro
     depends_on:
       - backend
     entrypoint:

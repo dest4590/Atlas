@@ -41,7 +41,7 @@ public class UserExternalAccountsService {
     public UserExternalAccountResponse addExternalAccount(User principal, UserExternalAccountRequest request)
             throws NotFoundException, BadRequestException {
         var user = userRepository.findById(principal.getId())
-                .orElseThrow(() -> new NotFoundException());
+                .orElseThrow(NotFoundException::new);
         if (request == null) {
             throw new BadRequestException("External account payload is required");
         }
@@ -55,9 +55,9 @@ public class UserExternalAccountsService {
     }
 
     @Transactional
-    public void deleteExternalAccount(User principal, Long accountId) throws NotFoundException, BadRequestException {
+    public void deleteExternalAccount(User principal, Long accountId) throws NotFoundException {
         var account = userExternalAccountRepository.findByIdAndUserId(accountId, principal.getId())
-                .orElseThrow(() -> new NotFoundException());
+                .orElseThrow(NotFoundException::new);
         userExternalAccountRepository.delete(account);
     }
 
