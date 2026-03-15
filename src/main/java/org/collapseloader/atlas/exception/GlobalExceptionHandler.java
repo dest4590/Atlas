@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindException;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -41,7 +42,7 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("Internal Server Error"));
     }
 
-    @ExceptionHandler({DataAccessException.class, SQLException.class})
+    @ExceptionHandler({ DataAccessException.class, SQLException.class })
     public ResponseEntity<ApiResponse<Void>> handleDatabaseException(Exception e) {
         log.error("Database error: ", e);
         return ResponseEntity
@@ -114,6 +115,11 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("Request method not supported"));
     }
 
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+    public ResponseEntity<Void> handleMediaTypeNotAcceptable(HttpMediaTypeNotAcceptableException e) {
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
+    }
+
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNoResourceFound(NoResourceFoundException ignored) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Not found"));
@@ -127,7 +133,7 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(e.getMessage()));
     }
 
-    @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})
+    @ExceptionHandler({ MethodArgumentNotValidException.class, BindException.class })
     public ResponseEntity<ApiResponse<Void>> handleValidationExceptions(Exception ex) {
         var messages = new StringBuilder();
         if (ex instanceof MethodArgumentNotValidException manv) {

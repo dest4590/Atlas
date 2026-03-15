@@ -51,6 +51,16 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void handleMediaTypeNotAcceptableReturns406WithoutBody() {
+        ResponseEntity<Void> response = handler
+                .handleMediaTypeNotAcceptable(new org.springframework.web.HttpMediaTypeNotAcceptableException(
+                        "No acceptable representation"));
+
+        assertEquals(406, response.getStatusCode().value());
+        assertNull(response.getBody());
+    }
+
+    @Test
     void handleGenericExceptionReturns500() {
         ResponseEntity<ApiResponse<Void>> response = handler.handleException(new RuntimeException("boom"));
 
