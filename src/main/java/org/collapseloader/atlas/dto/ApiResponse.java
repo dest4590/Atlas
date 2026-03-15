@@ -3,14 +3,13 @@ package org.collapseloader.atlas.dto;
 public record ApiResponse<T>(
         boolean success,
         T data,
-        String error,
-        long timestamp
+        String error
 ) {
     public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<>(true, data, null, System.currentTimeMillis());
+        return new ApiResponse<>(true, data, null);
     }
 
     public static <T> ApiResponse<T> error(String message) {
-        return new ApiResponse<>(false, null, message, System.currentTimeMillis());
+        return new ApiResponse<>(false, null, message);
     }
 }
