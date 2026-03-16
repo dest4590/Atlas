@@ -1,5 +1,6 @@
 package org.collapseloader.atlas.domain.users.controller;
 
+import jakarta.validation.Valid;
 import org.apache.coyote.BadRequestException;
 import org.collapseloader.atlas.domain.achievements.dto.UserAchievementResponse;
 import org.collapseloader.atlas.domain.achievements.service.AchievementService;
@@ -9,6 +10,7 @@ import org.collapseloader.atlas.domain.friends.service.FriendshipService;
 import org.collapseloader.atlas.domain.presets.dto.response.PresetResponse;
 import org.collapseloader.atlas.domain.presets.service.PresetService;
 import org.collapseloader.atlas.domain.users.dto.request.UpdateProfileRequest;
+import org.collapseloader.atlas.domain.users.dto.request.UserSearchRequest;
 import org.collapseloader.atlas.domain.users.dto.response.*;
 import org.collapseloader.atlas.domain.users.entity.User;
 import org.collapseloader.atlas.domain.users.service.UserExternalAccountsService;
@@ -116,16 +118,15 @@ public class UserController {
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<List<SearchUserResponse>>> searchUsers(
             Authentication authentication,
-            @RequestParam("q") String query,
-            @RequestParam(value = "limit", required = false, defaultValue = "20") int limit) {
+            @Valid @RequestBody UserSearchRequest request) {
         var user = requireUser(authentication);
-        return ResponseEntity.ok(ApiResponse.success(friendshipService.searchUsers(user, query, limit)));
+        return ResponseEntity.ok(ApiResponse.success(friendshipService.searchUsers(user, request.params().q(), request.params().limit())));
     }
 
     @PatchMapping("/me/profile")
     public ResponseEntity<ApiResponse<UserProfileResponse>> updateProfile(
             Authentication authentication,
-            @jakarta.validation.Valid @RequestBody UpdateProfileRequest request) {
+            @Valid @RequestBody UpdateProfileRequest request) {
         var user = requireUser(authentication);
         return ResponseEntity.ok(ApiResponse.success(userProfileService.updateProfile(user, request)));
     }
