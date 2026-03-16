@@ -15,6 +15,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -54,27 +55,68 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             @NullMarked
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-                if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    String authHeader = accessor.getFirstNativeHeader("Authorization");
-                    if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                        String jwt = authHeader.substring(7);
-                        try {
-                            String username = jwtService.extractUsername(jwt);
-                            if (username != null) {
-                                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                                if (jwtService.isTokenValid(jwt, userDetails)) {
-                                    var authToken = new UsernamePasswordAuthenticationToken(userDetails, null,
-                                            userDetails.getAuthorities());
-                                    accessor.setUser(authToken);
-                                }
+                if (accessor == null) return message;
+
+                if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+                    handleConnect(accessor);
+                } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+                    handleSubscribe(accessor);
+                } else if (StompCommand.SEND.equals(accessor.getCommand())) {
+                    handleSend(accessor);
+                }
+                return message;
+            }
+
+            private void handleConnect(StompHeaderAccessor accessor) {
+                String authHeader = accessor.getFirstNativeHeader("Authorization");
+                if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                    String jwt = authHeader.substring(7);
+                    try {
+                        String username = jwtService.extractUsername(jwt);
+                        if (username != null) {
+                            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                            if (jwtService.isTokenValid(jwt, userDetails)) {
+                                var authToken = new UsernamePasswordAuthenticationToken(userDetails, null,
+                                        userDetails.getAuthorities());
+                                accessor.setUser(authToken);
                             }
-                        } catch (org.springframework.security.core.userdetails.UsernameNotFoundException
-                                 | io.jsonwebtoken.JwtException
-                                 | IllegalArgumentException ignored) {
+                        }
+                    } catch (org.springframework.security.core.userdetails.UsernameNotFoundException
+                             | io.jsonwebtoken.JwtException
+                             | IllegalArgumentException ignored) {
+                    }
+                }
+            }
+
+            private void handleSubscribe(StompHeaderAccessor accessor) {
+                String destination = accessor.getDestination();
+                if (destination == null) return;
+
+                if (destination.startsWith("/topic/broadcast")) {
+                    if (destination.equals("/topic/broadcast/users")) {
+                        if (accessor.getUser() == null) {
+                            throw new AccessDeniedException("Only registered users can subscribe to /topic/broadcast/users");
+                        }
+                    } else if (destination.equals("/topic/broadcast")) {
+                        if (!isAdmin(accessor)) {
+                            throw new AccessDeniedException("Only admins can subscribe to /topic/broadcast");
                         }
                     }
                 }
-                return message;
+            }
+
+            private void handleSend(StompHeaderAccessor accessor) {
+                String destination = accessor.getDestination();
+                if (destination != null && destination.startsWith("/topic/")) {
+                    if (!isAdmin(accessor)) {
+                        throw new AccessDeniedException("Only admins can send messages to /topic/**");
+                    }
+                }
+            }
+
+            private boolean isAdmin(StompHeaderAccessor accessor) {
+                return accessor.getUser() instanceof UsernamePasswordAuthenticationToken auth &&
+                        auth.getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
             }
         });
     }
