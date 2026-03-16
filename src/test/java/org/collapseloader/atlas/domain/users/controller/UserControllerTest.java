@@ -3,7 +3,6 @@ package org.collapseloader.atlas.domain.users.controller;
 import org.collapseloader.atlas.domain.achievements.service.AchievementService;
 import org.collapseloader.atlas.domain.friends.service.FriendshipService;
 import org.collapseloader.atlas.domain.presets.service.PresetService;
-import org.collapseloader.atlas.domain.users.dto.request.UserSearchParams;
 import org.collapseloader.atlas.domain.users.dto.request.UserSearchRequest;
 import org.collapseloader.atlas.domain.users.dto.response.PublicUserResponse;
 import org.collapseloader.atlas.domain.users.dto.response.UserMeResponse;
@@ -175,7 +174,7 @@ class UserControllerTest {
         var auth = new UsernamePasswordAuthenticationToken(user, null);
         when(friendshipService.searchUsers(user, "abc", 7)).thenReturn(Collections.emptyList());
 
-        var query = new UserSearchRequest(new UserSearchParams("abc", 7));
+        var query = new UserSearchRequest("abc", 7);
 
         ResponseEntity<?> response = userController.searchUsers(auth, query);
 

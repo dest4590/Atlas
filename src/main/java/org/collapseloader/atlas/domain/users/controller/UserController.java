@@ -118,9 +118,9 @@ public class UserController {
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<List<SearchUserResponse>>> searchUsers(
             Authentication authentication,
-            @Valid @RequestBody UserSearchRequest request) {
+            @RequestBody UserSearchRequest request) {
         var user = requireUser(authentication);
-        return ResponseEntity.ok(ApiResponse.success(friendshipService.searchUsers(user, request.params().q(), request.params().limit())));
+        return ResponseEntity.ok(ApiResponse.success(friendshipService.searchUsers(user, request.q(), request.limit())));
     }
 
     @PatchMapping("/me/profile")

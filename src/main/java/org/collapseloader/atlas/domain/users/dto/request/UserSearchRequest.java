@@ -1,5 +1,12 @@
 package org.collapseloader.atlas.domain.users.dto.request;
 
-public record UserSearchRequest(UserSearchParams params) {
+import jakarta.validation.constraints.Max;
+
+public record UserSearchRequest(
+        String q,
+
+        @Max(value = 30, message = "limit must be at most 30")
+        int limit
+) {
 
 }
