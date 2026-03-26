@@ -4,5 +4,23 @@
     "allDeclaredFields": true,
     "allDeclaredMethods": true,
     "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.jsonwebtoken.Jwts",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.jsonwebtoken.impl.DefaultJwtParserBuilder",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.jsonwebtoken.jackson.JacksonDeserializer",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.jsonwebtoken.jackson.JacksonSerializer",
+    "allDeclaredConstructors": true
   }
 ]
