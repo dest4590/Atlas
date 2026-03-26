@@ -1,0 +1,8 @@
+[
+  {
+    "name": "org.collapseloader.atlas.domain.news.News",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
+  }
+]

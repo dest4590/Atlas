@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Repository
 public interface AnalyticsServerRepository extends JpaRepository<AnalyticsServerRecord, Long> {
-    Optional<Boolean> existsByDomain(String domain);
+    boolean existsByDomain(String domain);
 
     AnalyticsServerRecord findByDomain(String domain);
 

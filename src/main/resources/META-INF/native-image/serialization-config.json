@@ -1,0 +1,20 @@
+[
+  {
+    "name": "org.collapseloader.atlas.domain.news.News"
+  },
+  {
+    "name": "java.util.ArrayList"
+  },
+  {
+    "name": "java.lang.Long"
+  },
+  {
+    "name": "java.lang.String"
+  },
+  {
+    "name": "java.time.Instant"
+  },
+  {
+    "name": "java.lang.Number"
+  }
+]
