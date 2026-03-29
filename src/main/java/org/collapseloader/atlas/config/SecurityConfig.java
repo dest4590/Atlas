@@ -108,6 +108,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/v1/news/**").permitAll()
                         .requestMatchers("/api/v1/presets/**").permitAll()
+                        .requestMatchers("/api/v1/server-ads/**").permitAll()
                         .requestMatchers("/api/v1/crash-logs").permitAll()
 
                         .requestMatchers("/api/v1/auth/setPassword", "/api/v1/auth/logout").authenticated()
